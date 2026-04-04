@@ -32,7 +32,7 @@ _Nothing blocking._
 
 ## Planned
 
-- [ ] (2026-04-04) Create Gitea repo on Sierra-Madre and push initial mirror [plan]
+_Nothing planned._
 
 ## Future
 
@@ -60,3 +60,4 @@ _Nothing blocking._
 - [x] (2026-04-04 → 2026-04-04) Move project from src/CheapClerk/ to solution root [user]
 - [x] (2026-04-04 → 2026-04-04) Cache tag/correspondent lookups in PaperlessClient (5min ConcurrentDictionary TTL) [audit]
 - [x] (2026-04-04 → 2026-04-04) Add GitHub Actions PR review workflow (ported from CheapHelpers) [plan]
+- [x] (2026-04-04 → 2026-04-04) Create Gitea repo on Sierra-Madre with push mirror to GitHub (24h + sync on commit) [plan]
