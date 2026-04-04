@@ -1,0 +1,39 @@
+services:
+  paperless-broker:
+    image: redis:7
+    container_name: paperless-broker
+    restart: unless-stopped
+    volumes:
+      - paperless-redis:/data
+
+  paperless:
+    image: ghcr.io/paperless-ngx/paperless-ngx:latest
+    container_name: paperless
+    restart: unless-stopped
+    depends_on:
+      - paperless-broker
+    ports:
+      - "8000:8000"
+    volumes:
+      - paperless-data:/usr/src/paperless/data
+      - paperless-media:/usr/src/paperless/media
+      - paperless-export:/usr/src/paperless/export
+      - paperless-consume:/usr/src/paperless/consume
+    environment:
+      PAPERLESS_REDIS: redis://paperless-broker:6379
+      PAPERLESS_OCR_LANGUAGE: nld+eng+fra+deu
+      PAPERLESS_TIME_ZONE: Europe/Brussels
+      PAPERLESS_SECRET_KEY: changeme-generate-a-random-key
+      PAPERLESS_ADMIN_USER: brecht
+      PAPERLESS_ADMIN_PASSWORD: changeme
+      PAPERLESS_URL: https://docs.cheaplues.be
+      PAPERLESS_OCR_MODE: skip_noarchive
+      PAPERLESS_TASK_WORKERS: 2
+      PAPERLESS_CONSUMER_RECURSIVE: "true"
+
+volumes:
+  paperless-redis:
+  paperless-data:
+  paperless-media:
+  paperless-export:
+  paperless-consume:
