@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Text.Json;
 using CheapClerk.Models;
 using Microsoft.Extensions.Logging;
@@ -17,6 +18,10 @@ public sealed class PaperlessClient(
     {
         PropertyNameCaseInsensitive = true
     };
+
+    private static readonly TimeSpan LookupCacheDuration = TimeSpan.FromMinutes(5);
+
+    private readonly ConcurrentDictionary<string, (DateTime Expiry, object Lookup)> _lookupCache = new();
 
     public async Task<List<DocumentMatch>> SearchDocumentsAsync(
         string query,
@@ -141,14 +146,33 @@ public sealed class PaperlessClient(
 
     public async Task<Dictionary<int, string>> GetTagLookupAsync(CancellationToken cancellationToken = default)
     {
-        var tags = await GetTagsAsync(cancellationToken);
-        return tags.ToDictionary(t => t.Id, t => t.Name);
+        return await GetCachedLookupAsync("tags", async ct =>
+        {
+            var tags = await GetTagsAsync(ct);
+            return tags.ToDictionary(t => t.Id, t => t.Name);
+        }, cancellationToken);
     }
 
     public async Task<Dictionary<int, string>> GetCorrespondentLookupAsync(CancellationToken cancellationToken = default)
     {
-        var correspondents = await GetCorrespondentsAsync(cancellationToken);
-        return correspondents.ToDictionary(c => c.Id, c => c.Name);
+        return await GetCachedLookupAsync("correspondents", async ct =>
+        {
+            var correspondents = await GetCorrespondentsAsync(ct);
+            return correspondents.ToDictionary(c => c.Id, c => c.Name);
+        }, cancellationToken);
+    }
+
+    private async Task<Dictionary<int, string>> GetCachedLookupAsync(
+        string cacheKey,
+        Func<CancellationToken, Task<Dictionary<int, string>>> factory,
+        CancellationToken cancellationToken)
+    {
+        if (_lookupCache.TryGetValue(cacheKey, out var cached) && cached.Expiry > DateTime.UtcNow)
+            return (Dictionary<int, string>)cached.Lookup;
+
+        var freshLookup = await factory(cancellationToken);
+        _lookupCache[cacheKey] = (DateTime.UtcNow.Add(LookupCacheDuration), freshLookup);
+        return freshLookup;
     }
 
     private async Task<T?> GetAsync<T>(string relativeUrl, CancellationToken cancellationToken) where T : class

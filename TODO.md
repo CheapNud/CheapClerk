@@ -32,17 +32,7 @@ _Nothing blocking._
 
 ## Planned
 
-- [ ] (2026-04-04) Scaffold .NET 11 console project with MCP server bootstrap [plan]
-- [ ] (2026-04-04) Implement PaperlessClient service (HTTP client for Paperless-ngx REST API) [plan]
-- [ ] (2026-04-04) Implement search_documents MCP tool [plan]
-- [ ] (2026-04-04) Implement get_document_content MCP tool [plan]
-- [ ] (2026-04-04) Implement list_documents MCP tool [plan]
-- [ ] (2026-04-04) Implement get_document_metadata MCP tool [plan]
-- [ ] (2026-04-04) Implement list_tags MCP tool [plan]
-- [ ] (2026-04-04) Implement OcrQualityChecker service [plan]
-- [ ] (2026-04-04) Implement VisionOcrService (Claude Vision fallback) [plan]
-- [ ] (2026-04-04) Add appsettings.json configuration [plan]
-- [ ] (2026-04-04) Add docker-compose.yml for Paperless-ngx deployment [plan]
+- [ ] (2026-04-04) Create Gitea repo on Sierra-Madre and push initial mirror [plan]
 
 ## Future
 
@@ -54,4 +44,19 @@ _Nothing blocking._
 
 ## Done
 
-_Nothing completed yet._
+- [x] (2026-04-04 → 2026-04-04) Scaffold .NET 11 console project with MCP server bootstrap [plan]
+- [x] (2026-04-04 → 2026-04-04) Implement PaperlessClient service (HTTP client for Paperless-ngx REST API) [plan]
+- [x] (2026-04-04 → 2026-04-04) Implement search_documents MCP tool [plan]
+- [x] (2026-04-04 → 2026-04-04) Implement get_document_content MCP tool [plan]
+- [x] (2026-04-04 → 2026-04-04) Implement list_documents MCP tool [plan]
+- [x] (2026-04-04 → 2026-04-04) Implement get_document_metadata MCP tool [plan]
+- [x] (2026-04-04 → 2026-04-04) Implement list_tags MCP tool [plan]
+- [x] (2026-04-04 → 2026-04-04) Implement OcrQualityChecker service [plan]
+- [x] (2026-04-04 → 2026-04-04) Implement VisionOcrService (Claude Vision fallback) [plan]
+- [x] (2026-04-04 → 2026-04-04) Add appsettings.json configuration [plan]
+- [x] (2026-04-04 → 2026-04-04) Add docker-compose.yml for Paperless-ngx deployment [plan]
+- [x] (2026-04-04 → 2026-04-04) Fix naming violations per global CLAUDE.md variable naming rules [audit]
+- [x] (2026-04-04 → 2026-04-04) Use SearchValues<char> in OcrQualityChecker for SIMD-accelerated scanning [audit]
+- [x] (2026-04-04 → 2026-04-04) Move project from src/CheapClerk/ to solution root [user]
+- [x] (2026-04-04 → 2026-04-04) Cache tag/correspondent lookups in PaperlessClient (5min ConcurrentDictionary TTL) [audit]
+- [x] (2026-04-04 → 2026-04-04) Add GitHub Actions PR review workflow (ported from CheapHelpers) [plan]
