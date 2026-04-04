@@ -178,6 +178,10 @@ Full API docs ship with Paperless at `/api/schema/swagger-ui/`.
 
 ```
 CheapClerk/
+├── CheapClerk.csproj
+├── CheapClerk.slnx
+├── Program.cs                       # MCP server bootstrap
+├── appsettings.json
 ├── README.md
 ├── TODO.md
 ├── LICENSE
@@ -185,29 +189,27 @@ CheapClerk/
 ├── .github/
 │   └── workflows/
 │       └── dotnet.yml
-├── src/
-│   └── CheapClerk/
-│       ├── CheapClerk.csproj
-│       ├── Program.cs               # MCP server bootstrap
-│       ├── Tools/
-│       │   ├── SearchDocumentsTool.cs
-│       │   ├── GetDocumentContentTool.cs
-│       │   ├── ListDocumentsTool.cs
-│       │   ├── GetDocumentMetadataTool.cs
-│       │   └── ListTagsTool.cs
-│       ├── Services/
-│       │   ├── PaperlessClient.cs       # HTTP client for Paperless REST API
-│       │   ├── VisionOcrService.cs      # Claude Vision fallback
-│       │   └── OcrQualityChecker.cs     # Confidence threshold logic
-│       ├── Models/
-│       │   ├── PaperlessDocument.cs
-│       │   ├── PaperlessTag.cs
-│       │   ├── PaperlessCorrespondent.cs
-│       │   └── SearchResult.cs
-│       └── appsettings.json
-├── docker/
-│   └── docker-compose.yml           # Paperless-ngx deployment
-└── CheapClerk.slnx
+├── Configuration/
+│   ├── PaperlessOptions.cs
+│   └── VisionFallbackOptions.cs
+├── Tools/
+│   ├── SearchDocumentsTool.cs
+│   ├── GetDocumentContentTool.cs
+│   ├── ListDocumentsTool.cs
+│   ├── GetDocumentMetadataTool.cs
+│   └── ListTagsTool.cs
+├── Services/
+│   ├── PaperlessClient.cs           # HTTP client for Paperless REST API
+│   ├── VisionOcrService.cs          # Claude Vision fallback
+│   └── OcrQualityChecker.cs         # Confidence threshold logic
+├── Models/
+│   ├── PaperlessDocument.cs
+│   ├── PaperlessTag.cs
+│   ├── PaperlessCorrespondent.cs
+│   ├── PaperlessPage.cs
+│   └── DocumentMatch.cs
+└── docker/
+    └── docker-compose.yml           # Paperless-ngx deployment
 ```
 
 ---
@@ -221,7 +223,7 @@ Add to `~/.claude.json` (global) or `.claude/settings.json` (project):
   "mcpServers": {
     "cheapclerk": {
       "command": "dotnet",
-      "args": ["run", "--project", "/path/to/CheapClerk/src/CheapClerk"]
+      "args": ["run", "--project", "/path/to/CheapClerk"]
     }
   }
 }

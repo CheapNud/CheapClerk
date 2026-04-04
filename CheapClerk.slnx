@@ -1,5 +1,3 @@
 <Solution>
-  <Folder Name="/src/">
-    <Project Path="src/CheapClerk/CheapClerk.csproj" />
-  </Folder>
+  <Project Path="CheapClerk.csproj" />
 </Solution>
