@@ -1,6 +1,6 @@
 <!--
   TODO.md — CheapClerk project work tracker
-  Last updated: 2026-04-04
+  Last updated: 2026-04-11
 
   RULES FOR AI AGENTS:
   - Update the "Last updated" date above whenever you modify this file
@@ -37,7 +37,6 @@ _Nothing planned._
 ## Future
 
 - [ ] (2026-04-04) Evaluate CheapHelpers for shared plumbing and potential OCR delegation [plan]
-- [ ] (2026-04-04) Blazor Server UI with MudBlazor (search, browse, quick actions) [plan]
 - [ ] (2026-04-04) Multi-LLM support (Ollama local models for non-sensitive queries) [plan]
 - [ ] (2026-04-04) Structured data extraction — recognize bill formats, extract amounts/dates into typed models [plan]
 - [ ] (2026-04-04) Automated workflows — notify on expiring documents within 30 days [plan]
@@ -61,3 +60,4 @@ _Nothing planned._
 - [x] (2026-04-04 → 2026-04-04) Cache tag/correspondent lookups in PaperlessClient (5min ConcurrentDictionary TTL) [audit]
 - [x] (2026-04-04 → 2026-04-04) Add GitHub Actions PR review workflow (ported from CheapHelpers) [plan]
 - [x] (2026-04-04 → 2026-04-04) Create Gitea repo on Sierra-Madre with push mirror to GitHub (24h + sync on commit) [plan]
+- [x] (2026-04-08 → 2026-04-11) Blazor Server UI with MudBlazor (dashboard, documents, search, tags, detail view with Vision OCR trigger) [plan]
