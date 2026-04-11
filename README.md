@@ -242,12 +242,23 @@ Add to `~/.claude.json` (global) or `.claude/settings.json` (project):
   "VisionFallback": {
     "Enabled": true,
     "MinTextLength": 50,
-    "MaxGarbageRatio": 0.15,
-    "ApiKey": "<anthropic-api-key>",
-    "Model": "claude-sonnet-4-20250514"
+    "MaxGarbageRatio": 0.15
+  },
+  "Llm": {
+    "Provider": "Anthropic",
+    "Anthropic": {
+      "ApiKey": "<anthropic-api-key>",
+      "Model": "claude-sonnet-4-20250514"
+    },
+    "Ollama": {
+      "BaseUrl": "http://localhost:11434",
+      "Model": "llama3.2"
+    }
   }
 }
 ```
+
+**LLM providers:** Structured extraction uses the configured `Llm.Provider` (`Anthropic` or `Ollama`). Vision OCR fallback always uses Anthropic since local vision models are still unreliable for Belgian household documents. To run fully offline, set `Provider: Ollama` and disable `VisionFallback.Enabled`.
 
 ---
 

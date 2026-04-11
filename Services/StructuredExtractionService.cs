@@ -1,5 +1,3 @@
-using Anthropic;
-using Anthropic.Core;
 using CheapClerk.Configuration;
 using CheapClerk.Models.Extraction;
 using Microsoft.Extensions.AI;
@@ -9,10 +7,11 @@ using Microsoft.Extensions.Options;
 namespace CheapClerk.Services;
 
 public sealed class StructuredExtractionService(
-    IOptions<VisionFallbackOptions> visionOptions,
+    IChatClient chatClient,
+    IOptions<LlmOptions> llmOptions,
     ILogger<StructuredExtractionService> logger)
 {
-    private readonly VisionFallbackOptions _options = visionOptions.Value;
+    private readonly LlmOptions _llm = llmOptions.Value;
 
     private const string SystemPrompt = """
         You are a document analysis assistant specialized in Belgian household paperwork
@@ -27,7 +26,12 @@ public sealed class StructuredExtractionService(
         If a field is not present in the document, leave it null — do not guess.
         """;
 
-    public bool IsEnabled => _options.Enabled && !string.IsNullOrWhiteSpace(_options.ApiKey);
+    public bool IsEnabled => _llm.Provider switch
+    {
+        LlmProvider.Anthropic => !string.IsNullOrWhiteSpace(_llm.Anthropic.ApiKey),
+        LlmProvider.Ollama => !string.IsNullOrWhiteSpace(_llm.Ollama.BaseUrl),
+        _ => false
+    };
 
     public async Task<ExtractionResult?> ExtractAsync(
         string documentText,
@@ -35,7 +39,7 @@ public sealed class StructuredExtractionService(
     {
         if (!IsEnabled)
         {
-            logger.LogWarning("Structured extraction skipped: Anthropic API key not configured");
+            logger.LogWarning("Structured extraction skipped: LLM provider not configured");
             return null;
         }
 
@@ -47,9 +51,6 @@ public sealed class StructuredExtractionService(
 
         try
         {
-            var anthropic = new AnthropicClient(new ClientOptions { ApiKey = _options.ApiKey });
-            IChatClient extractionClient = anthropic.AsIChatClient(_options.Model);
-
             var extractionPrompt = new List<ChatMessage>
             {
                 new(ChatRole.System, SystemPrompt),
@@ -62,7 +63,7 @@ public sealed class StructuredExtractionService(
                 Temperature = 0.0f
             };
 
-            var extractionCompletion = await extractionClient.GetResponseAsync<ExtractionResult>(
+            var extractionCompletion = await chatClient.GetResponseAsync<ExtractionResult>(
                 extractionPrompt,
                 chatOptions,
                 cancellationToken: cancellationToken);
@@ -70,9 +71,10 @@ public sealed class StructuredExtractionService(
             if (extractionCompletion.TryGetResult(out var extracted))
             {
                 logger.LogInformation(
-                    "Extracted document as {Category} with confidence {Confidence:P0}",
+                    "Extracted document as {Category} with confidence {Confidence:P0} via {Provider}",
                     extracted.Category,
-                    extracted.Confidence);
+                    extracted.Confidence,
+                    _llm.Provider);
                 return extracted;
             }
 

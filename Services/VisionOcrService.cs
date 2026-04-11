@@ -1,19 +1,21 @@
 using Anthropic;
 using Anthropic.Core;
+using CheapClerk.Configuration;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using CheapClerk.Configuration;
 
 namespace CheapClerk.Services;
 
 public sealed class VisionOcrService(
     IOptions<VisionFallbackOptions> visionOptions,
+    IOptions<LlmOptions> llmOptions,
     ILogger<VisionOcrService> logger)
 {
-    private readonly VisionFallbackOptions _options = visionOptions.Value;
+    private readonly VisionFallbackOptions _vision = visionOptions.Value;
+    private readonly LlmOptions _llm = llmOptions.Value;
 
-    public bool IsEnabled => _options.Enabled && !string.IsNullOrWhiteSpace(_options.ApiKey);
+    public bool IsEnabled => _vision.Enabled && !string.IsNullOrWhiteSpace(_llm.Anthropic.ApiKey);
 
     public async Task<string?> ExtractTextFromImageAsync(
         byte[] imageBytes,
@@ -22,14 +24,14 @@ public sealed class VisionOcrService(
     {
         if (!IsEnabled)
         {
-            logger.LogWarning("Vision OCR fallback is disabled or API key is not configured");
+            logger.LogWarning("Vision OCR fallback is disabled or Anthropic API key is not configured");
             return null;
         }
 
         try
         {
-            var anthropic = new AnthropicClient(new ClientOptions { ApiKey = _options.ApiKey });
-            IChatClient visionClient = anthropic.AsIChatClient(_options.Model);
+            var anthropic = new AnthropicClient(new ClientOptions { ApiKey = _llm.Anthropic.ApiKey });
+            IChatClient visionClient = anthropic.AsIChatClient(_llm.Anthropic.Model);
 
             var visionMediaType = mediaType switch
             {

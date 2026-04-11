@@ -19,9 +19,12 @@ builder.Services.AddMudServices();
 
 var paperlessSection = builder.Configuration.GetSection(PaperlessOptions.SectionName);
 var visionSection = builder.Configuration.GetSection(VisionFallbackOptions.SectionName);
+var llmSection = builder.Configuration.GetSection(LlmOptions.SectionName);
 
 builder.Services.Configure<PaperlessOptions>(paperlessSection);
 builder.Services.Configure<VisionFallbackOptions>(visionSection);
+builder.Services.Configure<LlmOptions>(llmSection);
+builder.Services.AddConfiguredChatClient();
 
 builder.Services.AddHttpClient<PaperlessClient>((sp, httpClient) =>
 {
