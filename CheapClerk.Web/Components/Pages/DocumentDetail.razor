@@ -1,4 +1,5 @@
 @page "/documents/{DocumentId:int}"
+@using CheapClerk.Models.Extraction
 
 <PageTitle>CheapClerk — Document @DocumentId</PageTitle>
 
@@ -56,6 +57,89 @@ else
                     }
                 </MudCardContent>
             </MudCard>
+
+            <MudCard Elevation="0" Class="mt-4" Style="border: 1px solid rgba(255,255,255,0.06);">
+                <MudCardContent>
+                    <div class="d-flex align-center justify-space-between mb-3">
+                        <MudText Typo="Typo.h6">Extracted Data</MudText>
+                        <MudButton Variant="Variant.Outlined" Size="Size.Small" Color="Color.Tertiary"
+                                   OnClick="RunExtractionAsync" Disabled="_isExtracting"
+                                   StartIcon="@Icons.Material.Filled.AutoAwesome">
+                            @(_isExtracting ? "Extracting..." : "Extract")
+                        </MudButton>
+                    </div>
+
+                    @if (_isExtracting)
+                    {
+                        <MudProgressLinear Indeterminate="true" Color="Color.Tertiary" />
+                    }
+                    else if (_extracted is null)
+                    {
+                        <MudText Typo="Typo.body2" Style="opacity: 0.5;">Click Extract to classify and pull structured fields via Claude.</MudText>
+                    }
+                    else
+                    {
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Tertiary" Class="mb-2">
+                            @_extracted.Category
+                        </MudChip>
+                        <MudText Typo="Typo.caption" Class="ml-2" Style="opacity: 0.6;">
+                            @($"{_extracted.Confidence:P0} confidence")
+                        </MudText>
+
+                        @if (_extracted.Summary is not null)
+                        {
+                            <MudText Typo="Typo.body2" Class="mt-2 mb-3" Style="font-style: italic; opacity: 0.8;">
+                                @_extracted.Summary
+                            </MudText>
+                        }
+
+                        @if (_extracted.Invoice is not null)
+                        {
+                            <MudSimpleTable Dense="true" Elevation="0">
+                                <tbody>
+                                    @if (_extracted.Invoice.Vendor is not null) { <tr><td><strong>Vendor</strong></td><td>@_extracted.Invoice.Vendor</td></tr> }
+                                    @if (_extracted.Invoice.InvoiceNumber is not null) { <tr><td><strong>Invoice #</strong></td><td>@_extracted.Invoice.InvoiceNumber</td></tr> }
+                                    @if (_extracted.Invoice.TotalAmount.HasValue) { <tr><td><strong>Total</strong></td><td>@_extracted.Invoice.TotalAmount @_extracted.Invoice.Currency</td></tr> }
+                                    @if (_extracted.Invoice.IssueDate is not null) { <tr><td><strong>Issued</strong></td><td>@_extracted.Invoice.IssueDate</td></tr> }
+                                    @if (_extracted.Invoice.DueDate is not null) { <tr><td><strong>Due</strong></td><td>@_extracted.Invoice.DueDate</td></tr> }
+                                    @if (_extracted.Invoice.AccountNumber is not null) { <tr><td><strong>Account</strong></td><td>@_extracted.Invoice.AccountNumber</td></tr> }
+                                    @if (_extracted.Invoice.PaymentReference is not null) { <tr><td><strong>Reference</strong></td><td>@_extracted.Invoice.PaymentReference</td></tr> }
+                                    @if (_extracted.Invoice.BeneficiaryIban is not null) { <tr><td><strong>IBAN</strong></td><td>@_extracted.Invoice.BeneficiaryIban</td></tr> }
+                                </tbody>
+                            </MudSimpleTable>
+                        }
+                        else if (_extracted.Insurance is not null)
+                        {
+                            <MudSimpleTable Dense="true" Elevation="0">
+                                <tbody>
+                                    @if (_extracted.Insurance.Insurer is not null) { <tr><td><strong>Insurer</strong></td><td>@_extracted.Insurance.Insurer</td></tr> }
+                                    @if (_extracted.Insurance.PolicyNumber is not null) { <tr><td><strong>Policy #</strong></td><td>@_extracted.Insurance.PolicyNumber</td></tr> }
+                                    @if (_extracted.Insurance.PolicyType is not null) { <tr><td><strong>Type</strong></td><td>@_extracted.Insurance.PolicyType</td></tr> }
+                                    @if (_extracted.Insurance.PremiumAmount.HasValue) { <tr><td><strong>Premium</strong></td><td>@_extracted.Insurance.PremiumAmount (@_extracted.Insurance.PremiumFrequency)</td></tr> }
+                                    @if (_extracted.Insurance.Deductible.HasValue) { <tr><td><strong>Deductible</strong></td><td>@_extracted.Insurance.Deductible</td></tr> }
+                                    @if (_extracted.Insurance.CoverageStart is not null) { <tr><td><strong>Coverage Start</strong></td><td>@_extracted.Insurance.CoverageStart</td></tr> }
+                                    @if (_extracted.Insurance.CoverageEnd is not null) { <tr><td><strong>Coverage End</strong></td><td>@_extracted.Insurance.CoverageEnd</td></tr> }
+                                    @if (_extracted.Insurance.InsuredItem is not null) { <tr><td><strong>Insured</strong></td><td>@_extracted.Insurance.InsuredItem</td></tr> }
+                                </tbody>
+                            </MudSimpleTable>
+                        }
+                        else if (_extracted.Contract is not null)
+                        {
+                            <MudSimpleTable Dense="true" Elevation="0">
+                                <tbody>
+                                    @if (_extracted.Contract.Counterparty is not null) { <tr><td><strong>Counterparty</strong></td><td>@_extracted.Contract.Counterparty</td></tr> }
+                                    @if (_extracted.Contract.Subject is not null) { <tr><td><strong>Subject</strong></td><td>@_extracted.Contract.Subject</td></tr> }
+                                    @if (_extracted.Contract.StartDate is not null) { <tr><td><strong>Start</strong></td><td>@_extracted.Contract.StartDate</td></tr> }
+                                    @if (_extracted.Contract.EndDate is not null) { <tr><td><strong>End</strong></td><td>@_extracted.Contract.EndDate</td></tr> }
+                                    @if (_extracted.Contract.NoticePeriod is not null) { <tr><td><strong>Notice</strong></td><td>@_extracted.Contract.NoticePeriod</td></tr> }
+                                    @if (_extracted.Contract.AutoRenewal.HasValue) { <tr><td><strong>Auto-renew</strong></td><td>@(_extracted.Contract.AutoRenewal.Value ? "Yes" : "No")</td></tr> }
+                                    @if (_extracted.Contract.RecurringAmount.HasValue) { <tr><td><strong>Amount</strong></td><td>@_extracted.Contract.RecurringAmount (@_extracted.Contract.BillingFrequency)</td></tr> }
+                                </tbody>
+                            </MudSimpleTable>
+                        }
+                    }
+                </MudCardContent>
+            </MudCard>
         </MudItem>
 
         <MudItem xs="12" md="8">
@@ -94,6 +178,7 @@ else
     [Inject] private PaperlessClient PaperlessClient { get; set; } = null!;
     [Inject] private OcrQualityChecker OcrQualityChecker { get; set; } = null!;
     [Inject] private VisionOcrService VisionOcrService { get; set; } = null!;
+    [Inject] private StructuredExtractionService ExtractionService { get; set; } = null!;
     [Inject] private ISnackbar Snackbar { get; set; } = null!;
 
     private PaperlessDocument? _doc;
@@ -102,6 +187,8 @@ else
     private List<string> _tagNames = [];
     private bool _notFound;
     private bool _isRunningVision;
+    private bool _isExtracting;
+    private ExtractionResult? _extracted;
 
     protected override async Task OnInitializedAsync()
     {
@@ -157,5 +244,32 @@ else
         }
 
         _isRunningVision = false;
+    }
+
+    private async Task RunExtractionAsync()
+    {
+        if (!ExtractionService.IsEnabled)
+        {
+            Snackbar.Add("Structured extraction is not configured.", Severity.Warning);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_documentContent))
+        {
+            Snackbar.Add("No text content to extract from.", Severity.Warning);
+            return;
+        }
+
+        _isExtracting = true;
+        StateHasChanged();
+
+        _extracted = await ExtractionService.ExtractAsync(_documentContent);
+
+        if (_extracted is not null)
+            Snackbar.Add($"Classified as {_extracted.Category} ({_extracted.Confidence:P0}).", Severity.Success);
+        else
+            Snackbar.Add("Extraction failed — check logs.", Severity.Error);
+
+        _isExtracting = false;
     }
 }

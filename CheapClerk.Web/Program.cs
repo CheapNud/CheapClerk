@@ -32,6 +32,7 @@ builder.Services.AddHttpClient<PaperlessClient>((sp, httpClient) =>
 
 builder.Services.AddSingleton<OcrQualityChecker>();
 builder.Services.AddSingleton<VisionOcrService>();
+builder.Services.AddSingleton<StructuredExtractionService>();
 
 var app = builder.Build();
 

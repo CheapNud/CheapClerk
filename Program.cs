@@ -23,6 +23,7 @@ builder.Services.AddHttpClient<PaperlessClient>((sp, httpClient) =>
 
 builder.Services.AddSingleton<OcrQualityChecker>();
 builder.Services.AddSingleton<VisionOcrService>();
+builder.Services.AddSingleton<StructuredExtractionService>();
 
 builder.Services.AddMcpServer()
     .WithStdioServerTransport()
@@ -30,7 +31,8 @@ builder.Services.AddMcpServer()
     .WithTools<GetDocumentContentTool>()
     .WithTools<ListDocumentsTool>()
     .WithTools<GetDocumentMetadataTool>()
-    .WithTools<ListTagsTool>();
+    .WithTools<ListTagsTool>()
+    .WithTools<ExtractStructuredDataTool>();
 
 // MCP stdio uses stdin/stdout — log to stderr only
 builder.Logging.AddConsole(consoleOptions =>
