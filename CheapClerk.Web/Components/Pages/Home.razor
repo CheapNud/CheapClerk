@@ -6,7 +6,7 @@
 <MudText Typo="Typo.body1" Class="mb-6" Style="opacity: 0.6;">Your household documents at a glance.</MudText>
 
 <MudGrid>
-    <MudItem xs="12" md="4">
+    <MudItem xs="12" md="3">
         <MudCard Elevation="0" Style="border: 1px solid rgba(255,255,255,0.06);">
             <MudCardContent Class="d-flex align-center gap-4">
                 <MudIcon Icon="@Icons.Material.Filled.Description" Color="Color.Primary" Size="Size.Large" />
@@ -17,7 +17,7 @@
             </MudCardContent>
         </MudCard>
     </MudItem>
-    <MudItem xs="12" md="4">
+    <MudItem xs="12" md="3">
         <MudCard Elevation="0" Style="border: 1px solid rgba(255,255,255,0.06);">
             <MudCardContent Class="d-flex align-center gap-4">
                 <MudIcon Icon="@Icons.Material.Filled.Label" Color="Color.Secondary" Size="Size.Large" />
@@ -28,13 +28,26 @@
             </MudCardContent>
         </MudCard>
     </MudItem>
-    <MudItem xs="12" md="4">
+    <MudItem xs="12" md="3">
         <MudCard Elevation="0" Style="border: 1px solid rgba(255,255,255,0.06);">
             <MudCardContent Class="d-flex align-center gap-4">
                 <MudIcon Icon="@Icons.Material.Filled.People" Color="Color.Tertiary" Size="Size.Large" />
                 <div>
                     <MudText Typo="Typo.h4">@_correspondentCount</MudText>
                     <MudText Typo="Typo.body2" Style="opacity: 0.6;">Correspondents</MudText>
+                </div>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+    <MudItem xs="12" md="3">
+        <MudCard Elevation="0" Style="@($"border: 1px solid {(_expiringCount > 0 ? "rgba(255,87,34,0.5)" : "rgba(255,255,255,0.06)")};")">
+            <MudCardContent Class="d-flex align-center gap-4">
+                <MudIcon Icon="@Icons.Material.Filled.Schedule"
+                         Color="@(_expiringCount > 0 ? Color.Warning : Color.Default)"
+                         Size="Size.Large" />
+                <div>
+                    <MudText Typo="Typo.h4">@_expiringCount</MudText>
+                    <MudLink Href="/expiring" Typo="Typo.body2" Style="opacity: 0.6;">Expiring in 30 days</MudLink>
                 </div>
             </MudCardContent>
         </MudCard>
@@ -72,26 +85,31 @@ else
 
 @code {
     [Inject] private PaperlessClient PaperlessClient { get; set; } = null!;
+    [Inject] private ExtractionCacheService ExtractionCache { get; set; } = null!;
 
     private List<PaperlessDocument>? _recentDocuments;
     private int _documentCount;
     private int _tagCount;
     private int _correspondentCount;
+    private int _expiringCount;
 
     protected override async Task OnInitializedAsync()
     {
         var docsTask = PaperlessClient.ListDocumentsAsync(maxResults: 10);
         var tagsTask = PaperlessClient.GetTagsAsync();
         var corrsTask = PaperlessClient.GetCorrespondentsAsync();
+        var expiringTask = ExtractionCache.FindExpiringAsync(30);
 
-        await Task.WhenAll(docsTask, tagsTask, corrsTask);
+        await Task.WhenAll(docsTask, tagsTask, corrsTask, expiringTask);
 
         _recentDocuments = await docsTask;
         var tags = await tagsTask;
         var correspondents = await corrsTask;
+        var expiring = await expiringTask;
 
         _documentCount = _recentDocuments.Count;
         _tagCount = tags.Count;
         _correspondentCount = correspondents.Count;
+        _expiringCount = expiring.Count;
     }
 }

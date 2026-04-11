@@ -1,6 +1,8 @@
 using CheapClerk.Configuration;
+using CheapClerk.Data;
 using CheapClerk.Services;
 using CheapClerk.Web.Components;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using MudBlazor.Services;
 using Serilog;
@@ -20,11 +22,17 @@ builder.Services.AddMudServices();
 var paperlessSection = builder.Configuration.GetSection(PaperlessOptions.SectionName);
 var visionSection = builder.Configuration.GetSection(VisionFallbackOptions.SectionName);
 var llmSection = builder.Configuration.GetSection(LlmOptions.SectionName);
+var cacheSection = builder.Configuration.GetSection(CacheOptions.SectionName);
 
 builder.Services.Configure<PaperlessOptions>(paperlessSection);
 builder.Services.Configure<VisionFallbackOptions>(visionSection);
 builder.Services.Configure<LlmOptions>(llmSection);
+builder.Services.Configure<CacheOptions>(cacheSection);
 builder.Services.AddConfiguredChatClient();
+
+var cacheOptions = cacheSection.Get<CacheOptions>() ?? new CacheOptions();
+builder.Services.AddDbContextFactory<ClerkDbContext>(dbOpt =>
+    dbOpt.UseSqlite($"Data Source={cacheOptions.DatabasePath}"));
 
 builder.Services.AddHttpClient<PaperlessClient>((sp, httpClient) =>
 {
@@ -36,8 +44,16 @@ builder.Services.AddHttpClient<PaperlessClient>((sp, httpClient) =>
 builder.Services.AddSingleton<OcrQualityChecker>();
 builder.Services.AddSingleton<VisionOcrService>();
 builder.Services.AddSingleton<StructuredExtractionService>();
+builder.Services.AddSingleton<ExtractionCacheService>();
 
 var app = builder.Build();
+
+await using (var scope = app.Services.CreateAsyncScope())
+{
+    var dbFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<ClerkDbContext>>();
+    await using var db = await dbFactory.CreateDbContextAsync();
+    await db.Database.EnsureCreatedAsync();
+}
 
 if (!app.Environment.IsDevelopment())
 {

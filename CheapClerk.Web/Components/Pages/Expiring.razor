@@ -1,0 +1,129 @@
+@page "/expiring"
+@using CheapClerk.Models.Extraction
+
+<PageTitle>CheapClerk — Expiring</PageTitle>
+
+<div class="d-flex align-center justify-space-between mb-4">
+    <MudText Typo="Typo.h4">Expiring Documents</MudText>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="RefreshCacheAsync"
+               Disabled="_isRefreshing" StartIcon="@Icons.Material.Filled.Autorenew">
+        @(_isRefreshing ? "Analyzing..." : "Analyze All")
+    </MudButton>
+</div>
+
+<MudGrid Class="mb-4">
+    <MudItem xs="12" sm="4">
+        <MudNumericField T="int" @bind-Value="_daysAhead" Label="Days ahead" Min="1" Max="365"
+                         Variant="Variant.Outlined" Immediate="true" OnBlur="LoadAsync" />
+    </MudItem>
+    <MudItem xs="12" sm="8" Class="d-flex align-center">
+        <MudText Typo="Typo.body2" Style="opacity: 0.6;">
+            @_cachedCount document(s) in the extraction cache
+        </MudText>
+    </MudItem>
+</MudGrid>
+
+@if (_isRefreshing)
+{
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+    <MudText Typo="Typo.body2" Class="mt-2" Style="opacity: 0.6;">Running extraction on all documents. This may take a few minutes.</MudText>
+}
+else if (_expiring is null)
+{
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+}
+else if (_expiring.Count == 0)
+{
+    <MudAlert Severity="Severity.Success">No documents expiring within @_daysAhead days.</MudAlert>
+    @if (_cachedCount == 0)
+    {
+        <MudAlert Severity="Severity.Info" Class="mt-3">
+            The extraction cache is empty. Click "Analyze All" to run structured extraction on your documents.
+        </MudAlert>
+    }
+}
+else
+{
+    <MudTable Items="_expiring" Hover="true" Elevation="0" Dense="true"
+              Style="border: 1px solid rgba(255,255,255,0.06);">
+        <HeaderContent>
+            <MudTh>ID</MudTh>
+            <MudTh>Category</MudTh>
+            <MudTh>Expires</MudTh>
+            <MudTh>Days Left</MudTh>
+            <MudTh>Summary</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>
+                <MudLink Href="@($"/documents/{context.DocumentId}")">@context.DocumentId</MudLink>
+            </MudTd>
+            <MudTd>
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="@CategoryColor(context.Category)">
+                    @context.Category
+                </MudChip>
+            </MudTd>
+            <MudTd>@context.ExpiryDate.ToString("yyyy-MM-dd")</MudTd>
+            <MudTd>
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="@DaysLeftColor(context.DaysRemaining)">
+                    @context.DaysRemaining
+                </MudChip>
+            </MudTd>
+            <MudTd>@(context.Summary ?? "—")</MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+
+@code {
+    [Inject] private ExtractionCacheService ExtractionCache { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+
+    private List<ExpiringDocument>? _expiring;
+    private int _daysAhead = 30;
+    private int _cachedCount;
+    private bool _isRefreshing;
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        _expiring = await ExtractionCache.FindExpiringAsync(_daysAhead);
+        _cachedCount = await ExtractionCache.GetCachedCountAsync();
+    }
+
+    private async Task RefreshCacheAsync()
+    {
+        _isRefreshing = true;
+        StateHasChanged();
+
+        try
+        {
+            var summary = await ExtractionCache.RefreshAllAsync();
+            Snackbar.Add($"Cache refreshed: {summary.Processed} processed, {summary.Classified} classified, {summary.Skipped} skipped.",
+                Severity.Success);
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Refresh failed: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isRefreshing = false;
+        }
+    }
+
+    private static Color CategoryColor(DocumentCategory category) => category switch
+    {
+        DocumentCategory.Insurance => Color.Primary,
+        DocumentCategory.Contract => Color.Secondary,
+        DocumentCategory.Invoice => Color.Tertiary,
+        _ => Color.Default
+    };
+
+    private static Color DaysLeftColor(int daysLeft) => daysLeft switch
+    {
+        <= 7 => Color.Error,
+        <= 14 => Color.Warning,
+        _ => Color.Success
+    };
+}

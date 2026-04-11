@@ -37,7 +37,6 @@ _Nothing planned._
 ## Future
 
 - [ ] (2026-04-04) Evaluate CheapHelpers for shared plumbing and potential OCR delegation [plan]
-- [ ] (2026-04-04) Automated workflows — notify on expiring documents within 30 days [plan]
 
 ## Done
 
@@ -61,3 +60,4 @@ _Nothing planned._
 - [x] (2026-04-08 → 2026-04-11) Blazor Server UI with MudBlazor (dashboard, documents, search, tags, detail view with Vision OCR trigger) [plan]
 - [x] (2026-04-11 → 2026-04-11) Structured data extraction — Invoice/Insurance/Contract typed models via Claude IChatClient.GetResponseAsync<T> [plan]
 - [x] (2026-04-11 → 2026-04-11) Multi-LLM support — Llm.Provider config switch (Anthropic/Ollama) with OllamaSharp, refactored VisionOcrService to read Anthropic creds from LlmOptions [plan]
+- [x] (2026-04-11 → 2026-04-11) Expiry workflow — SQLite extraction cache via EF Core, find_expiring_documents + refresh_extraction_cache MCP tools, Expiring Blazor page with dashboard card [plan]
