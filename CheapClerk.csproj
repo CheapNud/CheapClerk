@@ -8,6 +8,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="CheapClerk.Web\**" />
+    <Content Remove="CheapClerk.Web\**" />
+    <EmbeddedResource Remove="CheapClerk.Web\**" />
+    <None Remove="CheapClerk.Web\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Anthropic" Version="12.11.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.5" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.5" />

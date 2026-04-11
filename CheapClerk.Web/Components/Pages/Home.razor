@@ -1,0 +1,97 @@
+@page "/"
+
+<PageTitle>CheapClerk — Dashboard</PageTitle>
+
+<MudText Typo="Typo.h4" GutterBottom="true">Dashboard</MudText>
+<MudText Typo="Typo.body1" Class="mb-6" Style="opacity: 0.6;">Your household documents at a glance.</MudText>
+
+<MudGrid>
+    <MudItem xs="12" md="4">
+        <MudCard Elevation="0" Style="border: 1px solid rgba(255,255,255,0.06);">
+            <MudCardContent Class="d-flex align-center gap-4">
+                <MudIcon Icon="@Icons.Material.Filled.Description" Color="Color.Primary" Size="Size.Large" />
+                <div>
+                    <MudText Typo="Typo.h4">@_documentCount</MudText>
+                    <MudText Typo="Typo.body2" Style="opacity: 0.6;">Documents</MudText>
+                </div>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+    <MudItem xs="12" md="4">
+        <MudCard Elevation="0" Style="border: 1px solid rgba(255,255,255,0.06);">
+            <MudCardContent Class="d-flex align-center gap-4">
+                <MudIcon Icon="@Icons.Material.Filled.Label" Color="Color.Secondary" Size="Size.Large" />
+                <div>
+                    <MudText Typo="Typo.h4">@_tagCount</MudText>
+                    <MudText Typo="Typo.body2" Style="opacity: 0.6;">Tags</MudText>
+                </div>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+    <MudItem xs="12" md="4">
+        <MudCard Elevation="0" Style="border: 1px solid rgba(255,255,255,0.06);">
+            <MudCardContent Class="d-flex align-center gap-4">
+                <MudIcon Icon="@Icons.Material.Filled.People" Color="Color.Tertiary" Size="Size.Large" />
+                <div>
+                    <MudText Typo="Typo.h4">@_correspondentCount</MudText>
+                    <MudText Typo="Typo.body2" Style="opacity: 0.6;">Correspondents</MudText>
+                </div>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+</MudGrid>
+
+<MudText Typo="Typo.h5" Class="mt-8 mb-4">Recently Added</MudText>
+
+@if (_recentDocuments is null)
+{
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+}
+else if (_recentDocuments.Count == 0)
+{
+    <MudAlert Severity="Severity.Info">No documents found. Start scanning!</MudAlert>
+}
+else
+{
+    <MudTable Items="_recentDocuments" Hover="true" Elevation="0" Dense="true"
+              Style="border: 1px solid rgba(255,255,255,0.06);">
+        <HeaderContent>
+            <MudTh>ID</MudTh>
+            <MudTh>Title</MudTh>
+            <MudTh>Added</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.Id</MudTd>
+            <MudTd>
+                <MudLink Href="@($"/documents/{context.Id}")">@context.Title</MudLink>
+            </MudTd>
+            <MudTd>@(context.Added?.ToString("yyyy-MM-dd") ?? "—")</MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+
+@code {
+    [Inject] private PaperlessClient PaperlessClient { get; set; } = null!;
+
+    private List<PaperlessDocument>? _recentDocuments;
+    private int _documentCount;
+    private int _tagCount;
+    private int _correspondentCount;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var docsTask = PaperlessClient.ListDocumentsAsync(maxResults: 10);
+        var tagsTask = PaperlessClient.GetTagsAsync();
+        var corrsTask = PaperlessClient.GetCorrespondentsAsync();
+
+        await Task.WhenAll(docsTask, tagsTask, corrsTask);
+
+        _recentDocuments = await docsTask;
+        var tags = await tagsTask;
+        var correspondents = await corrsTask;
+
+        _documentCount = _recentDocuments.Count;
+        _tagCount = tags.Count;
+        _correspondentCount = correspondents.Count;
+    }
+}

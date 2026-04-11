@@ -1,0 +1,109 @@
+@page "/documents"
+
+<PageTitle>CheapClerk — Documents</PageTitle>
+
+<MudText Typo="Typo.h4" GutterBottom="true">Documents</MudText>
+
+<MudGrid Class="mb-4">
+    <MudItem xs="12" sm="4">
+        <MudSelect T="string" Label="Correspondent" Value="_selectedCorrespondent" ValueChanged="OnCorrespondentChanged"
+                   Clearable="true" Variant="Variant.Outlined" Dense="true">
+            @if (_correspondents is not null)
+            {
+                @foreach (var corr in _correspondents)
+                {
+                    <MudSelectItem T="string" Value="@corr.Name">@corr.Name (@corr.DocumentCount)</MudSelectItem>
+                }
+            }
+        </MudSelect>
+    </MudItem>
+    <MudItem xs="12" sm="4">
+        <MudSelect T="string" Label="Tag" Value="_selectedTag" ValueChanged="OnTagChanged"
+                   Clearable="true" Variant="Variant.Outlined" Dense="true">
+            @if (_tags is not null)
+            {
+                @foreach (var paperlessTag in _tags)
+                {
+                    <MudSelectItem T="string" Value="@paperlessTag.Name">@paperlessTag.Name (@paperlessTag.DocumentCount)</MudSelectItem>
+                }
+            }
+        </MudSelect>
+    </MudItem>
+    <MudItem xs="12" sm="4" Class="d-flex align-end">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="LoadDocumentsAsync"
+                   Disabled="_isLoading" StartIcon="@Icons.Material.Filled.Refresh">
+            @(_isLoading ? "Loading..." : "Apply")
+        </MudButton>
+    </MudItem>
+</MudGrid>
+
+@if (_isLoading)
+{
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+}
+else if (_documents is not null)
+{
+    <MudTable Items="_documents" Hover="true" Elevation="0" Dense="true"
+              Style="border: 1px solid rgba(255,255,255,0.06);">
+        <HeaderContent>
+            <MudTh>ID</MudTh>
+            <MudTh>Title</MudTh>
+            <MudTh>Created</MudTh>
+            <MudTh>Added</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.Id</MudTd>
+            <MudTd>
+                <MudLink Href="@($"/documents/{context.Id}")">@context.Title</MudLink>
+            </MudTd>
+            <MudTd>@(context.Created?.ToString("yyyy-MM-dd") ?? "—")</MudTd>
+            <MudTd>@(context.Added?.ToString("yyyy-MM-dd") ?? "—")</MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+
+@code {
+    [Inject] private PaperlessClient PaperlessClient { get; set; } = null!;
+
+    private List<PaperlessDocument>? _documents;
+    private List<PaperlessTag>? _tags;
+    private List<PaperlessCorrespondent>? _correspondents;
+    private string? _selectedCorrespondent;
+    private string? _selectedTag;
+    private bool _isLoading;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var tagsTask = PaperlessClient.GetTagsAsync();
+        var corrsTask = PaperlessClient.GetCorrespondentsAsync();
+        var docsTask = PaperlessClient.ListDocumentsAsync(maxResults: 50);
+
+        await Task.WhenAll(tagsTask, corrsTask, docsTask);
+
+        _tags = await tagsTask;
+        _correspondents = await corrsTask;
+        _documents = await docsTask;
+    }
+
+    private async Task OnCorrespondentChanged(string corrName)
+    {
+        _selectedCorrespondent = corrName;
+        await LoadDocumentsAsync();
+    }
+
+    private async Task OnTagChanged(string tagName)
+    {
+        _selectedTag = tagName;
+        await LoadDocumentsAsync();
+    }
+
+    private async Task LoadDocumentsAsync()
+    {
+        _isLoading = true;
+        _documents = await PaperlessClient.ListDocumentsAsync(
+            correspondentName: _selectedCorrespondent,
+            tagName: _selectedTag,
+            maxResults: 50);
+        _isLoading = false;
+    }
+}

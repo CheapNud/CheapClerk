@@ -1,0 +1,106 @@
+@page "/search"
+
+<PageTitle>CheapClerk — Search</PageTitle>
+
+<MudText Typo="Typo.h4" GutterBottom="true">Search Documents</MudText>
+
+<MudGrid Class="mb-4">
+    <MudItem xs="12" sm="6">
+        <MudTextField T="string" @bind-Value="_searchQuery" Label="Search query" Variant="Variant.Outlined"
+                      Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search"
+                      OnAdornmentClick="SearchAsync" OnKeyDown="OnSearchKeyDown"
+                      Placeholder="e.g. home insurance deductible" />
+    </MudItem>
+    <MudItem xs="12" sm="3">
+        <MudSelect T="string" Label="Tag filter" Value="_tagFilter" ValueChanged="@(v => { _tagFilter = v; })"
+                   Clearable="true" Variant="Variant.Outlined">
+            @if (_tags is not null)
+            {
+                @foreach (var paperlessTag in _tags)
+                {
+                    <MudSelectItem T="string" Value="@paperlessTag.Name">@paperlessTag.Name</MudSelectItem>
+                }
+            }
+        </MudSelect>
+    </MudItem>
+    <MudItem xs="12" sm="3" Class="d-flex align-end">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SearchAsync"
+                   Disabled="_isSearching" FullWidth="true"
+                   StartIcon="@Icons.Material.Filled.Search">
+            @(_isSearching ? "Searching..." : "Search")
+        </MudButton>
+    </MudItem>
+</MudGrid>
+
+@if (_isSearching)
+{
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+}
+else if (_matches is not null)
+{
+    @if (_matches.Count == 0)
+    {
+        <MudAlert Severity="Severity.Info">No documents found matching "@_searchQuery".</MudAlert>
+    }
+    else
+    {
+        <MudText Typo="Typo.body2" Class="mb-3" Style="opacity: 0.6;">Found @_matches.Count document(s)</MudText>
+
+        @foreach (var match in _matches)
+        {
+            <MudCard Elevation="0" Class="mb-3" Style="border: 1px solid rgba(255,255,255,0.06);">
+                <MudCardContent>
+                    <MudLink Href="@($"/documents/{match.DocumentId}")" Typo="Typo.h6">@match.Title</MudLink>
+                    <div class="d-flex align-center gap-2 mt-1 mb-2">
+                        @if (match.Correspondent is not null)
+                        {
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Tertiary">@match.Correspondent</MudChip>
+                        }
+                        @foreach (var tagName in match.Tags)
+                        {
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary">@tagName</MudChip>
+                        }
+                        @if (match.Created.HasValue)
+                        {
+                            <MudText Typo="Typo.caption" Style="opacity: 0.5;">@match.Created.Value.ToString("yyyy-MM-dd")</MudText>
+                        }
+                    </div>
+                    @if (match.Excerpt is not null)
+                    {
+                        <MudText Typo="Typo.body2" Style="opacity: 0.7;">@match.Excerpt</MudText>
+                    }
+                </MudCardContent>
+            </MudCard>
+        }
+    }
+}
+
+@code {
+    [Inject] private PaperlessClient PaperlessClient { get; set; } = null!;
+
+    private string? _searchQuery;
+    private string? _tagFilter;
+    private List<DocumentMatch>? _matches;
+    private List<PaperlessTag>? _tags;
+    private bool _isSearching;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _tags = await PaperlessClient.GetTagsAsync();
+    }
+
+    private async Task OnSearchKeyDown(KeyboardEventArgs keyArgs)
+    {
+        if (keyArgs.Key == "Enter")
+            await SearchAsync();
+    }
+
+    private async Task SearchAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_searchQuery)) return;
+
+        _isSearching = true;
+        _matches = await PaperlessClient.SearchDocumentsAsync(_searchQuery, tagName: _tagFilter);
+        _isSearching = false;
+    }
+}

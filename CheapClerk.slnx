@@ -1,3 +1,4 @@
 <Solution>
   <Project Path="CheapClerk.csproj" />
+  <Project Path="CheapClerk.Web/CheapClerk.Web.csproj" />
 </Solution>

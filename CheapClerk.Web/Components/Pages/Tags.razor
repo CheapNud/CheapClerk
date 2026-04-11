@@ -1,0 +1,41 @@
+@page "/tags"
+
+<PageTitle>CheapClerk — Tags</PageTitle>
+
+<MudText Typo="Typo.h4" GutterBottom="true">Tags</MudText>
+
+@if (_tags is null)
+{
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+}
+else if (_tags.Count == 0)
+{
+    <MudAlert Severity="Severity.Info">No tags found in Paperless.</MudAlert>
+}
+else
+{
+    <MudTable Items="@_tags.OrderByDescending(t => t.DocumentCount)" Hover="true" Elevation="0" Dense="true"
+              Style="border: 1px solid rgba(255,255,255,0.06);">
+        <HeaderContent>
+            <MudTh>Tag</MudTh>
+            <MudTh>Documents</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary">@context.Name</MudChip>
+            </MudTd>
+            <MudTd>@context.DocumentCount</MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+
+@code {
+    [Inject] private PaperlessClient PaperlessClient { get; set; } = null!;
+
+    private List<PaperlessTag>? _tags;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _tags = await PaperlessClient.GetTagsAsync();
+    }
+}

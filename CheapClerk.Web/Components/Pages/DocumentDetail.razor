@@ -1,0 +1,161 @@
+@page "/documents/{DocumentId:int}"
+
+<PageTitle>CheapClerk — Document @DocumentId</PageTitle>
+
+@if (_doc is null && !_notFound)
+{
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+}
+else if (_notFound)
+{
+    <MudAlert Severity="Severity.Warning">Document @DocumentId not found.</MudAlert>
+}
+else
+{
+    <MudText Typo="Typo.h4" GutterBottom="true">@_doc!.Title</MudText>
+
+    <MudGrid>
+        <MudItem xs="12" md="4">
+            <MudCard Elevation="0" Style="border: 1px solid rgba(255,255,255,0.06);">
+                <MudCardContent>
+                    <MudText Typo="Typo.h6" GutterBottom="true">Metadata</MudText>
+
+                    <MudSimpleTable Dense="true" Elevation="0">
+                        <tbody>
+                            <tr><td><strong>Document ID</strong></td><td>@_doc!.Id</td></tr>
+                            @if (_correspondentName is not null)
+                            {
+                                <tr><td><strong>Correspondent</strong></td><td>@_correspondentName</td></tr>
+                            }
+                            @if (_doc.Created.HasValue)
+                            {
+                                <tr><td><strong>Created</strong></td><td>@_doc.Created.Value.ToString("yyyy-MM-dd")</td></tr>
+                            }
+                            @if (_doc.Added.HasValue)
+                            {
+                                <tr><td><strong>Added</strong></td><td>@_doc.Added.Value.ToString("yyyy-MM-dd")</td></tr>
+                            }
+                            @if (_doc.OriginalFileName is not null)
+                            {
+                                <tr><td><strong>Original File</strong></td><td>@_doc.OriginalFileName</td></tr>
+                            }
+                            @if (_doc.ArchiveSerialNumber.HasValue)
+                            {
+                                <tr><td><strong>ASN</strong></td><td>@_doc.ArchiveSerialNumber</td></tr>
+                            }
+                        </tbody>
+                    </MudSimpleTable>
+
+                    @if (_tagNames.Count > 0)
+                    {
+                        <MudText Typo="Typo.subtitle2" Class="mt-4 mb-2">Tags</MudText>
+                        @foreach (var tagName in _tagNames)
+                        {
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary" Class="mr-1 mb-1">@tagName</MudChip>
+                        }
+                    }
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <MudItem xs="12" md="8">
+            <MudCard Elevation="0" Style="border: 1px solid rgba(255,255,255,0.06);">
+                <MudCardContent>
+                    <div class="d-flex align-center justify-space-between mb-4">
+                        <MudText Typo="Typo.h6">Content</MudText>
+                        <MudButton Variant="Variant.Outlined" Size="Size.Small" Color="Color.Secondary"
+                                   OnClick="RunVisionOcrAsync" Disabled="_isRunningVision"
+                                   StartIcon="@Icons.Material.Filled.RemoveRedEye">
+                            @(_isRunningVision ? "Running Vision OCR..." : "Vision OCR")
+                        </MudButton>
+                    </div>
+
+                    @if (_documentContent is null)
+                    {
+                        <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+                    }
+                    else if (string.IsNullOrWhiteSpace(_documentContent))
+                    {
+                        <MudAlert Severity="Severity.Info">No text content available.</MudAlert>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2" Style="white-space: pre-wrap; font-family: monospace; opacity: 0.85;">@_documentContent</MudText>
+                    }
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+}
+
+@code {
+    [Parameter] public int DocumentId { get; set; }
+
+    [Inject] private PaperlessClient PaperlessClient { get; set; } = null!;
+    [Inject] private OcrQualityChecker OcrQualityChecker { get; set; } = null!;
+    [Inject] private VisionOcrService VisionOcrService { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+
+    private PaperlessDocument? _doc;
+    private string? _documentContent;
+    private string? _correspondentName;
+    private List<string> _tagNames = [];
+    private bool _notFound;
+    private bool _isRunningVision;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _doc = await PaperlessClient.GetDocumentAsync(DocumentId);
+        if (_doc is null)
+        {
+            _notFound = true;
+            return;
+        }
+
+        _documentContent = _doc.Content;
+
+        var tagLookup = await PaperlessClient.GetTagLookupAsync();
+        var correspondentLookup = await PaperlessClient.GetCorrespondentLookupAsync();
+
+        _tagNames = _doc.Tags
+            .Where(tagLookup.ContainsKey)
+            .Select(tagId => tagLookup[tagId])
+            .ToList();
+
+        if (_doc.CorrespondentId.HasValue && correspondentLookup.TryGetValue(_doc.CorrespondentId.Value, out var corrName))
+            _correspondentName = corrName;
+    }
+
+    private async Task RunVisionOcrAsync()
+    {
+        if (!VisionOcrService.IsEnabled)
+        {
+            Snackbar.Add("Vision OCR is not configured.", Severity.Warning);
+            return;
+        }
+
+        _isRunningVision = true;
+        StateHasChanged();
+
+        var originalBytes = await PaperlessClient.DownloadOriginalAsync(DocumentId);
+        if (originalBytes is null)
+        {
+            Snackbar.Add("Failed to download original document.", Severity.Error);
+            _isRunningVision = false;
+            return;
+        }
+
+        var visionText = await VisionOcrService.ExtractTextFromImageAsync(originalBytes);
+        if (visionText is not null)
+        {
+            _documentContent = visionText;
+            Snackbar.Add($"Vision OCR extracted {visionText.Length} characters.", Severity.Success);
+        }
+        else
+        {
+            Snackbar.Add("Vision OCR returned no text.", Severity.Warning);
+        }
+
+        _isRunningVision = false;
+    }
+}

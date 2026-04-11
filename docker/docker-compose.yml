@@ -31,6 +31,22 @@ services:
       PAPERLESS_TASK_WORKERS: 2
       PAPERLESS_CONSUMER_RECURSIVE: "true"
 
+  cheapclerk-web:
+    image: ghcr.io/cheapnud/cheapclerk-web:latest
+    container_name: cheapclerk-web
+    restart: unless-stopped
+    depends_on:
+      - paperless
+    environment:
+      - ASPNETCORE_URLS=http://+:5000
+      - ASPNETCORE_ENVIRONMENT=Production
+      - Paperless__BaseUrl=http://paperless:8000
+      - Paperless__ApiToken=${PAPERLESS_API_TOKEN}
+      - Serilog__WriteTo__0__Name=Seq
+      - Serilog__WriteTo__0__Args__serverUrl=http://192.168.1.15:5341
+    ports:
+      - "5030:5000"
+
 volumes:
   paperless-redis:
   paperless-data:
