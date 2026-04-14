@@ -20,7 +20,7 @@ public static class LlmServiceExtensions
             {
                 LlmProvider.Ollama => BuildOllamaClient(llmOptions.Ollama),
                 LlmProvider.Anthropic => BuildAnthropicClient(llmOptions.Anthropic),
-                _ => throw new InvalidOperationException($"Unknown LLM provider: {llmOptions.Provider}")
+                _ => new NoOpChatClient()
             };
         });
 
@@ -30,7 +30,7 @@ public static class LlmServiceExtensions
     private static IChatClient BuildAnthropicClient(AnthropicProviderOptions opts)
     {
         if (string.IsNullOrWhiteSpace(opts.ApiKey))
-            throw new InvalidOperationException("Anthropic API key is not configured (Llm:Anthropic:ApiKey).");
+            return new NoOpChatClient();
 
         var anthropic = new AnthropicClient(new ClientOptions { ApiKey = opts.ApiKey });
         return anthropic.AsIChatClient(opts.Model);
@@ -40,5 +40,27 @@ public static class LlmServiceExtensions
     {
         var ollamaClient = new OllamaApiClient(new Uri(opts.BaseUrl), opts.Model);
         return ollamaClient;
+    }
+
+    /// <summary>Placeholder client that returns empty responses when no LLM provider is configured.</summary>
+    private sealed class NoOpChatClient : IChatClient
+    {
+        public ChatClientMetadata Metadata { get; } = new("noop");
+
+        public Task<ChatResponse> GetResponseAsync(
+            IEnumerable<ChatMessage> chatMessages,
+            ChatOptions? chatOptions = null,
+            CancellationToken cancellationToken = default)
+            => Task.FromResult(new ChatResponse([new ChatMessage(ChatRole.Assistant, "LLM provider is not configured.")]));
+
+        public IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
+            IEnumerable<ChatMessage> chatMessages,
+            ChatOptions? chatOptions = null,
+            CancellationToken cancellationToken = default)
+            => AsyncEnumerable.Empty<ChatResponseUpdate>();
+
+        public object? GetService(Type serviceType, object? serviceKey = null) => null;
+
+        public void Dispose() { }
     }
 }
