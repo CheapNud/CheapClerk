@@ -32,7 +32,8 @@ _Nothing blocking._
 
 ## Planned
 
-_Nothing planned._
+- [ ] (2026-04-15) Deploy Paperless-ngx on Megaton and configure PAPERLESS_API_TOKEN for CheapClerk [plan]
+- [ ] (2026-04-15) Set up GitHub Actions workflow to build and push Docker image to GHCR on release [plan]
 
 ## Future
 
@@ -61,3 +62,4 @@ _Nothing planned._
 - [x] (2026-04-11 → 2026-04-11) Multi-LLM support — Llm.Provider config switch (Anthropic/Ollama) with OllamaSharp, refactored VisionOcrService to read Anthropic creds from LlmOptions [plan]
 - [x] (2026-04-11 → 2026-04-11) Expiry workflow — SQLite extraction cache via EF Core, find_expiring_documents + refresh_extraction_cache MCP tools, Expiring Blazor page with dashboard card [plan]
 - [x] (2026-04-04 → 2026-04-11) Evaluate CheapHelpers — decided NOT to adopt. Marginal wins (SlidingExpirationCache, email) don't justify pulling SendGrid/MailKit/ClosedXML/iText/GoogleApi transitives. OCR is Azure-Vision-only (we use Claude). If email alerts are needed later, reference MailKit directly [plan]
+- [x] (2026-04-15 → 2026-04-15) Initial deploy to Megaton — Docker build on-host, port 5030, NoOpChatClient fallback for missing API key, Error.razor fix for .NET 11 preview [plan]
