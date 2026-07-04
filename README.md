@@ -27,10 +27,10 @@ Physical documents
         │  scan (Paperless mobile app / flatbed scanner)
         ▼
 ┌─────────────────────────────┐
-│  Paperless-ngx              │  Docker on Megaton (192.168.1.x)
-│  • Tesseract OCR            │  Behind Hidden-Valley nginx reverse proxy
-│  • Full-text search (FTS)   │
-│  • REST API (:8000)         │
+│  Paperless-ngx              │  Docker on Sierra-Madre (:8010)
+│  • Tesseract OCR            │  Media on mirrored bfa pool (RAID10)
+│  • Full-text search (FTS)   │  Database on Vault-Tec PostgreSQL
+│  • REST API                 │
 │  • Tagging & correspondents │
 └─────────────┬───────────────┘
               │ HTTP (internal network)
@@ -264,51 +264,17 @@ Add to `~/.claude.json` (global) or `.claude/settings.json` (project):
 
 ## Paperless-ngx Docker Compose
 
-Deploy on Megaton alongside existing containers:
+Deployed on Sierra-Madre at `/opt/paperless` (see `docker/docker-compose.yml` for the reference file). Key deployment choices:
 
-```yaml
-services:
-  paperless-broker:
-    image: redis:7
-    container_name: paperless-broker
-    restart: unless-stopped
-    volumes:
-      - paperless-redis:/data
-
-  paperless:
-    image: ghcr.io/paperless-ngx/paperless-ngx:latest
-    container_name: paperless
-    restart: unless-stopped
-    depends_on:
-      - paperless-broker
-    ports:
-      - "8000:8000"
-    volumes:
-      - paperless-data:/usr/src/paperless/data
-      - paperless-media:/usr/src/paperless/media
-      - paperless-export:/usr/src/paperless/export
-      - paperless-consume:/usr/src/paperless/consume
-    environment:
-      PAPERLESS_REDIS: redis://paperless-broker:6379
-      PAPERLESS_OCR_LANGUAGE: nld+eng+fra+deu
-      PAPERLESS_TIME_ZONE: Europe/Brussels
-      PAPERLESS_SECRET_KEY: <generate-a-random-key>
-      PAPERLESS_ADMIN_USER: brecht
-      PAPERLESS_ADMIN_PASSWORD: <set-on-first-run>
-      PAPERLESS_URL: https://docs.cheaplues.be
-      PAPERLESS_OCR_MODE: skip_noarchive
-      PAPERLESS_TASK_WORKERS: 2
-      PAPERLESS_CONSUMER_RECURSIVE: "true"
-
-volumes:
-  paperless-redis:
-  paperless-data:
-  paperless-media:
-  paperless-export:
-  paperless-consume:
-```
+- **Port 8010** on the host (8000 was taken by Portainer's edge tunnel)
+- **Media and export on `/mnt/bfa-appdata/paperless`** — a mirrored ZFS pool, because scanned originals are the one copy that must survive a disk failure. Data/consume/redis stay in local Docker volumes (regenerable).
+- **PostgreSQL on Vault-Tec** instead of SQLite, following the pattern of the other self-hosted services
+- **Secrets in `/opt/paperless/.env`** (`PAPERLESS_DBPASS`, `PAPERLESS_SECRET_KEY`, `PAPERLESS_ADMIN_PASSWORD`)
+- **`PAPERLESS_OCR_LANGUAGES: nld fra deu`** installs the tesseract language packs at container start (the image only ships English data; `PAPERLESS_OCR_LANGUAGE` alone fails the startup check). If the container comes up unhealthy right after an image update, restart it once — the language install can race the startup check on first boot.
 
 OCR languages: Dutch (primary), English, French, German — covers Belgian household documents.
+
+The `cheapclerk-web` container runs separately on Megaton (`/opt/blazor-apps/cheapclerk`) and points at Paperless via `Paperless__BaseUrl` + an API token generated with `manage.py drf_create_token`.
 
 ---
 

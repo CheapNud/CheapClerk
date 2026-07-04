@@ -1,6 +1,6 @@
 <!--
   TODO.md — CheapClerk project work tracker
-  Last updated: 2026-04-11 (extraction)
+  Last updated: 2026-07-04 (Paperless-ngx deployed to Sierra-Madre)
 
   RULES FOR AI AGENTS:
   - Update the "Last updated" date above whenever you modify this file
@@ -32,7 +32,13 @@ _Nothing blocking._
 
 ## Planned
 
-- [ ] (2026-04-15) Deploy Paperless-ngx on Megaton and configure PAPERLESS_API_TOKEN for CheapClerk [plan]
+- [ ] (2026-07-04) Regenerate GitHub mirror PAT with workflow scope and recreate Gitea push mirror [bug]
+  - Mirror push fails (GH013) when commits touch .github/workflows/; credentials can't be edited in place
+  - Until fixed: push workflow changes to GitHub first, then fast-forward Gitea
+- [x] (2026-04-15 → 2026-07-04) Deploy Paperless-ngx and configure PAPERLESS_API_TOKEN for CheapClerk [plan]
+  - Target changed Megaton → Sierra-Madre (Megaton RAM/disk exhausted; documents belong on mirrored bfa pool, not ssd-vms RAID0)
+  - Stack at /opt/paperless on Sierra-Madre (:8010), media/export on /mnt/bfa-appdata/paperless, DB on Vault-Tec Postgres
+  - cheapclerk-web on Megaton repointed via Paperless__BaseUrl + token in /opt/blazor-apps/cheapclerk/.env
 
 ## Future
 

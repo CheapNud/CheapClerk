@@ -1,3 +1,8 @@
+# Reference for the live deployment — services run on TWO hosts:
+#   paperless + paperless-broker  → Sierra-Madre, /opt/paperless
+#   cheapclerk-web                → Megaton, /opt/blazor-apps/cheapclerk
+# Secrets live in a .env next to each compose file, never in this repo.
+
 services:
   paperless-broker:
     image: redis:7
@@ -13,43 +18,54 @@ services:
     depends_on:
       - paperless-broker
     ports:
-      - "8000:8000"
+      - "8010:8000"
     volumes:
       - paperless-data:/usr/src/paperless/data
-      - paperless-media:/usr/src/paperless/media
-      - paperless-export:/usr/src/paperless/export
+      # Originals + archive PDFs on the mirrored bfa pool — must survive disk loss
+      - /mnt/bfa-appdata/paperless/media:/usr/src/paperless/media
+      - /mnt/bfa-appdata/paperless/export:/usr/src/paperless/export
       - paperless-consume:/usr/src/paperless/consume
     environment:
       PAPERLESS_REDIS: redis://paperless-broker:6379
+      PAPERLESS_DBHOST: 192.168.1.14
+      PAPERLESS_DBNAME: paperless
+      PAPERLESS_DBUSER: paperless
+      PAPERLESS_DBPASS: ${PAPERLESS_DBPASS}
+      PAPERLESS_SECRET_KEY: ${PAPERLESS_SECRET_KEY}
+      PAPERLESS_ADMIN_USER: brecht
+      PAPERLESS_ADMIN_PASSWORD: ${PAPERLESS_ADMIN_PASSWORD}
+      PAPERLESS_URL: http://192.168.1.15:8010
+      # Image ships English only; this installs the extra tesseract packs at boot
+      PAPERLESS_OCR_LANGUAGES: nld fra deu
       PAPERLESS_OCR_LANGUAGE: nld+eng+fra+deu
       PAPERLESS_TIME_ZONE: Europe/Brussels
-      PAPERLESS_SECRET_KEY: changeme-generate-a-random-key
-      PAPERLESS_ADMIN_USER: brecht
-      PAPERLESS_ADMIN_PASSWORD: changeme
-      PAPERLESS_URL: https://docs.cheaplues.be
-      PAPERLESS_OCR_MODE: skip_noarchive
+      PAPERLESS_OCR_MODE: skip
       PAPERLESS_TASK_WORKERS: 2
       PAPERLESS_CONSUMER_RECURSIVE: "true"
 
+  # Runs on Megaton, not alongside paperless — kept here as reference only
   cheapclerk-web:
     image: ghcr.io/cheapnud/cheapclerk-web:latest
     container_name: cheapclerk-web
     restart: unless-stopped
-    depends_on:
-      - paperless
+    labels:
+      - wud.watch=true
     environment:
       - ASPNETCORE_URLS=http://+:5000
       - ASPNETCORE_ENVIRONMENT=Production
-      - Paperless__BaseUrl=http://paperless:8000
+      - Paperless__BaseUrl=http://192.168.1.15:8010
       - Paperless__ApiToken=${PAPERLESS_API_TOKEN}
       - Serilog__WriteTo__0__Name=Seq
       - Serilog__WriteTo__0__Args__serverUrl=http://192.168.1.15:5341
+    volumes:
+      - cheapclerk-data:/app/data
+      - dataprotection-keys:/root/.aspnet/DataProtection-Keys
     ports:
       - "5030:5000"
 
 volumes:
   paperless-redis:
   paperless-data:
-  paperless-media:
-  paperless-export:
   paperless-consume:
+  cheapclerk-data:
+  dataprotection-keys:
