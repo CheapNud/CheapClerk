@@ -32,7 +32,7 @@ services:
       PAPERLESS_DBUSER: paperless
       PAPERLESS_DBPASS: ${PAPERLESS_DBPASS}
       PAPERLESS_SECRET_KEY: ${PAPERLESS_SECRET_KEY}
-      PAPERLESS_ADMIN_USER: brecht
+      PAPERLESS_ADMIN_USER: elijah
       PAPERLESS_ADMIN_PASSWORD: ${PAPERLESS_ADMIN_PASSWORD}
       PAPERLESS_URL: http://192.168.1.15:8010
       # Image ships English only; this installs the extra tesseract packs at boot
