@@ -12,6 +12,7 @@ public sealed class InboxProcessorService(
     VisionOcrService visionOcrService,
     TagContextFactory tagContextFactory,
     ClassificationApplier applier,
+    SuggestionStore suggestionStore,
     IOptions<ClassificationOptions> classificationOptions,
     ILogger<InboxProcessorService> logger)
 {
@@ -89,6 +90,11 @@ public sealed class InboxProcessorService(
                     if (classification is null || classification.Confidence < _options.MinConfidence)
                     {
                         outcome.Confidence = classification?.Confidence ?? 0;
+
+                        if (classification is not null)
+                        {
+                            await suggestionStore.UpsertAsync(doc.Id, classification, cancellationToken);
+                        }
 
                         var lowRoadTags = doc.Tags
                             .Where(tagId => tagId != tagContext.InboxTagId)

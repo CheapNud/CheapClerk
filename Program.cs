@@ -41,6 +41,7 @@ builder.Services.AddSingleton<ExtractionCacheService>();
 builder.Services.AddSingleton<DocumentClassifierService>();
 builder.Services.AddSingleton<TagContextFactory>();
 builder.Services.AddSingleton<ClassificationApplier>();
+builder.Services.AddSingleton<SuggestionStore>();
 builder.Services.AddSingleton<InboxProcessorService>();
 
 builder.Services.AddMcpServer()
