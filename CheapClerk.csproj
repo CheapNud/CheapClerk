@@ -5,8 +5,6 @@
     <TargetFramework>net11.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,6 +12,10 @@
     <Content Remove="CheapClerk.Web\**" />
     <EmbeddedResource Remove="CheapClerk.Web\**" />
     <None Remove="CheapClerk.Web\**" />
+    <Compile Remove="CheapClerk.Tests\**" />
+    <Content Remove="CheapClerk.Tests\**" />
+    <EmbeddedResource Remove="CheapClerk.Tests\**" />
+    <None Remove="CheapClerk.Tests\**" />
   </ItemGroup>
 
   <ItemGroup>
