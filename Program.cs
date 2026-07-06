@@ -14,11 +14,13 @@ var paperlessSection = builder.Configuration.GetSection(PaperlessOptions.Section
 var visionSection = builder.Configuration.GetSection(VisionFallbackOptions.SectionName);
 var llmSection = builder.Configuration.GetSection(LlmOptions.SectionName);
 var cacheSection = builder.Configuration.GetSection(CacheOptions.SectionName);
+var classificationSection = builder.Configuration.GetSection(ClassificationOptions.SectionName);
 
 builder.Services.Configure<PaperlessOptions>(paperlessSection);
 builder.Services.Configure<VisionFallbackOptions>(visionSection);
 builder.Services.Configure<LlmOptions>(llmSection);
 builder.Services.Configure<CacheOptions>(cacheSection);
+builder.Services.Configure<ClassificationOptions>(classificationSection);
 builder.Services.AddConfiguredChatClient();
 
 var cacheOptions = cacheSection.Get<CacheOptions>() ?? new CacheOptions();
@@ -36,6 +38,8 @@ builder.Services.AddSingleton<OcrQualityChecker>();
 builder.Services.AddSingleton<VisionOcrService>();
 builder.Services.AddSingleton<StructuredExtractionService>();
 builder.Services.AddSingleton<ExtractionCacheService>();
+builder.Services.AddSingleton<DocumentClassifierService>();
+builder.Services.AddSingleton<InboxProcessorService>();
 
 builder.Services.AddMcpServer()
     .WithStdioServerTransport()
@@ -46,7 +50,8 @@ builder.Services.AddMcpServer()
     .WithTools<ListTagsTool>()
     .WithTools<ExtractStructuredDataTool>()
     .WithTools<FindExpiringDocumentsTool>()
-    .WithTools<RefreshExtractionCacheTool>();
+    .WithTools<RefreshExtractionCacheTool>()
+    .WithTools<ProcessInboxTool>();
 
 // MCP stdio uses stdin/stdout — log to stderr only
 builder.Logging.AddConsole(consoleOptions =>
