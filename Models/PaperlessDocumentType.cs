@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace CheapClerk.Models;
 
-public sealed class PaperlessTag
+public sealed class PaperlessDocumentType
 {
     [JsonPropertyName("id")]
     public int Id { get; set; }
@@ -12,7 +12,4 @@ public sealed class PaperlessTag
 
     [JsonPropertyName("document_count")]
     public int DocumentCount { get; set; }
-
-    [JsonPropertyName("is_inbox_tag")]
-    public bool IsInboxTag { get; set; }
 }

@@ -219,4 +219,68 @@ public sealed class PaperlessClient(
             return false;
         }
     }
+
+    public async Task<List<PaperlessDocumentType>> GetDocumentTypesAsync(CancellationToken cancellationToken = default)
+    {
+        var page = await GetAsync<PaperlessPage<PaperlessDocumentType>>(
+            "api/document_types/?page_size=100", cancellationToken);
+        return page?.Entries ?? [];
+    }
+
+    public async Task<Dictionary<int, string>> GetDocumentTypeLookupAsync(CancellationToken cancellationToken = default)
+    {
+        return await GetCachedLookupAsync("document_types", async ct =>
+        {
+            var documentTypes = await GetDocumentTypesAsync(ct);
+            return documentTypes.ToDictionary(dt => dt.Id, dt => dt.Name);
+        }, cancellationToken);
+    }
+
+    public async Task<PaperlessTag?> CreateTagAsync(
+        string tagName, bool isInboxTag = false, CancellationToken cancellationToken = default)
+    {
+        var created = await PostAsync<PaperlessTag>(
+            "api/tags/", new { name = tagName, is_inbox_tag = isInboxTag }, cancellationToken);
+        if (created is not null) _lookupCache.TryRemove("tags", out _);
+        return created;
+    }
+
+    public async Task<PaperlessCorrespondent?> CreateCorrespondentAsync(
+        string correspondentName, CancellationToken cancellationToken = default)
+    {
+        var created = await PostAsync<PaperlessCorrespondent>(
+            "api/correspondents/", new { name = correspondentName }, cancellationToken);
+        if (created is not null) _lookupCache.TryRemove("correspondents", out _);
+        return created;
+    }
+
+    public async Task<PaperlessDocumentType?> CreateDocumentTypeAsync(
+        string typeName, CancellationToken cancellationToken = default)
+    {
+        var created = await PostAsync<PaperlessDocumentType>(
+            "api/document_types/", new { name = typeName }, cancellationToken);
+        if (created is not null) _lookupCache.TryRemove("document_types", out _);
+        return created;
+    }
+
+    private async Task<T?> PostAsync<T>(string relativeUrl, object payload, CancellationToken cancellationToken)
+        where T : class
+    {
+        try
+        {
+            var postBody = new StringContent(
+                JsonSerializer.Serialize(payload, WriteJsonSettings),
+                System.Text.Encoding.UTF8,
+                "application/json");
+            var postReply = await httpClient.PostAsync(relativeUrl, postBody, cancellationToken);
+            postReply.EnsureSuccessStatusCode();
+            var json = await postReply.Content.ReadAsStringAsync(cancellationToken);
+            return JsonSerializer.Deserialize<T>(json, JsonSettings);
+        }
+        catch (HttpRequestException ex)
+        {
+            logger.LogError(ex, "Paperless API POST failed: {Url}", relativeUrl);
+            return null;
+        }
+    }
 }
