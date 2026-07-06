@@ -248,7 +248,7 @@ Add to `~/.claude.json` (global) or `.claude/settings.json` (project):
     "Provider": "Anthropic",
     "Anthropic": {
       "ApiKey": "<anthropic-api-key>",
-      "Model": "claude-sonnet-4-20250514"
+      "Model": "claude-haiku-4-5-20251001"
     },
     "Ollama": {
       "BaseUrl": "http://localhost:11434",

@@ -19,7 +19,7 @@ public enum LlmProvider
 public sealed class AnthropicProviderOptions
 {
     public string ApiKey { get; set; } = string.Empty;
-    public string Model { get; set; } = "claude-sonnet-4-20250514";
+    public string Model { get; set; } = "claude-haiku-4-5-20251001";
 }
 
 public sealed class OllamaProviderOptions
