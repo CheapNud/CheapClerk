@@ -137,6 +137,14 @@ public sealed class PaperlessClient(
         return page?.Entries ?? [];
     }
 
+    public async Task<List<PaperlessDocument>> ListDocumentsByTagIdAsync(
+        int tagId, int maxResults, CancellationToken cancellationToken = default)
+    {
+        var page = await GetAsync<PaperlessPage<PaperlessDocument>>(
+            $"api/documents/?tags__id={tagId}&page_size={maxResults}&ordering=added", cancellationToken);
+        return page?.Entries ?? [];
+    }
+
     public async Task<List<PaperlessTag>> GetTagsAsync(CancellationToken cancellationToken = default)
     {
         var page = await GetAsync<PaperlessPage<PaperlessTag>>("api/tags/?page_size=100", cancellationToken);

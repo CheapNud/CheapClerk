@@ -92,4 +92,17 @@ public sealed class PaperlessClientWriteTests
         var only = Assert.Single(documentTypes);
         Assert.Equal("Invoice", only.Name);
     }
+
+    [Fact]
+    public async Task ListDocumentsByTagId_FiltersByExactTagId()
+    {
+        var stub = new StubHttpHandler(_ => Ok("{\"count\":0,\"results\":[]}"));
+        var paperless = BuildClient(stub);
+
+        await paperless.ListDocumentsByTagIdAsync(12, maxResults: 20);
+
+        var sent = Assert.Single(stub.Requests);
+        Assert.Contains("tags__id=12", sent.RequestUri!.Query);
+        Assert.Contains("page_size=20", sent.RequestUri!.Query);
+    }
 }
