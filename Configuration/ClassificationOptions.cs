@@ -12,4 +12,5 @@ public sealed class ClassificationOptions
     public int MaxTagsPerDocument { get; set; } = 4;
     public bool AutoCreateTags { get; set; } = true;
     public int MaxDocumentsPerRun { get; set; } = 20;
+    public string? WebhookToken { get; set; }
 }

@@ -49,6 +49,9 @@ builder.Services.AddSingleton<StructuredExtractionService>();
 builder.Services.AddSingleton<ExtractionCacheService>();
 builder.Services.AddSingleton<DocumentClassifierService>();
 builder.Services.AddSingleton<InboxProcessorService>();
+builder.Services.AddSingleton(sp => new InboxRunCoordinator(
+    ct => sp.GetRequiredService<InboxProcessorService>().ProcessInboxAsync(ct),
+    sp.GetRequiredService<ILogger<InboxRunCoordinator>>()));
 builder.Services.AddHostedService<CheapClerk.Web.Services.InboxPollingService>();
 
 var app = builder.Build();
@@ -66,6 +69,29 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseAntiforgery();
+
+app.MapPost("/api/inbox/process", (HttpContext http,
+    Microsoft.Extensions.Options.IOptions<ClassificationOptions> classificationConfig,
+    InboxRunCoordinator coordinator) =>
+{
+    var suppliedToken = http.Request.Headers["X-Webhook-Token"].FirstOrDefault()
+        ?? http.Request.Query["token"].FirstOrDefault();
+
+    return WebhookAuth.Evaluate(classificationConfig.Value.WebhookToken, suppliedToken) switch
+    {
+        WebhookAuthOutcome.Accepted => Trigger(coordinator),
+        WebhookAuthOutcome.Unauthorized => Results.Unauthorized(),
+        // NotConfigured and anything unexpected fail closed
+        _ => Results.NotFound()
+    };
+
+    static IResult Trigger(InboxRunCoordinator coordinator)
+    {
+        coordinator.RequestRun();
+        return Results.Accepted();
+    }
+});
+
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
