@@ -140,9 +140,15 @@ public sealed class InboxProcessorService(
                         outcome.Error = "Failed to update document";
 
                     if (appliedClassification is not null)
+                    {
+                        // A confidently filed document no longer needs its parked suggestion
+                        await suggestionStore.DeleteAsync(doc.Id, cancellationToken);
                         applied++;
+                    }
                     else
+                    {
                         failed++;
+                    }
 
                     report.Outcomes.Add(outcome);
                 }

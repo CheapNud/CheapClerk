@@ -43,7 +43,7 @@ public sealed class ApplySuggestionTool
         var outcome = await reviewQueue.ApplyAsync(documentId, finalDecision, cancellationToken);
 
         return outcome.Applied
-            ? $"Filed as '{outcome.NewTitle}' with tags [{string.Join(", ", outcome.AppliedTags)}]"
+            ? $"Filed as '{outcome.NewTitle ?? "(title unchanged)"}' with tags [{string.Join(", ", outcome.AppliedTags)}]"
             : outcome.Error ?? "Apply failed for an unknown reason.";
     }
 }

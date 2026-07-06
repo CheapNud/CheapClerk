@@ -32,6 +32,11 @@ _Nothing blocking._
 
 ## Planned
 
+- [ ] (2026-07-06) Recover from cross-host entity-creation races in ClassificationApplier [audit]
+  - Duplicate-name POST 400s → CreateTagAsync null → tag silently dropped from the filed doc (Applied still true)
+  - On null create, force-refresh the lookup and rematch by name; same for correspondent/type
+- [ ] (2026-07-06) Review queue capped at MaxDocumentsPerRun with no "more" indicator [audit]
+  - GetQueueAsync reuses the batch knob as a page size; >20 queued docs are invisible in UI and MCP
 - [x] (2026-07-06 → 2026-07-06) Review queue — stored suggestions, /review page (accept/edit/re-run), 3 MCP tools [user]
   - Suggestions persisted in SQLite at low-confidence time; filing shares the applier with auto-classification
 - [x] (2026-07-06 → 2026-07-06) Instant webhook trigger — Paperless Document Added workflow → token-guarded endpoint → coalesced run [user]
