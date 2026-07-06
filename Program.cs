@@ -43,6 +43,7 @@ builder.Services.AddSingleton<TagContextFactory>();
 builder.Services.AddSingleton<ClassificationApplier>();
 builder.Services.AddSingleton<SuggestionStore>();
 builder.Services.AddSingleton<InboxProcessorService>();
+builder.Services.AddSingleton<ReviewQueueService>();
 
 builder.Services.AddMcpServer()
     .WithStdioServerTransport()
