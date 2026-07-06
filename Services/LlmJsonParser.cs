@@ -1,10 +1,14 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace CheapClerk.Services;
 
 public static class LlmJsonParser
 {
-    private static readonly JsonSerializerOptions LenientSettings = new(JsonSerializerDefaults.Web);
+    private static readonly JsonSerializerOptions LenientSettings = new(JsonSerializerDefaults.Web)
+    {
+        Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
+    };
 
     public static bool TryParse<T>(string? rawText, out T? parsed) where T : class
     {

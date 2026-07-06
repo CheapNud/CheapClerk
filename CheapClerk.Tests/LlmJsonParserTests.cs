@@ -11,6 +11,14 @@ public sealed class LlmJsonParserTests
         public double Confidence { get; set; }
     }
 
+    private enum ProbeCategory { Unknown, Invoice, Contract }
+
+    private sealed class ProbeTyped
+    {
+        public ProbeCategory Category { get; set; }
+        public double Confidence { get; set; }
+    }
+
     [Fact]
     public void TryParse_JsonInFencedCodeBlock_Parses()
     {
@@ -97,5 +105,16 @@ public sealed class LlmJsonParserTests
 
         Assert.False(LlmJsonParser.TryParse<ProbeDoc>("   ", out var parsedWhitespace));
         Assert.Null(parsedWhitespace);
+    }
+
+    [Fact]
+    public void TryParse_BindsStringEnumValues()
+    {
+        var fenced = "```json\n{\"category\":\"Invoice\",\"confidence\":0.9}\n```";
+
+        var ok = LlmJsonParser.TryParse<ProbeTyped>(fenced, out var parsed);
+
+        Assert.True(ok);
+        Assert.Equal(ProbeCategory.Invoice, parsed!.Category);
     }
 }
