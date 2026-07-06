@@ -34,6 +34,9 @@ _Nothing blocking._
 
 - [x] (2026-07-06 → 2026-07-06) Instant webhook trigger — Paperless Document Added workflow → token-guarded endpoint → coalesced run [user]
   - Poller demoted to safety net (60 min in prod); endpoint dark without Classification__WebhookToken
+- [ ] (2026-07-06) Typed SkippedReason so the coordinator can requeue webhook runs that lose the gate race [audit]
+  - Webhook run contending with a poller-held semaphore is silently consumed; doc waits for next poll
+  - Watch for "Triggered inbox run skipped: a processing run is already in progress" in Seq — promote if frequent
 - [ ] (2026-07-06) Paginate tag fetch or use name__iexact lookup in EnsureWorkflowTagsAsync [audit]
   - GetTagsAsync caps at page_size=100; once the taxonomy outgrows page 1, workflow tags stop resolving and every run aborts
   - AutoCreateTags makes this a when, not an if
