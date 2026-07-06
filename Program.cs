@@ -65,7 +65,7 @@ await using (var scope = app.Services.CreateAsyncScope())
 {
     var dbFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<ClerkDbContext>>();
     await using var db = await dbFactory.CreateDbContextAsync();
-    await db.Database.EnsureCreatedAsync();
+    await ClerkDbInitializer.EnsureSchemaAsync(db);
 }
 
 await app.RunAsync();
