@@ -1,6 +1,6 @@
 <!--
   TODO.md — CheapClerk project work tracker
-  Last updated: 2026-07-06 (webhook trigger documented)
+  Last updated: 2026-07-06 (review queue implemented)
 
   RULES FOR AI AGENTS:
   - Update the "Last updated" date above whenever you modify this file
@@ -32,6 +32,8 @@ _Nothing blocking._
 
 ## Planned
 
+- [x] (2026-07-06 → 2026-07-06) Review queue — stored suggestions, /review page (accept/edit/re-run), 3 MCP tools [user]
+  - Suggestions persisted in SQLite at low-confidence time; filing shares the applier with auto-classification
 - [x] (2026-07-06 → 2026-07-06) Instant webhook trigger — Paperless Document Added workflow → token-guarded endpoint → coalesced run [user]
   - Poller demoted to safety net (60 min in prod); endpoint dark without Classification__WebhookToken
 - [ ] (2026-07-06) Typed SkippedReason so the coordinator can requeue webhook runs that lose the gate race [audit]

@@ -133,6 +133,46 @@ async Task<string> ListTags()
 
 Returns: tag names with document counts.
 
+### `list_review_queue`
+List all documents awaiting review (tagged with `Needs Review`). Each entry includes the stored suggestion.
+
+```csharp
+[Tool("list_review_queue")]
+async Task<string> ListReviewQueue()
+```
+
+Returns: documents with their low-confidence suggestions (title, correspondent, document type, tags, date).
+
+### `apply_suggestion`
+Accept a queued document's suggestion (with optional field overrides) and file it. Removes the `Needs Review` tag and applies the metadata update to Paperless.
+
+```csharp
+[Tool("apply_suggestion")]
+async Task<string> ApplySuggestion(
+    int documentId,
+    string? title = null,
+    string? correspondent = null,
+    string? documentType = null,
+    string? tags = null,
+    string? documentDate = null   // yyyy-MM-dd
+)
+```
+
+Parameters are merged onto the stored suggestion; explicit values override the cached fields. Returns: confirmation of the filed document.
+
+### `reclassify_document`
+Re-run classification on a document already tagged with `Needs Review`, optionally forcing a fresh Vision OCR pass. Stores the new suggestion and updates the review queue.
+
+```csharp
+[Tool("reclassify_document")]
+async Task<string> ReclassifyDocument(
+    int documentId,
+    bool forceVisionOcr = false
+)
+```
+
+Returns: the refreshed suggestion (also stored as the document's latest).
+
 ---
 
 ## Vision OCR Fallback
@@ -303,6 +343,16 @@ Configuration (`Classification` section):
 | `WebhookToken` | (unset) | Shared secret for the webhook endpoint; unset = endpoint returns 404 |
 
 Classification uses the same `Llm.Provider` switch as extraction — without an Anthropic key (or Ollama endpoint) configured, the processor logs that the provider is unconfigured and leaves the inbox untouched.
+
+### Review queue
+
+Low-confidence documents — those below the `MinConfidence` threshold — receive a `Needs Review` tag instead of auto-filed suggestions. The classification run stores its LLM-generated suggestion (title, correspondent, document type, tags, document date) in a local SQLite cache at the moment of low-confidence detection; only the latest suggestion per document is retained.
+
+The `/review` page in CheapClerk.Web displays all queued documents awaiting review. Each shows the stored suggested fields (title, correspondent, document type, tags, date) in editable form. Three actions are available:
+
+- **Accept** — applies the suggestion (or user edits) through the same filing path as auto-classification: PATCH the metadata back to Paperless and remove the `Needs Review` tag.
+- **Edit** — modify any suggested field before accepting.
+- **Re-run** — request a fresh classification attempt with an optional `forceVisionOcr` flag to skip the quality check and re-extract text via Claude Vision even if Tesseract looks acceptable.
 
 ---
 
