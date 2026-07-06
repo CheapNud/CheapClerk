@@ -137,13 +137,12 @@ else
         _correspondentCount = correspondents.Count;
         _expiringCount = expiring.Count;
 
-        var inboxTag = tags.FirstOrDefault(t =>
-            t.Name.Equals(ClassificationConfig.Value.InboxTagName, StringComparison.OrdinalIgnoreCase));
-        _inboxCount = inboxTag?.DocumentCount ?? 0;
+        await LoadInboxCountAsync();
     }
 
     private async Task ProcessInboxAsync()
     {
+        if (_processing) return;
         _processing = true;
         try
         {
