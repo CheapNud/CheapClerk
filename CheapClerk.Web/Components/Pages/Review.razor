@@ -1,0 +1,152 @@
+@page "/review"
+@using CheapClerk.Models.Classification
+
+<PageTitle>CheapClerk — Review Queue</PageTitle>
+
+<MudText Typo="Typo.h4" GutterBottom="true">Review Queue</MudText>
+<MudText Typo="Typo.body1" Class="mb-6" Style="opacity: 0.6;">Documents the clerk wasn't confident enough to file automatically.</MudText>
+
+@if (_rows is null)
+{
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+}
+else if (_rows.Count == 0)
+{
+    <MudAlert Severity="Severity.Info">Review queue is empty — the clerk has no doubts.</MudAlert>
+}
+else
+{
+    <MudSwitch T="bool" @bind-Value="_forceVision" Label="Force Vision OCR on re-run" Class="mb-4" />
+
+    <MudTable Items="_rows" Hover="true" Elevation="0" Dense="true"
+              Style="border: 1px solid rgba(255,255,255,0.06);">
+        <HeaderContent>
+            <MudTh>Doc</MudTh>
+            <MudTh>Title</MudTh>
+            <MudTh>Correspondent</MudTh>
+            <MudTh>Type</MudTh>
+            <MudTh>Tags</MudTh>
+            <MudTh>Date</MudTh>
+            <MudTh>Actions</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>
+                <MudLink Href="@($"/documents/{context.Entry.DocumentId}")">@context.Entry.DocumentId</MudLink>
+                @if (context.Entry.Confidence is not null)
+                {
+                    <MudText Typo="Typo.caption" Style="opacity: 0.6;">@($"{context.Entry.Confidence:P0}")</MudText>
+                }
+            </MudTd>
+            <MudTd><MudTextField T="string" @bind-Value="context.Title" /></MudTd>
+            <MudTd><MudTextField T="string" @bind-Value="context.Correspondent" /></MudTd>
+            <MudTd><MudTextField T="string" @bind-Value="context.DocumentType" /></MudTd>
+            <MudTd><MudTextField T="string" @bind-Value="context.TagsCsv" /></MudTd>
+            <MudTd><MudTextField T="string" @bind-Value="context.DocumentDate" /></MudTd>
+            <MudTd>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
+                           Disabled="@(context.Busy)"
+                           OnClick="@(() => AcceptAsync(context))">
+                    Accept
+                </MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Small" Class="ml-2"
+                           Disabled="@(context.Busy)"
+                           OnClick="@(() => RerunAsync(context))">
+                    Re-run
+                </MudButton>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+
+@code {
+    [Inject] private ReviewQueueService ReviewQueue { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+
+    private List<ReviewRow>? _rows;
+    private bool _forceVision;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var queue = await ReviewQueue.GetQueueAsync();
+        _rows = queue.Select(entry => new ReviewRow(entry)).ToList();
+    }
+
+    private async Task AcceptAsync(ReviewRow row)
+    {
+        row.Busy = true;
+        try
+        {
+            var tags = row.TagsCsv
+                .Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+                .ToList();
+
+            var finalDecision = new ClassificationResult
+            {
+                SuggestedTitle = row.Title,
+                Correspondent = row.Correspondent,
+                DocumentType = row.DocumentType,
+                Tags = tags,
+                DocumentDate = string.IsNullOrWhiteSpace(row.DocumentDate) ? null : row.DocumentDate,
+                Confidence = row.Entry.Confidence ?? 0
+            };
+
+            var outcome = await ReviewQueue.ApplyAsync(row.Entry.DocumentId, finalDecision);
+            if (outcome.Applied)
+            {
+                Snackbar.Add($"Filed as \"{outcome.NewTitle}\"", Severity.Success);
+                _rows?.Remove(row);
+            }
+            else
+            {
+                Snackbar.Add($"Failed to apply: {outcome.Error}", Severity.Error);
+            }
+        }
+        finally
+        {
+            row.Busy = false;
+        }
+    }
+
+    private async Task RerunAsync(ReviewRow row)
+    {
+        row.Busy = true;
+        try
+        {
+            var (entry, error) = await ReviewQueue.ReclassifyAsync(row.Entry.DocumentId, _forceVision);
+            if (entry is not null)
+            {
+                row.Refresh(entry);
+                Snackbar.Add("Re-classified.", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add($"Re-run failed: {error}", Severity.Error);
+            }
+        }
+        finally
+        {
+            row.Busy = false;
+        }
+    }
+
+    private sealed class ReviewRow(ReviewQueueEntry entry)
+    {
+        public ReviewQueueEntry Entry { get; private set; } = entry;
+        public string Title { get; set; } = entry.Suggestion?.SuggestedTitle ?? string.Empty;
+        public string Correspondent { get; set; } = entry.Suggestion?.Correspondent ?? string.Empty;
+        public string DocumentType { get; set; } = entry.Suggestion?.DocumentType ?? string.Empty;
+        public string TagsCsv { get; set; } = entry.Suggestion?.Tags is { Count: > 0 } tags ? string.Join(", ", tags) : string.Empty;
+        public string DocumentDate { get; set; } = entry.Suggestion?.DocumentDate ?? string.Empty;
+        public bool Busy { get; set; }
+
+        public void Refresh(ReviewQueueEntry entry)
+        {
+            Entry = entry;
+            Title = entry.Suggestion?.SuggestedTitle ?? string.Empty;
+            Correspondent = entry.Suggestion?.Correspondent ?? string.Empty;
+            DocumentType = entry.Suggestion?.DocumentType ?? string.Empty;
+            TagsCsv = entry.Suggestion?.Tags is { Count: > 0 } tags ? string.Join(", ", tags) : string.Empty;
+            DocumentDate = entry.Suggestion?.DocumentDate ?? string.Empty;
+        }
+    }
+}

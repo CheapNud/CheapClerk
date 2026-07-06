@@ -72,6 +72,18 @@
             </MudCardContent>
         </MudCard>
     </MudItem>
+    <MudItem xs="12" sm="6" md="4">
+        <MudCard Elevation="0" Style="@($"border: 1px solid {(_reviewCount > 0 ? "rgba(156,39,176,0.5)" : "rgba(255,255,255,0.06)")};")">
+            <MudCardContent Class="d-flex align-center gap-4">
+                <MudIcon Icon="@Icons.Material.Filled.RateReview"
+                         Color="@(_reviewCount > 0 ? Color.Secondary : Color.Default)" Size="Size.Large" />
+                <div>
+                    <MudText Typo="Typo.h4">@_reviewCount</MudText>
+                    <MudLink Href="/review" Typo="Typo.body2" Style="opacity: 0.6;">Needs review</MudLink>
+                </div>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
 </MudGrid>
 
 <MudText Typo="Typo.h5" Class="mt-8 mb-4">Recently Added</MudText>
@@ -116,6 +128,7 @@ else
     private int _correspondentCount;
     private int _expiringCount;
     private int _inboxCount;
+    private int _reviewCount;
     private bool _processing;
 
     protected override async Task OnInitializedAsync()
@@ -137,7 +150,7 @@ else
         _correspondentCount = correspondents.Count;
         _expiringCount = expiring.Count;
 
-        await LoadInboxCountAsync();
+        await LoadWorkflowCountsAsync();
     }
 
     private async Task ProcessInboxAsync()
@@ -161,7 +174,7 @@ else
                     : review > 0 ? Severity.Warning : Severity.Success;
                 Snackbar.Add($"Inbox processed: {applied} filed, {review} sent to review, {failed} failed.", severity);
             }
-            await LoadInboxCountAsync();
+            await LoadWorkflowCountsAsync();
         }
         finally
         {
@@ -169,11 +182,14 @@ else
         }
     }
 
-    private async Task LoadInboxCountAsync()
+    private async Task LoadWorkflowCountsAsync()
     {
         var tags = await PaperlessClient.GetTagsAsync();
         var inboxTag = tags.FirstOrDefault(t =>
             t.Name.Equals(ClassificationConfig.Value.InboxTagName, StringComparison.OrdinalIgnoreCase));
+        var reviewTag = tags.FirstOrDefault(t =>
+            t.Name.Equals(ClassificationConfig.Value.ReviewTagName, StringComparison.OrdinalIgnoreCase));
         _inboxCount = inboxTag?.DocumentCount ?? 0;
+        _reviewCount = reviewTag?.DocumentCount ?? 0;
     }
 }
