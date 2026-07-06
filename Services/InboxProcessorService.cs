@@ -3,6 +3,7 @@ using CheapClerk.Models;
 using CheapClerk.Models.Classification;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System.Globalization;
 
 namespace CheapClerk.Services;
 
@@ -82,16 +83,22 @@ public sealed class InboxProcessorService(
                         cancellationToken);
 
                     outcome.Applied = false;
-                    outcome.SentToReview = true;
                     outcome.AppliedTags = lowRoadTags
                         .Where(tagLookup.ContainsKey)
                         .Select(tagId => tagLookup[tagId])
                         .ToList();
 
-                    if (!lowRoadApplied)
+                    if (lowRoadApplied)
+                    {
+                        outcome.SentToReview = true;
+                        sentToReview++;
+                    }
+                    else
+                    {
                         outcome.Error = "Failed to apply review tag";
+                        failed++;
+                    }
 
-                    sentToReview++;
                     report.Outcomes.Add(outcome);
                     continue;
                 }
@@ -164,8 +171,8 @@ public sealed class InboxProcessorService(
                     .ToList();
 
                 string? createdDate = null;
-                if (DateOnly.TryParseExact(classification.DocumentDate, "yyyy-MM-dd", out var parsedDate))
-                    createdDate = parsedDate.ToString("yyyy-MM-dd");
+                if (DateOnly.TryParseExact(classification.DocumentDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsedDate))
+                    createdDate = parsedDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 
                 var update = new DocumentUpdate
                 {
