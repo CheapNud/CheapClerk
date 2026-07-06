@@ -278,6 +278,32 @@ The `cheapclerk-web` container runs separately on Megaton (`/opt/blazor-apps/che
 
 ---
 
+## Automatic Classification
+
+New documents don't need manual filing. Paperless marks every consumed document with the `Inbox` tag (created automatically as an inbox-type tag on the clerk's first run); CheapClerk then reads the OCR text and asks the configured LLM for a title, correspondent, document type, topical tags and the document date, PATCHing the result back and removing the inbox tag. Existing taxonomy is strongly preferred — new tags are only created when nothing fits (capped, existing matches win). Garbled scans go through the Vision OCR fallback first. Anything the classifier isn't confident about gets a `Needs Review` tag instead of guesses.
+
+Three triggers:
+- **Background poll** — `InboxPollingService` in CheapClerk.Web, every `Classification:PollIntervalMinutes` (0 disables the poller)
+- **Dashboard button** — "Process now" on the inbox card
+- **MCP tool** — `process_inbox` from Claude Code
+
+Configuration (`Classification` section):
+
+| Key | Default | Meaning |
+|---|---|---|
+| `Enabled` | `true` | Master switch |
+| `InboxTagName` | `Inbox` | Tag marking unprocessed documents |
+| `ReviewTagName` | `Needs Review` | Applied instead of guesses below the confidence bar |
+| `MinConfidence` | `0.6` | Below this, documents go to review |
+| `PollIntervalMinutes` | `15` | Background poll cadence; `0` = manual only |
+| `MaxTagsPerDocument` | `4` | Cap on applied tags, existing matches first |
+| `AutoCreateTags` | `true` | Allow the LLM to introduce new tags |
+| `MaxDocumentsPerRun` | `20` | Batch size per run; the poller drains over successive runs |
+
+Classification uses the same `Llm.Provider` switch as extraction — without an Anthropic key (or Ollama endpoint) configured, the processor logs that the provider is unconfigured and leaves the inbox untouched.
+
+---
+
 ## Example Queries
 
 Once documents are scanned and indexed, these should all work from Claude Code:

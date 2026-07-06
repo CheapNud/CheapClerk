@@ -1,6 +1,6 @@
 <!--
   TODO.md — CheapClerk project work tracker
-  Last updated: 2026-07-06 (inbox auto-classification planned)
+  Last updated: 2026-07-06 (inbox auto-classification implemented)
 
   RULES FOR AI AGENTS:
   - Update the "Last updated" date above whenever you modify this file
@@ -32,10 +32,10 @@ _Nothing blocking._
 
 ## Planned
 
-- [ ] (2026-07-06) Automatic inbox classification — LLM titles/tags/correspondents/dates new Paperless documents [user]
+- [x] (2026-07-06 → 2026-07-06) Automatic inbox classification — LLM titles/tags/correspondents/dates new Paperless documents [user]
   - Paperless inbox tag marks incoming docs; clerk polls + dashboard button + process_inbox MCP tool
   - Low-confidence docs get a Needs Review tag instead of guesses; existing taxonomy preferred over new tags
-  - Needs write support in PaperlessClient (PATCH documents, POST tags/correspondents/types)
+  - Requires Llm config (Anthropic key or Ollama) on the web host — without it the processor no-ops
 - [ ] (2026-07-04) Regenerate GitHub mirror PAT with workflow scope and recreate Gitea push mirror [bug]
   - Mirror push fails (GH013) when commits touch .github/workflows/; credentials can't be edited in place
   - Until fixed: push workflow changes to GitHub first, then fast-forward Gitea
