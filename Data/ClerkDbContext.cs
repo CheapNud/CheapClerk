@@ -5,7 +5,7 @@ namespace CheapClerk.Data;
 public sealed class ClerkDbContext(DbContextOptions<ClerkDbContext> options) : DbContext(options)
 {
     public DbSet<CachedExtraction> CachedExtractions => Set<CachedExtraction>();
-    public DbSet<CachedSuggestion> Suggestions => Set<CachedSuggestion>();
+    public DbSet<CachedSuggestion> CachedSuggestions => Set<CachedSuggestion>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

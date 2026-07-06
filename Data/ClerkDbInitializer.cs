@@ -6,6 +6,8 @@ public static class ClerkDbInitializer
 {
     // EnsureCreated() no-ops on existing databases, so additive tables need
     // explicit DDL. Revisit with real EF migrations if the cache schema grows.
+    // Raw DDL table names below must match their DbSet property names, since
+    // that is what EF uses as the default table name.
     public static async Task EnsureSchemaAsync(ClerkDbContext db)
     {
         await db.Database.EnsureCreatedAsync();
