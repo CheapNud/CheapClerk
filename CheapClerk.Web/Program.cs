@@ -49,6 +49,7 @@ builder.Services.AddSingleton<StructuredExtractionService>();
 builder.Services.AddSingleton<ExtractionCacheService>();
 builder.Services.AddSingleton<DocumentClassifierService>();
 builder.Services.AddSingleton<InboxProcessorService>();
+builder.Services.AddHostedService<CheapClerk.Web.Services.InboxPollingService>();
 
 var app = builder.Build();
 

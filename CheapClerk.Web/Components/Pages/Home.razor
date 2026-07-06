@@ -1,4 +1,6 @@
 @page "/"
+@using CheapClerk.Configuration
+@using Microsoft.Extensions.Options
 
 <PageTitle>CheapClerk — Dashboard</PageTitle>
 
@@ -6,7 +8,7 @@
 <MudText Typo="Typo.body1" Class="mb-6" Style="opacity: 0.6;">Your household documents at a glance.</MudText>
 
 <MudGrid>
-    <MudItem xs="12" md="3">
+    <MudItem xs="12" sm="6" md="4">
         <MudCard Elevation="0" Style="border: 1px solid rgba(255,255,255,0.06);">
             <MudCardContent Class="d-flex align-center gap-4">
                 <MudIcon Icon="@Icons.Material.Filled.Description" Color="Color.Primary" Size="Size.Large" />
@@ -17,7 +19,7 @@
             </MudCardContent>
         </MudCard>
     </MudItem>
-    <MudItem xs="12" md="3">
+    <MudItem xs="12" sm="6" md="4">
         <MudCard Elevation="0" Style="border: 1px solid rgba(255,255,255,0.06);">
             <MudCardContent Class="d-flex align-center gap-4">
                 <MudIcon Icon="@Icons.Material.Filled.Label" Color="Color.Secondary" Size="Size.Large" />
@@ -28,7 +30,7 @@
             </MudCardContent>
         </MudCard>
     </MudItem>
-    <MudItem xs="12" md="3">
+    <MudItem xs="12" sm="6" md="4">
         <MudCard Elevation="0" Style="border: 1px solid rgba(255,255,255,0.06);">
             <MudCardContent Class="d-flex align-center gap-4">
                 <MudIcon Icon="@Icons.Material.Filled.People" Color="Color.Tertiary" Size="Size.Large" />
@@ -39,7 +41,7 @@
             </MudCardContent>
         </MudCard>
     </MudItem>
-    <MudItem xs="12" md="3">
+    <MudItem xs="12" sm="6" md="4">
         <MudCard Elevation="0" Style="@($"border: 1px solid {(_expiringCount > 0 ? "rgba(255,87,34,0.5)" : "rgba(255,255,255,0.06)")};")">
             <MudCardContent Class="d-flex align-center gap-4">
                 <MudIcon Icon="@Icons.Material.Filled.Schedule"
@@ -49,6 +51,24 @@
                     <MudText Typo="Typo.h4">@_expiringCount</MudText>
                     <MudLink Href="/expiring" Typo="Typo.body2" Style="opacity: 0.6;">Expiring in 30 days</MudLink>
                 </div>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+    <MudItem xs="12" sm="6" md="4">
+        <MudCard Elevation="0" Style="@($"border: 1px solid {(_inboxCount > 0 ? "rgba(33,150,243,0.5)" : "rgba(255,255,255,0.06)")};")">
+            <MudCardContent Class="d-flex align-center gap-4">
+                <MudIcon Icon="@Icons.Material.Filled.MoveToInbox"
+                         Color="@(_inboxCount > 0 ? Color.Info : Color.Default)" Size="Size.Large" />
+                <div>
+                    <MudText Typo="Typo.h4">@_inboxCount</MudText>
+                    <MudText Typo="Typo.body2" Style="opacity: 0.6;">In inbox</MudText>
+                </div>
+                <MudSpacer />
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
+                           Disabled="@(_inboxCount == 0 || _processing)"
+                           OnClick="@(() => ProcessInboxAsync())">
+                    @(_processing ? "Processing..." : "Process now")
+                </MudButton>
             </MudCardContent>
         </MudCard>
     </MudItem>
@@ -86,12 +106,17 @@ else
 @code {
     [Inject] private PaperlessClient PaperlessClient { get; set; } = null!;
     [Inject] private ExtractionCacheService ExtractionCache { get; set; } = null!;
+    [Inject] private InboxProcessorService InboxProcessor { get; set; } = null!;
+    [Inject] private IOptions<ClassificationOptions> ClassificationConfig { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
 
     private List<PaperlessDocument>? _recentDocuments;
     private int _documentCount;
     private int _tagCount;
     private int _correspondentCount;
     private int _expiringCount;
+    private int _inboxCount;
+    private bool _processing;
 
     protected override async Task OnInitializedAsync()
     {
@@ -111,5 +136,35 @@ else
         _tagCount = tags.Count;
         _correspondentCount = correspondents.Count;
         _expiringCount = expiring.Count;
+
+        var inboxTag = tags.FirstOrDefault(t =>
+            t.Name.Equals(ClassificationConfig.Value.InboxTagName, StringComparison.OrdinalIgnoreCase));
+        _inboxCount = inboxTag?.DocumentCount ?? 0;
+    }
+
+    private async Task ProcessInboxAsync()
+    {
+        _processing = true;
+        try
+        {
+            var report = await InboxProcessor.ProcessInboxAsync();
+            var applied = report.Outcomes.Count(o => o.Applied);
+            var review = report.Outcomes.Count(o => o.SentToReview);
+            Snackbar.Add($"Inbox processed: {applied} filed, {review} sent to review.",
+                review > 0 ? Severity.Warning : Severity.Success);
+            await LoadInboxCountAsync();
+        }
+        finally
+        {
+            _processing = false;
+        }
+    }
+
+    private async Task LoadInboxCountAsync()
+    {
+        var tags = await PaperlessClient.GetTagsAsync();
+        var inboxTag = tags.FirstOrDefault(t =>
+            t.Name.Equals(ClassificationConfig.Value.InboxTagName, StringComparison.OrdinalIgnoreCase));
+        _inboxCount = inboxTag?.DocumentCount ?? 0;
     }
 }
