@@ -7,8 +7,8 @@ public static class TagResolver
         Dictionary<int, string> existingLookup,
         int maxTags)
     {
-        List<int> matchedIds = [];
-        List<string> missingNames = [];
+        List<int> allMatchedIds = [];
+        List<string> allMissingNames = [];
         HashSet<string> seenNames = new(StringComparer.OrdinalIgnoreCase);
 
         foreach (var suggestedName in suggestedNames
@@ -16,16 +16,18 @@ public static class TagResolver
                      .Select(n => n.Trim()))
         {
             if (!seenNames.Add(suggestedName)) continue;
-            if (matchedIds.Count + missingNames.Count >= maxTags) break;
 
             var existingId = existingLookup
                 .FirstOrDefault(t => t.Value.Equals(suggestedName, StringComparison.OrdinalIgnoreCase)).Key;
 
             if (existingId > 0)
-                matchedIds.Add(existingId);
+                allMatchedIds.Add(existingId);
             else
-                missingNames.Add(suggestedName);
+                allMissingNames.Add(suggestedName);
         }
+
+        var matchedIds = allMatchedIds.Take(maxTags).ToList();
+        var missingNames = allMissingNames.Take(maxTags - matchedIds.Count).ToList();
 
         return (matchedIds, missingNames);
     }

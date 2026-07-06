@@ -42,4 +42,14 @@ public sealed class TagResolverTests
         Assert.Equal([1], matchedIds);
         Assert.Empty(missingNames);
     }
+
+    [Fact]
+    public void Resolve_PrefersMatchesOverMisses_WhenMissesComeFirst()
+    {
+        var (matchedIds, missingNames) = TagResolver.Resolve(
+            ["Home", "Car", "Insurance", "Utilities", "KBC"], Existing, maxTags: 4);
+
+        Assert.Equal([1, 2, 3], matchedIds);
+        Assert.Equal(["Home"], missingNames);
+    }
 }
