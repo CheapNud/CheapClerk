@@ -55,7 +55,10 @@ builder.Services.AddMcpServer()
     .WithTools<ExtractStructuredDataTool>()
     .WithTools<FindExpiringDocumentsTool>()
     .WithTools<RefreshExtractionCacheTool>()
-    .WithTools<ProcessInboxTool>();
+    .WithTools<ProcessInboxTool>()
+    .WithTools<ListReviewQueueTool>()
+    .WithTools<ApplySuggestionTool>()
+    .WithTools<ReclassifyDocumentTool>();
 
 // MCP stdio uses stdin/stdout — log to stderr only
 builder.Logging.AddConsole(consoleOptions =>
