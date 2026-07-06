@@ -61,7 +61,7 @@ public sealed class DocumentClassifierService(
             """;
     }
 
-    public async Task<ClassificationResult?> ClassifyAsync(
+    public async Task<(ClassificationResult? Classification, bool LlmFailed)> ClassifyAsync(
         string documentText,
         List<string> existingTags,
         List<string> existingCorrespondents,
@@ -71,13 +71,13 @@ public sealed class DocumentClassifierService(
         if (!IsEnabled)
         {
             logger.LogWarning("Classification skipped: LLM provider not configured");
-            return null;
+            return (null, true);
         }
 
         if (string.IsNullOrWhiteSpace(documentText))
         {
             logger.LogWarning("Classification skipped: document text is empty");
-            return null;
+            return (null, false);
         }
 
         try
@@ -103,16 +103,16 @@ public sealed class DocumentClassifierService(
                 logger.LogInformation(
                     "Classified document as '{Title}' ({Confidence:P0}) via {Provider}",
                     classification.SuggestedTitle, classification.Confidence, _llm.Provider);
-                return classification;
+                return (classification, false);
             }
 
             logger.LogWarning("Classification returned no parseable result");
-            return null;
+            return (null, true);
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Document classification failed");
-            return null;
+            return (null, true);
         }
     }
 }

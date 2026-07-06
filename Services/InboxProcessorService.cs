@@ -16,207 +16,240 @@ public sealed class InboxProcessorService(
     ILogger<InboxProcessorService> logger)
 {
     private readonly ClassificationOptions _options = classificationOptions.Value;
+    private readonly SemaphoreSlim _runGate = new(1, 1);
 
     public async Task<InboxProcessingReport> ProcessInboxAsync(CancellationToken cancellationToken = default)
     {
-        if (!_options.Enabled || !classifier.IsEnabled)
+        if (!await _runGate.WaitAsync(0, cancellationToken))
         {
-            logger.LogInformation("Inbox processing skipped: classification disabled or classifier not configured");
-            return new InboxProcessingReport();
+            logger.LogWarning("Inbox processing skipped: a processing run is already in progress");
+            return new InboxProcessingReport { SkippedReason = "a processing run is already in progress" };
         }
 
-        var (inboxTagId, reviewTagId) = await EnsureWorkflowTagsAsync(cancellationToken);
-        if (inboxTagId <= 0 || reviewTagId <= 0)
+        try
         {
-            logger.LogError("Inbox processing aborted: unable to ensure workflow tags exist");
-            return new InboxProcessingReport();
-        }
-
-        var inboxDocuments = await paperlessClient.ListDocumentsByTagIdAsync(
-            inboxTagId, _options.MaxDocumentsPerRun, cancellationToken);
-
-        var report = new InboxProcessingReport { InboxCount = inboxDocuments.Count };
-        if (inboxDocuments.Count == 0)
-            return report;
-
-        var tagLookup = new Dictionary<int, string>(await paperlessClient.GetTagLookupAsync(cancellationToken));
-        var correspondentLookup = new Dictionary<int, string>(await paperlessClient.GetCorrespondentLookupAsync(cancellationToken));
-        var documentTypeLookup = new Dictionary<int, string>(await paperlessClient.GetDocumentTypeLookupAsync(cancellationToken));
-
-        var applied = 0;
-        var sentToReview = 0;
-        var failed = 0;
-
-        foreach (var doc in inboxDocuments)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            var outcome = new InboxDocumentOutcome
+            if (!_options.Enabled || !classifier.IsEnabled)
             {
-                DocumentId = doc.Id,
-                OriginalTitle = doc.Title
-            };
-
-            try
-            {
-                var text = await ResolveDocumentTextAsync(doc, cancellationToken);
-                var classification = await classifier.ClassifyAsync(
-                    text ?? string.Empty,
-                    tagLookup.Values.ToList(),
-                    correspondentLookup.Values.ToList(),
-                    documentTypeLookup.Values.ToList(),
-                    cancellationToken);
-
-                if (classification is null || classification.Confidence < _options.MinConfidence)
+                logger.LogInformation("Inbox processing skipped: classification disabled or classifier not configured");
+                return new InboxProcessingReport
                 {
-                    outcome.Confidence = classification?.Confidence ?? 0;
+                    SkippedReason = "classification is disabled or the LLM provider is not configured"
+                };
+            }
 
-                    var lowRoadTags = doc.Tags
-                        .Where(tagId => tagId != inboxTagId)
-                        .Append(reviewTagId)
+            var (inboxTagId, reviewTagId) = await EnsureWorkflowTagsAsync(cancellationToken);
+            if (inboxTagId <= 0 || reviewTagId <= 0)
+            {
+                logger.LogError("Inbox processing aborted: unable to ensure workflow tags exist");
+                return new InboxProcessingReport
+                {
+                    SkippedReason = "could not verify workflow tags — is Paperless reachable?"
+                };
+            }
+
+            var inboxDocuments = await paperlessClient.ListDocumentsByTagIdAsync(
+                inboxTagId, _options.MaxDocumentsPerRun, cancellationToken);
+
+            var report = new InboxProcessingReport { InboxCount = inboxDocuments.Count };
+            if (inboxDocuments.Count == 0)
+                return report;
+
+            var tagLookup = new Dictionary<int, string>(await paperlessClient.GetTagLookupAsync(cancellationToken));
+            var correspondentLookup = new Dictionary<int, string>(await paperlessClient.GetCorrespondentLookupAsync(cancellationToken));
+            var documentTypeLookup = new Dictionary<int, string>(await paperlessClient.GetDocumentTypeLookupAsync(cancellationToken));
+
+            var applied = 0;
+            var sentToReview = 0;
+            var failed = 0;
+
+            foreach (var doc in inboxDocuments)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var outcome = new InboxDocumentOutcome
+                {
+                    DocumentId = doc.Id,
+                    OriginalTitle = doc.Title
+                };
+
+                try
+                {
+                    var text = await ResolveDocumentTextAsync(doc, cancellationToken);
+                    var (classification, llmFailed) = await classifier.ClassifyAsync(
+                        text ?? string.Empty,
+                        tagLookup.Values.ToList(),
+                        correspondentLookup.Values.ToList(),
+                        documentTypeLookup.Values.ToList(),
+                        cancellationToken);
+
+                    if (llmFailed)
+                    {
+                        outcome.Error = "LLM unavailable";
+                        failed++;
+                        report.Outcomes.Add(outcome);
+                        continue;
+                    }
+
+                    if (classification is null || classification.Confidence < _options.MinConfidence)
+                    {
+                        outcome.Confidence = classification?.Confidence ?? 0;
+
+                        var lowRoadTags = doc.Tags
+                            .Where(tagId => tagId != inboxTagId)
+                            .Append(reviewTagId)
+                            .Distinct()
+                            .ToList();
+
+                        var lowRoadApplied = await paperlessClient.UpdateDocumentAsync(
+                            doc.Id,
+                            new DocumentUpdate { TagIds = lowRoadTags },
+                            cancellationToken);
+
+                        outcome.Applied = false;
+                        outcome.AppliedTags = lowRoadTags
+                            .Where(tagLookup.ContainsKey)
+                            .Select(tagId => tagLookup[tagId])
+                            .ToList();
+
+                        if (lowRoadApplied)
+                        {
+                            outcome.SentToReview = true;
+                            sentToReview++;
+                        }
+                        else
+                        {
+                            outcome.Error = "Failed to apply review tag";
+                            failed++;
+                        }
+
+                        report.Outcomes.Add(outcome);
+                        continue;
+                    }
+
+                    outcome.Confidence = classification.Confidence;
+
+                    var (matchedTagIds, missingTagNames) = TagResolver.Resolve(
+                        classification.Tags, tagLookup, _options.MaxTagsPerDocument);
+
+                    var createdTagIds = new List<int>();
+                    if (_options.AutoCreateTags)
+                    {
+                        foreach (var missingName in missingTagNames)
+                        {
+                            var createdTag = await paperlessClient.CreateTagAsync(missingName, cancellationToken: cancellationToken);
+                            if (createdTag is not null)
+                            {
+                                createdTagIds.Add(createdTag.Id);
+                                tagLookup[createdTag.Id] = createdTag.Name;
+                            }
+                        }
+                    }
+
+                    int? correspondentId = null;
+                    if (!string.IsNullOrWhiteSpace(classification.Correspondent))
+                    {
+                        var existingCorrespondentId = correspondentLookup
+                            .FirstOrDefault(c => c.Value.Equals(classification.Correspondent, StringComparison.OrdinalIgnoreCase)).Key;
+                        if (existingCorrespondentId > 0)
+                        {
+                            correspondentId = existingCorrespondentId;
+                        }
+                        else
+                        {
+                            var createdCorrespondent = await paperlessClient.CreateCorrespondentAsync(
+                                classification.Correspondent, cancellationToken);
+                            if (createdCorrespondent is not null)
+                            {
+                                correspondentId = createdCorrespondent.Id;
+                                correspondentLookup[createdCorrespondent.Id] = createdCorrespondent.Name;
+                            }
+                        }
+                    }
+
+                    int? documentTypeId = null;
+                    if (!string.IsNullOrWhiteSpace(classification.DocumentType))
+                    {
+                        var existingDocumentTypeId = documentTypeLookup
+                            .FirstOrDefault(dt => dt.Value.Equals(classification.DocumentType, StringComparison.OrdinalIgnoreCase)).Key;
+                        if (existingDocumentTypeId > 0)
+                        {
+                            documentTypeId = existingDocumentTypeId;
+                        }
+                        else
+                        {
+                            var createdDocumentType = await paperlessClient.CreateDocumentTypeAsync(
+                                classification.DocumentType, cancellationToken);
+                            if (createdDocumentType is not null)
+                            {
+                                documentTypeId = createdDocumentType.Id;
+                                documentTypeLookup[createdDocumentType.Id] = createdDocumentType.Name;
+                            }
+                        }
+                    }
+
+                    var finalTagIds = matchedTagIds
+                        .Concat(createdTagIds)
+                        .Concat(doc.Tags.Where(tagId => tagId != inboxTagId))
                         .Distinct()
                         .ToList();
 
-                    var lowRoadApplied = await paperlessClient.UpdateDocumentAsync(
-                        doc.Id,
-                        new DocumentUpdate { TagIds = lowRoadTags },
-                        cancellationToken);
+                    string? createdDate = null;
+                    if (DateOnly.TryParseExact(classification.DocumentDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsedDate))
+                        createdDate = parsedDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 
-                    outcome.Applied = false;
-                    outcome.AppliedTags = lowRoadTags
+                    var suggested = classification.SuggestedTitle;
+                    var title = string.IsNullOrWhiteSpace(suggested)
+                        ? null
+                        : suggested.Length > 128 ? suggested[..128] : suggested;
+
+                    var update = new DocumentUpdate
+                    {
+                        Title = title,
+                        CorrespondentId = correspondentId,
+                        DocumentTypeId = documentTypeId,
+                        TagIds = finalTagIds,
+                        CreatedDate = createdDate
+                    };
+
+                    var patchSucceeded = await paperlessClient.UpdateDocumentAsync(doc.Id, update, cancellationToken);
+
+                    outcome.Applied = patchSucceeded;
+                    outcome.NewTitle = update.Title;
+                    outcome.AppliedTags = finalTagIds
                         .Where(tagLookup.ContainsKey)
                         .Select(tagId => tagLookup[tagId])
                         .ToList();
 
-                    if (lowRoadApplied)
-                    {
-                        outcome.SentToReview = true;
-                        sentToReview++;
-                    }
+                    if (!patchSucceeded)
+                        outcome.Error = "Failed to apply document update";
+
+                    if (patchSucceeded)
+                        applied++;
                     else
-                    {
-                        outcome.Error = "Failed to apply review tag";
                         failed++;
-                    }
 
                     report.Outcomes.Add(outcome);
-                    continue;
                 }
-
-                outcome.Confidence = classification.Confidence;
-
-                var (matchedTagIds, missingTagNames) = TagResolver.Resolve(
-                    classification.Tags, tagLookup, _options.MaxTagsPerDocument);
-
-                var createdTagIds = new List<int>();
-                if (_options.AutoCreateTags)
+                catch (Exception ex)
                 {
-                    foreach (var missingName in missingTagNames)
-                    {
-                        var createdTag = await paperlessClient.CreateTagAsync(missingName, cancellationToken: cancellationToken);
-                        if (createdTag is not null)
-                        {
-                            createdTagIds.Add(createdTag.Id);
-                            tagLookup[createdTag.Id] = createdTag.Name;
-                        }
-                    }
-                }
-
-                int? correspondentId = null;
-                if (!string.IsNullOrWhiteSpace(classification.Correspondent))
-                {
-                    var existingCorrespondentId = correspondentLookup
-                        .FirstOrDefault(c => c.Value.Equals(classification.Correspondent, StringComparison.OrdinalIgnoreCase)).Key;
-                    if (existingCorrespondentId > 0)
-                    {
-                        correspondentId = existingCorrespondentId;
-                    }
-                    else
-                    {
-                        var createdCorrespondent = await paperlessClient.CreateCorrespondentAsync(
-                            classification.Correspondent, cancellationToken);
-                        if (createdCorrespondent is not null)
-                        {
-                            correspondentId = createdCorrespondent.Id;
-                            correspondentLookup[createdCorrespondent.Id] = createdCorrespondent.Name;
-                        }
-                    }
-                }
-
-                int? documentTypeId = null;
-                if (!string.IsNullOrWhiteSpace(classification.DocumentType))
-                {
-                    var existingDocumentTypeId = documentTypeLookup
-                        .FirstOrDefault(dt => dt.Value.Equals(classification.DocumentType, StringComparison.OrdinalIgnoreCase)).Key;
-                    if (existingDocumentTypeId > 0)
-                    {
-                        documentTypeId = existingDocumentTypeId;
-                    }
-                    else
-                    {
-                        var createdDocumentType = await paperlessClient.CreateDocumentTypeAsync(
-                            classification.DocumentType, cancellationToken);
-                        if (createdDocumentType is not null)
-                        {
-                            documentTypeId = createdDocumentType.Id;
-                            documentTypeLookup[createdDocumentType.Id] = createdDocumentType.Name;
-                        }
-                    }
-                }
-
-                var finalTagIds = matchedTagIds
-                    .Concat(createdTagIds)
-                    .Concat(doc.Tags.Where(tagId => tagId != inboxTagId))
-                    .Distinct()
-                    .ToList();
-
-                string? createdDate = null;
-                if (DateOnly.TryParseExact(classification.DocumentDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsedDate))
-                    createdDate = parsedDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-
-                var update = new DocumentUpdate
-                {
-                    Title = string.IsNullOrWhiteSpace(classification.SuggestedTitle) ? null : classification.SuggestedTitle,
-                    CorrespondentId = correspondentId,
-                    DocumentTypeId = documentTypeId,
-                    TagIds = finalTagIds,
-                    CreatedDate = createdDate
-                };
-
-                var patchSucceeded = await paperlessClient.UpdateDocumentAsync(doc.Id, update, cancellationToken);
-
-                outcome.Applied = patchSucceeded;
-                outcome.NewTitle = update.Title;
-                outcome.AppliedTags = finalTagIds
-                    .Where(tagLookup.ContainsKey)
-                    .Select(tagId => tagLookup[tagId])
-                    .ToList();
-
-                if (!patchSucceeded)
-                    outcome.Error = "Failed to apply document update";
-
-                if (patchSucceeded)
-                    applied++;
-                else
+                    logger.LogError(ex, "Failed to process inbox document {DocumentId}", doc.Id);
+                    outcome.Applied = false;
+                    outcome.Error = ex.Message;
                     failed++;
+                    report.Outcomes.Add(outcome);
+                }
+            }
 
-                report.Outcomes.Add(outcome);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Failed to process inbox document {DocumentId}", doc.Id);
-                outcome.Applied = false;
-                outcome.Error = ex.Message;
-                failed++;
-                report.Outcomes.Add(outcome);
-            }
+            logger.LogInformation(
+                "Inbox processing complete: {Found} found, {Applied} applied, {Review} sent to review, {Failed} failed",
+                inboxDocuments.Count, applied, sentToReview, failed);
+
+            return report;
         }
-
-        logger.LogInformation(
-            "Inbox processing complete: {Found} found, {Applied} applied, {Review} sent to review, {Failed} failed",
-            inboxDocuments.Count, applied, sentToReview, failed);
-
-        return report;
+        finally
+        {
+            _runGate.Release();
+        }
     }
 
     private async Task<(int InboxTagId, int ReviewTagId)> EnsureWorkflowTagsAsync(CancellationToken cancellationToken)
@@ -272,6 +305,7 @@ public sealed class InboxProcessingReport
 {
     public int InboxCount { get; set; }
     public List<InboxDocumentOutcome> Outcomes { get; set; } = [];
+    public string? SkippedReason { get; set; }
 }
 
 public sealed class InboxDocumentOutcome

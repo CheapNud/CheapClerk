@@ -13,6 +13,9 @@ public sealed class ProcessInboxTool
         CancellationToken cancellationToken = default)
     {
         var report = await inboxProcessor.ProcessInboxAsync(cancellationToken);
+        if (report.SkippedReason is not null)
+            return $"Inbox processing skipped: {report.SkippedReason}";
+
         if (report.InboxCount == 0)
             return "Inbox is empty — nothing to process.";
 

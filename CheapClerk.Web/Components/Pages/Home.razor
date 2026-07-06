@@ -147,10 +147,20 @@ else
         try
         {
             var report = await InboxProcessor.ProcessInboxAsync();
-            var applied = report.Outcomes.Count(o => o.Applied);
-            var review = report.Outcomes.Count(o => o.SentToReview);
-            Snackbar.Add($"Inbox processed: {applied} filed, {review} sent to review.",
-                review > 0 ? Severity.Warning : Severity.Success);
+            if (report.SkippedReason is not null)
+            {
+                Snackbar.Add($"Inbox processing skipped: {report.SkippedReason}", Severity.Warning);
+            }
+            else
+            {
+                var applied = report.Outcomes.Count(o => o.Applied);
+                var review = report.Outcomes.Count(o => o.SentToReview);
+                var failed = report.Outcomes.Count(o => o.Error is not null);
+                var severity = failed > 0
+                    ? Severity.Error
+                    : review > 0 ? Severity.Warning : Severity.Success;
+                Snackbar.Add($"Inbox processed: {applied} filed, {review} sent to review, {failed} failed.", severity);
+            }
             await LoadInboxCountAsync();
         }
         finally
