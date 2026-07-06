@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using CheapClerk.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -17,6 +18,11 @@ public sealed class PaperlessClient(
     private static readonly JsonSerializerOptions JsonSettings = new()
     {
         PropertyNameCaseInsensitive = true
+    };
+
+    private static readonly JsonSerializerOptions WriteJsonSettings = new()
+    {
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
     };
 
     private static readonly TimeSpan LookupCacheDuration = TimeSpan.FromMinutes(5);
@@ -189,6 +195,28 @@ public sealed class PaperlessClient(
         {
             logger.LogError(ex, "Paperless API call failed: {Url}", relativeUrl);
             return null;
+        }
+    }
+
+    public async Task<bool> UpdateDocumentAsync(
+        int documentId,
+        DocumentUpdate update,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var patchBody = new StringContent(
+                JsonSerializer.Serialize(update, WriteJsonSettings),
+                System.Text.Encoding.UTF8,
+                "application/json");
+            var patchReply = await httpClient.PatchAsync($"api/documents/{documentId}/", patchBody, cancellationToken);
+            patchReply.EnsureSuccessStatusCode();
+            return true;
+        }
+        catch (HttpRequestException ex)
+        {
+            logger.LogError(ex, "Failed to update document {DocumentId}", documentId);
+            return false;
         }
     }
 }
