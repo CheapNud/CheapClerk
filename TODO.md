@@ -32,6 +32,13 @@ _Nothing blocking._
 
 ## Planned
 
+- [ ] (2026-07-06) Paginate tag fetch or use name__iexact lookup in EnsureWorkflowTagsAsync [audit]
+  - GetTagsAsync caps at page_size=100; once the taxonomy outgrows page 1, workflow tags stop resolving and every run aborts
+  - AutoCreateTags makes this a when, not an if
+- [ ] (2026-07-06) Sanitize LLM-created tag/correspondent names (length cap, strip newlines) [audit]
+  - Injected names feed back into every future classification prompt via the existing-tags list
+- [ ] (2026-07-06) Short-circuit inbox run after N consecutive LLM failures [audit]
+  - When the provider is down, each of up to 20 docs waits out a full HTTP timeout sequentially
 - [x] (2026-07-06 → 2026-07-06) Automatic inbox classification — LLM titles/tags/correspondents/dates new Paperless documents [user]
   - Paperless inbox tag marks incoming docs; clerk polls + dashboard button + process_inbox MCP tool
   - Low-confidence docs get a Needs Review tag instead of guesses; existing taxonomy preferred over new tags
