@@ -59,6 +59,8 @@ services:
       - Llm__Anthropic__ApiKey=${ANTHROPIC_API_KEY}
       # - Classification__Enabled=false
       # - Classification__PollIntervalMinutes=15
+      # - Classification__WebhookToken=${CHEAPCLERK_WEBHOOK_TOKEN}
+      # - Classification__PollIntervalMinutes=60
       - Serilog__WriteTo__0__Name=Seq
       - Serilog__WriteTo__0__Args__serverUrl=http://192.168.1.15:5341
     volumes:

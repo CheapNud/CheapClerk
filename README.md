@@ -282,10 +282,11 @@ The `cheapclerk-web` container runs separately on Megaton (`/opt/blazor-apps/che
 
 New documents don't need manual filing. Paperless marks every consumed document with the `Inbox` tag (created automatically as an inbox-type tag on the clerk's first run); CheapClerk then reads the OCR text and asks the configured LLM for a title, correspondent, document type, topical tags and the document date, PATCHing the result back and removing the inbox tag. Existing taxonomy is strongly preferred — new tags are only created when nothing fits (capped, existing matches win). Garbled scans go through the Vision OCR fallback first. Anything the classifier isn't confident about gets a `Needs Review` tag instead of guesses.
 
-Three triggers:
+Four triggers:
 - **Background poll** — `InboxPollingService` in CheapClerk.Web, every `Classification:PollIntervalMinutes` (0 disables the poller)
 - **Dashboard button** — "Process now" on the inbox card
 - **MCP tool** — `process_inbox` from Claude Code
+- **Webhook** — Paperless fires POST /api/inbox/process (token-guarded) the moment a document is added; the poll becomes a safety net. Prefer sending the token via the `X-Webhook-Token` header; the `?token=` query form works but relies on request-path logging staying suppressed (`Microsoft.AspNetCore` at Warning), and any reverse proxy in front would log query strings regardless.
 
 Configuration (`Classification` section):
 
@@ -299,6 +300,7 @@ Configuration (`Classification` section):
 | `MaxTagsPerDocument` | `4` | Cap on applied tags, existing matches first |
 | `AutoCreateTags` | `true` | Allow the LLM to introduce new tags |
 | `MaxDocumentsPerRun` | `20` | Batch size per run; the poller drains over successive runs |
+| `WebhookToken` | (unset) | Shared secret for the webhook endpoint; unset = endpoint returns 404 |
 
 Classification uses the same `Llm.Provider` switch as extraction — without an Anthropic key (or Ollama endpoint) configured, the processor logs that the provider is unconfigured and leaves the inbox untouched.
 

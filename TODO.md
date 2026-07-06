@@ -1,6 +1,6 @@
 <!--
   TODO.md — CheapClerk project work tracker
-  Last updated: 2026-07-06 (inbox auto-classification implemented)
+  Last updated: 2026-07-06 (webhook trigger documented)
 
   RULES FOR AI AGENTS:
   - Update the "Last updated" date above whenever you modify this file
@@ -32,6 +32,8 @@ _Nothing blocking._
 
 ## Planned
 
+- [x] (2026-07-06 → 2026-07-06) Instant webhook trigger — Paperless Document Added workflow → token-guarded endpoint → coalesced run [user]
+  - Poller demoted to safety net (60 min in prod); endpoint dark without Classification__WebhookToken
 - [ ] (2026-07-06) Paginate tag fetch or use name__iexact lookup in EnsureWorkflowTagsAsync [audit]
   - GetTagsAsync caps at page_size=100; once the taxonomy outgrows page 1, workflow tags stop resolving and every run aborts
   - AutoCreateTags makes this a when, not an if
