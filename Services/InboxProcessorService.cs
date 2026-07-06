@@ -58,6 +58,9 @@ public sealed class InboxProcessorService(
             var correspondentLookup = new Dictionary<int, string>(await paperlessClient.GetCorrespondentLookupAsync(cancellationToken));
             var documentTypeLookup = new Dictionary<int, string>(await paperlessClient.GetDocumentTypeLookupAsync(cancellationToken));
 
+            var classifiableTagLookup = new Dictionary<int, string>(
+                tagLookup.Where(kvp => kvp.Key != inboxTagId && kvp.Key != reviewTagId));
+
             var applied = 0;
             var sentToReview = 0;
             var failed = 0;
@@ -77,7 +80,7 @@ public sealed class InboxProcessorService(
                     var text = await ResolveDocumentTextAsync(doc, cancellationToken);
                     var (classification, llmFailed) = await classifier.ClassifyAsync(
                         text ?? string.Empty,
-                        tagLookup.Values.ToList(),
+                        classifiableTagLookup.Values.ToList(),
                         correspondentLookup.Values.ToList(),
                         documentTypeLookup.Values.ToList(),
                         cancellationToken);
@@ -129,18 +132,25 @@ public sealed class InboxProcessorService(
                     outcome.Confidence = classification.Confidence;
 
                     var (matchedTagIds, missingTagNames) = TagResolver.Resolve(
-                        classification.Tags, tagLookup, _options.MaxTagsPerDocument);
+                        classification.Tags, classifiableTagLookup, _options.MaxTagsPerDocument);
 
                     var createdTagIds = new List<int>();
                     if (_options.AutoCreateTags)
                     {
                         foreach (var missingName in missingTagNames)
                         {
+                            if (missingName.Equals(_options.InboxTagName, StringComparison.OrdinalIgnoreCase) ||
+                                missingName.Equals(_options.ReviewTagName, StringComparison.OrdinalIgnoreCase))
+                            {
+                                continue;
+                            }
+
                             var createdTag = await paperlessClient.CreateTagAsync(missingName, cancellationToken: cancellationToken);
                             if (createdTag is not null)
                             {
                                 createdTagIds.Add(createdTag.Id);
                                 tagLookup[createdTag.Id] = createdTag.Name;
+                                classifiableTagLookup[createdTag.Id] = createdTag.Name;
                             }
                         }
                     }

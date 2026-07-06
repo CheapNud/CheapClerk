@@ -66,6 +66,7 @@ public sealed class StructuredExtractionService(
             var extractionCompletion = await chatClient.GetResponseAsync<ExtractionResult>(
                 extractionPrompt,
                 chatOptions,
+                useJsonSchemaResponseFormat: false,
                 cancellationToken: cancellationToken);
 
             if (extractionCompletion.TryGetResult(out var extracted))
@@ -76,6 +77,12 @@ public sealed class StructuredExtractionService(
                     extracted.Confidence,
                     _llm.Provider);
                 return extracted;
+            }
+
+            if (LlmJsonParser.TryParse<ExtractionResult>(extractionCompletion.Text, out var recovered))
+            {
+                logger.LogInformation("Recovered structured output via lenient parse");
+                return recovered;
             }
 
             logger.LogWarning("Structured extraction returned no parseable result");

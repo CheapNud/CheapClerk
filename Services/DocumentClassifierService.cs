@@ -96,7 +96,7 @@ public sealed class DocumentClassifierService(
             };
 
             var classificationCompletion = await chatClient.GetResponseAsync<ClassificationResult>(
-                classificationPrompt, chatOptions, cancellationToken: cancellationToken);
+                classificationPrompt, chatOptions, useJsonSchemaResponseFormat: false, cancellationToken: cancellationToken);
 
             if (classificationCompletion.TryGetResult(out var classification))
             {
@@ -104,6 +104,12 @@ public sealed class DocumentClassifierService(
                     "Classified document as '{Title}' ({Confidence:P0}) via {Provider}",
                     classification.SuggestedTitle, classification.Confidence, _llm.Provider);
                 return (classification, false);
+            }
+
+            if (LlmJsonParser.TryParse<ClassificationResult>(classificationCompletion.Text, out var recovered))
+            {
+                logger.LogInformation("Recovered structured output via lenient parse");
+                return (recovered, false);
             }
 
             logger.LogWarning("Classification returned no parseable result");
