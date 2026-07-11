@@ -21,6 +21,44 @@ public sealed class PaperlessClientWriteTests
         new(HttpStatusCode.OK) { Content = new StringContent(json, Encoding.UTF8, "application/json") };
 
     [Fact]
+    public async Task GetFile_DefaultsToArchivedPreview_AndPassesContentTypeThrough()
+    {
+        var stub = new StubHttpHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new ByteArrayContent([0x25, 0x50, 0x44, 0x46])
+            {
+                Headers = { ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/pdf") }
+            }
+        });
+        var paperless = BuildClient(stub);
+
+        var storedFile = await paperless.GetFileAsync(9);
+
+        Assert.NotNull(storedFile);
+        Assert.Equal("application/pdf", storedFile!.Value.ContentType);
+        Assert.Equal(4, storedFile.Value.Payload.Length);
+        Assert.Equal("http://paperless.test/api/documents/9/preview/", Assert.Single(stub.Requests).RequestUri!.ToString());
+    }
+
+    [Fact]
+    public async Task GetFile_Original_UsesDownloadEndpoint()
+    {
+        var stub = new StubHttpHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new ByteArrayContent([0xFF, 0xD8])
+            {
+                Headers = { ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/jpeg") }
+            }
+        });
+        var paperless = BuildClient(stub);
+
+        var storedFile = await paperless.GetFileAsync(9, original: true);
+
+        Assert.Equal("image/jpeg", storedFile!.Value.ContentType);
+        Assert.Equal("http://paperless.test/api/documents/9/download/", Assert.Single(stub.Requests).RequestUri!.ToString());
+    }
+
+    [Fact]
     public async Task UpdateDocument_SendsPatchWithOnlyProvidedFields()
     {
         var stub = new StubHttpHandler(_ => Ok("{}"));

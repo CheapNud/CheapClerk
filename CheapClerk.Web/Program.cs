@@ -96,6 +96,27 @@ app.MapPost("/api/inbox/process", (HttpContext http,
     }
 });
 
+// Streams the archived preview (or ?original=true) from Paperless so the
+// browser never needs the API token. Content types outside the viewer's
+// allowlist are degraded to octet-stream so nothing scriptable (SVG/HTML
+// smuggled through the consume folder) can render on this origin.
+app.MapGet("/documents/{documentId:int}/file", async (
+    int documentId,
+    PaperlessClient paperless,
+    CancellationToken cancellationToken,
+    bool original = false) =>
+{
+    var storedFile = await paperless.GetFileAsync(documentId, original, cancellationToken);
+    if (storedFile is null)
+        return Results.NotFound();
+
+    string[] inlineSafeTypes = ["application/pdf", "image/jpeg", "image/png", "image/webp", "image/gif"];
+    var safeContentType = inlineSafeTypes.Contains(storedFile.Value.ContentType, StringComparer.OrdinalIgnoreCase)
+        ? storedFile.Value.ContentType
+        : "application/octet-stream";
+    return Results.File(storedFile.Value.Payload, safeContentType);
+});
+
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();

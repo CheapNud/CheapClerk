@@ -32,6 +32,9 @@ _Nothing blocking._
 
 ## Planned
 
+- [ ] (2026-07-11) Add authentication to cheapclerk-web BEFORE any exposure beyond the trusted LAN [audit]
+  - App has no auth by design (single-user LAN); all pages and the file proxy expose the full archive
+  - Hard gate: never proxy through Hidden-Valley / NPM without ASP.NET Identity in place first
 - [ ] (2026-07-06) Recover from cross-host entity-creation races in ClassificationApplier [audit]
   - Duplicate-name POST 400s → CreateTagAsync null → tag silently dropped from the filed doc (Applied still true)
   - On null create, force-refresh the lookup and rematch by name; same for correspondent/type

@@ -100,6 +100,29 @@ public sealed class PaperlessClient(
         }
     }
 
+    public async Task<(byte[] Payload, string ContentType)?> GetFileAsync(
+        int documentId,
+        bool original = false,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var relativeUrl = original
+                ? $"api/documents/{documentId}/download/"
+                : $"api/documents/{documentId}/preview/";
+            var fileReply = await httpClient.GetAsync(relativeUrl, cancellationToken);
+            fileReply.EnsureSuccessStatusCode();
+            var payload = await fileReply.Content.ReadAsByteArrayAsync(cancellationToken);
+            var contentType = fileReply.Content.Headers.ContentType?.MediaType ?? "application/octet-stream";
+            return (payload, contentType);
+        }
+        catch (HttpRequestException ex)
+        {
+            logger.LogError(ex, "Failed to fetch file for document {DocumentId}", documentId);
+            return null;
+        }
+    }
+
     public async Task<List<PaperlessDocument>> ListDocumentsAsync(
         string? correspondentName = null,
         string? tagName = null,
