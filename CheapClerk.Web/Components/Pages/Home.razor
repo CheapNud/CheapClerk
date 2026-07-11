@@ -1,11 +1,12 @@
 @page "/"
 @using CheapClerk.Configuration
 @using Microsoft.Extensions.Options
+@inject IStringLocalizer<SharedResources> Loc
 
-<PageTitle>CheapClerk — Dashboard</PageTitle>
+<PageTitle>@Loc["AppDashboardTitle"]</PageTitle>
 
-<MudText Typo="Typo.h4" GutterBottom="true">Dashboard</MudText>
-<MudText Typo="Typo.body1" Class="mb-6" Style="opacity: 0.6;">Your household documents at a glance.</MudText>
+<MudText Typo="Typo.h4" GutterBottom="true">@Loc["Dashboard"]</MudText>
+<MudText Typo="Typo.body1" Class="mb-6" Style="opacity: 0.6;">@Loc["HomeSubtitle"]</MudText>
 
 <MudGrid>
     <MudItem xs="12" sm="6" md="4">
@@ -15,7 +16,7 @@
                 <MudIcon Icon="@Icons.Material.Filled.Description" Color="Color.Primary" Size="Size.Large" />
                 <div>
                     <MudText Typo="Typo.h4">@_documentCount</MudText>
-                    <MudText Typo="Typo.body2" Style="opacity: 0.6;">Documents</MudText>
+                    <MudText Typo="Typo.body2" Style="opacity: 0.6;">@Loc["Documents"]</MudText>
                 </div>
             </MudCardContent>
         </MudCard>
@@ -27,7 +28,7 @@
                 <MudIcon Icon="@Icons.Material.Filled.Label" Color="Color.Secondary" Size="Size.Large" />
                 <div>
                     <MudText Typo="Typo.h4">@_tagCount</MudText>
-                    <MudText Typo="Typo.body2" Style="opacity: 0.6;">Tags</MudText>
+                    <MudText Typo="Typo.body2" Style="opacity: 0.6;">@Loc["Tags"]</MudText>
                 </div>
             </MudCardContent>
         </MudCard>
@@ -38,7 +39,7 @@
                 <MudIcon Icon="@Icons.Material.Filled.People" Color="Color.Tertiary" Size="Size.Large" />
                 <div>
                     <MudText Typo="Typo.h4">@_correspondentCount</MudText>
-                    <MudText Typo="Typo.body2" Style="opacity: 0.6;">Correspondents</MudText>
+                    <MudText Typo="Typo.body2" Style="opacity: 0.6;">@Loc["Correspondents"]</MudText>
                 </div>
             </MudCardContent>
         </MudCard>
@@ -52,7 +53,7 @@
                          Size="Size.Large" />
                 <div>
                     <MudText Typo="Typo.h4">@_expiringCount</MudText>
-                    <MudText Typo="Typo.body2" Style="opacity: 0.6;">Expiring in 30 days</MudText>
+                    <MudText Typo="Typo.body2" Style="opacity: 0.6;">@Loc["ExpiringIn30Days"]</MudText>
                 </div>
             </MudCardContent>
         </MudCard>
@@ -64,13 +65,13 @@
                          Color="@(_inboxCount > 0 ? Color.Info : Color.Default)" Size="Size.Large" />
                 <div>
                     <MudText Typo="Typo.h4">@_inboxCount</MudText>
-                    <MudText Typo="Typo.body2" Style="opacity: 0.6;">In inbox</MudText>
+                    <MudText Typo="Typo.body2" Style="opacity: 0.6;">@Loc["InInbox"]</MudText>
                 </div>
                 <MudSpacer />
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
                            Disabled="@(_inboxCount == 0 || _processing)"
                            OnClick="@(() => ProcessInboxAsync())">
-                    @(_processing ? "Processing..." : "Process now")
+                    @(_processing ? Loc["Processing"] : Loc["ProcessNow"])
                 </MudButton>
             </MudCardContent>
         </MudCard>
@@ -83,14 +84,14 @@
                          Color="@(_reviewCount > 0 ? Color.Secondary : Color.Default)" Size="Size.Large" />
                 <div>
                     <MudText Typo="Typo.h4">@_reviewCount</MudText>
-                    <MudText Typo="Typo.body2" Style="opacity: 0.6;">Needs review</MudText>
+                    <MudText Typo="Typo.body2" Style="opacity: 0.6;">@Loc["NeedsReview"]</MudText>
                 </div>
             </MudCardContent>
         </MudCard>
     </MudItem>
 </MudGrid>
 
-<MudText Typo="Typo.h5" Class="mt-8 mb-4">Recently Added</MudText>
+<MudText Typo="Typo.h5" Class="mt-8 mb-4">@Loc["RecentlyAdded"]</MudText>
 
 @if (_recentDocuments is null)
 {
@@ -98,16 +99,16 @@
 }
 else if (_recentDocuments.Count == 0)
 {
-    <MudAlert Severity="Severity.Info">No documents found. Start scanning!</MudAlert>
+    <MudAlert Severity="Severity.Info">@Loc["NoDocumentsFoundStartScanning"]</MudAlert>
 }
 else
 {
     <MudTable Items="_recentDocuments" Hover="true" Elevation="0" Dense="true"
               Style="border: 1px solid rgba(255,255,255,0.06);">
         <HeaderContent>
-            <MudTh>ID</MudTh>
-            <MudTh>Title</MudTh>
-            <MudTh>Added</MudTh>
+            <MudTh>@Loc["Id"]</MudTh>
+            <MudTh>@Loc["Title"]</MudTh>
+            <MudTh>@Loc["Added"]</MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd>@context.Id</MudTd>
@@ -167,7 +168,7 @@ else
             var report = await InboxProcessor.ProcessInboxAsync();
             if (report.SkippedReason is not null)
             {
-                Snackbar.Add($"Inbox processing skipped: {report.SkippedReason}", Severity.Warning);
+                Snackbar.Add(Loc["InboxProcessingSkipped", report.SkippedReason].Value, Severity.Warning);
             }
             else
             {
@@ -177,7 +178,7 @@ else
                 var severity = failed > 0
                     ? Severity.Error
                     : review > 0 ? Severity.Warning : Severity.Success;
-                Snackbar.Add($"Inbox processed: {applied} filed, {review} sent to review, {failed} failed.", severity);
+                Snackbar.Add(Loc["InboxProcessed", applied, review, failed].Value, severity);
             }
             await LoadWorkflowCountsAsync();
         }

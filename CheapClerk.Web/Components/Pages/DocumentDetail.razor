@@ -1,7 +1,8 @@
 @page "/documents/{DocumentId:int}"
 @using CheapClerk.Models.Extraction
+@inject IStringLocalizer<SharedResources> Loc
 
-<PageTitle>CheapClerk — Document @DocumentId</PageTitle>
+<PageTitle>@Loc["AppDocumentDetailTitle", DocumentId]</PageTitle>
 
 @if (_doc is null && !_notFound)
 {
@@ -9,7 +10,7 @@
 }
 else if (_notFound)
 {
-    <MudAlert Severity="Severity.Warning">Document @DocumentId not found.</MudAlert>
+    <MudAlert Severity="Severity.Warning">@Loc["DocumentNotFound", DocumentId]</MudAlert>
 }
 else
 {
@@ -19,37 +20,37 @@ else
         <MudItem xs="12" md="4">
             <MudCard Elevation="0" Style="border: 1px solid rgba(255,255,255,0.06);">
                 <MudCardContent>
-                    <MudText Typo="Typo.h6" GutterBottom="true">Metadata</MudText>
+                    <MudText Typo="Typo.h6" GutterBottom="true">@Loc["Metadata"]</MudText>
 
                     <MudSimpleTable Dense="true" Elevation="0">
                         <tbody>
-                            <tr><td><strong>Document ID</strong></td><td>@_doc!.Id</td></tr>
+                            <tr><td><strong>@Loc["DocumentIdLabel"]</strong></td><td>@_doc!.Id</td></tr>
                             @if (_correspondentName is not null)
                             {
-                                <tr><td><strong>Correspondent</strong></td><td>@_correspondentName</td></tr>
+                                <tr><td><strong>@Loc["Correspondent"]</strong></td><td>@_correspondentName</td></tr>
                             }
                             @if (_doc.Created.HasValue)
                             {
-                                <tr><td><strong>Created</strong></td><td>@_doc.Created.Value.ToString("yyyy-MM-dd")</td></tr>
+                                <tr><td><strong>@Loc["Created"]</strong></td><td>@_doc.Created.Value.ToString("yyyy-MM-dd")</td></tr>
                             }
                             @if (_doc.Added.HasValue)
                             {
-                                <tr><td><strong>Added</strong></td><td>@_doc.Added.Value.ToString("yyyy-MM-dd")</td></tr>
+                                <tr><td><strong>@Loc["Added"]</strong></td><td>@_doc.Added.Value.ToString("yyyy-MM-dd")</td></tr>
                             }
                             @if (_doc.OriginalFileName is not null)
                             {
-                                <tr><td><strong>Original File</strong></td><td>@_doc.OriginalFileName</td></tr>
+                                <tr><td><strong>@Loc["OriginalFile"]</strong></td><td>@_doc.OriginalFileName</td></tr>
                             }
                             @if (_doc.ArchiveSerialNumber.HasValue)
                             {
-                                <tr><td><strong>ASN</strong></td><td>@_doc.ArchiveSerialNumber</td></tr>
+                                <tr><td><strong>@Loc["Asn"]</strong></td><td>@_doc.ArchiveSerialNumber</td></tr>
                             }
                         </tbody>
                     </MudSimpleTable>
 
                     @if (_tagNames.Count > 0)
                     {
-                        <MudText Typo="Typo.subtitle2" Class="mt-4 mb-2">Tags</MudText>
+                        <MudText Typo="Typo.subtitle2" Class="mt-4 mb-2">@Loc["Tags"]</MudText>
                         @foreach (var tagName in _tagNames)
                         {
                             <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary" Class="mr-1 mb-1">@tagName</MudChip>
@@ -61,11 +62,11 @@ else
             <MudCard Elevation="0" Class="mt-4" Style="border: 1px solid rgba(255,255,255,0.06);">
                 <MudCardContent>
                     <div class="d-flex align-center justify-space-between mb-3">
-                        <MudText Typo="Typo.h6">Extracted Data</MudText>
+                        <MudText Typo="Typo.h6">@Loc["ExtractedData"]</MudText>
                         <MudButton Variant="Variant.Outlined" Size="Size.Small" Color="Color.Tertiary"
                                    OnClick="RunExtractionAsync" Disabled="_isExtracting"
                                    StartIcon="@Icons.Material.Filled.AutoAwesome">
-                            @(_isExtracting ? "Extracting..." : "Extract")
+                            @(_isExtracting ? Loc["Extracting"] : Loc["Extract"])
                         </MudButton>
                     </div>
 
@@ -75,7 +76,7 @@ else
                     }
                     else if (_extracted is null)
                     {
-                        <MudText Typo="Typo.body2" Style="opacity: 0.5;">Click Extract to classify and pull structured fields via Claude.</MudText>
+                        <MudText Typo="Typo.body2" Style="opacity: 0.5;">@Loc["ClickExtractToClassify"]</MudText>
                     }
                     else
                     {
@@ -83,7 +84,7 @@ else
                             @_extracted.Category
                         </MudChip>
                         <MudText Typo="Typo.caption" Class="ml-2" Style="opacity: 0.6;">
-                            @($"{_extracted.Confidence:P0} confidence")
+                            @Loc["ConfidencePercent", $"{_extracted.Confidence:P0}"]
                         </MudText>
 
                         @if (_extracted.Summary is not null)
@@ -97,14 +98,14 @@ else
                         {
                             <MudSimpleTable Dense="true" Elevation="0">
                                 <tbody>
-                                    @if (_extracted.Invoice.Vendor is not null) { <tr><td><strong>Vendor</strong></td><td>@_extracted.Invoice.Vendor</td></tr> }
-                                    @if (_extracted.Invoice.InvoiceNumber is not null) { <tr><td><strong>Invoice #</strong></td><td>@_extracted.Invoice.InvoiceNumber</td></tr> }
-                                    @if (_extracted.Invoice.TotalAmount.HasValue) { <tr><td><strong>Total</strong></td><td>@_extracted.Invoice.TotalAmount @_extracted.Invoice.Currency</td></tr> }
-                                    @if (_extracted.Invoice.IssueDate is not null) { <tr><td><strong>Issued</strong></td><td>@_extracted.Invoice.IssueDate</td></tr> }
-                                    @if (_extracted.Invoice.DueDate is not null) { <tr><td><strong>Due</strong></td><td>@_extracted.Invoice.DueDate</td></tr> }
-                                    @if (_extracted.Invoice.AccountNumber is not null) { <tr><td><strong>Account</strong></td><td>@_extracted.Invoice.AccountNumber</td></tr> }
-                                    @if (_extracted.Invoice.PaymentReference is not null) { <tr><td><strong>Reference</strong></td><td>@_extracted.Invoice.PaymentReference</td></tr> }
-                                    @if (_extracted.Invoice.BeneficiaryIban is not null) { <tr><td><strong>IBAN</strong></td><td>@_extracted.Invoice.BeneficiaryIban</td></tr> }
+                                    @if (_extracted.Invoice.Vendor is not null) { <tr><td><strong>@Loc["Vendor"]</strong></td><td>@_extracted.Invoice.Vendor</td></tr> }
+                                    @if (_extracted.Invoice.InvoiceNumber is not null) { <tr><td><strong>@Loc["InvoiceNumber"]</strong></td><td>@_extracted.Invoice.InvoiceNumber</td></tr> }
+                                    @if (_extracted.Invoice.TotalAmount.HasValue) { <tr><td><strong>@Loc["Total"]</strong></td><td>@_extracted.Invoice.TotalAmount @_extracted.Invoice.Currency</td></tr> }
+                                    @if (_extracted.Invoice.IssueDate is not null) { <tr><td><strong>@Loc["Issued"]</strong></td><td>@_extracted.Invoice.IssueDate</td></tr> }
+                                    @if (_extracted.Invoice.DueDate is not null) { <tr><td><strong>@Loc["Due"]</strong></td><td>@_extracted.Invoice.DueDate</td></tr> }
+                                    @if (_extracted.Invoice.AccountNumber is not null) { <tr><td><strong>@Loc["Account"]</strong></td><td>@_extracted.Invoice.AccountNumber</td></tr> }
+                                    @if (_extracted.Invoice.PaymentReference is not null) { <tr><td><strong>@Loc["Reference"]</strong></td><td>@_extracted.Invoice.PaymentReference</td></tr> }
+                                    @if (_extracted.Invoice.BeneficiaryIban is not null) { <tr><td><strong>@Loc["Iban"]</strong></td><td>@_extracted.Invoice.BeneficiaryIban</td></tr> }
                                 </tbody>
                             </MudSimpleTable>
                         }
@@ -112,14 +113,14 @@ else
                         {
                             <MudSimpleTable Dense="true" Elevation="0">
                                 <tbody>
-                                    @if (_extracted.Insurance.Insurer is not null) { <tr><td><strong>Insurer</strong></td><td>@_extracted.Insurance.Insurer</td></tr> }
-                                    @if (_extracted.Insurance.PolicyNumber is not null) { <tr><td><strong>Policy #</strong></td><td>@_extracted.Insurance.PolicyNumber</td></tr> }
-                                    @if (_extracted.Insurance.PolicyType is not null) { <tr><td><strong>Type</strong></td><td>@_extracted.Insurance.PolicyType</td></tr> }
-                                    @if (_extracted.Insurance.PremiumAmount.HasValue) { <tr><td><strong>Premium</strong></td><td>@_extracted.Insurance.PremiumAmount (@_extracted.Insurance.PremiumFrequency)</td></tr> }
-                                    @if (_extracted.Insurance.Deductible.HasValue) { <tr><td><strong>Deductible</strong></td><td>@_extracted.Insurance.Deductible</td></tr> }
-                                    @if (_extracted.Insurance.CoverageStart is not null) { <tr><td><strong>Coverage Start</strong></td><td>@_extracted.Insurance.CoverageStart</td></tr> }
-                                    @if (_extracted.Insurance.CoverageEnd is not null) { <tr><td><strong>Coverage End</strong></td><td>@_extracted.Insurance.CoverageEnd</td></tr> }
-                                    @if (_extracted.Insurance.InsuredItem is not null) { <tr><td><strong>Insured</strong></td><td>@_extracted.Insurance.InsuredItem</td></tr> }
+                                    @if (_extracted.Insurance.Insurer is not null) { <tr><td><strong>@Loc["Insurer"]</strong></td><td>@_extracted.Insurance.Insurer</td></tr> }
+                                    @if (_extracted.Insurance.PolicyNumber is not null) { <tr><td><strong>@Loc["PolicyNumber"]</strong></td><td>@_extracted.Insurance.PolicyNumber</td></tr> }
+                                    @if (_extracted.Insurance.PolicyType is not null) { <tr><td><strong>@Loc["Type"]</strong></td><td>@_extracted.Insurance.PolicyType</td></tr> }
+                                    @if (_extracted.Insurance.PremiumAmount.HasValue) { <tr><td><strong>@Loc["Premium"]</strong></td><td>@_extracted.Insurance.PremiumAmount (@_extracted.Insurance.PremiumFrequency)</td></tr> }
+                                    @if (_extracted.Insurance.Deductible.HasValue) { <tr><td><strong>@Loc["Deductible"]</strong></td><td>@_extracted.Insurance.Deductible</td></tr> }
+                                    @if (_extracted.Insurance.CoverageStart is not null) { <tr><td><strong>@Loc["CoverageStart"]</strong></td><td>@_extracted.Insurance.CoverageStart</td></tr> }
+                                    @if (_extracted.Insurance.CoverageEnd is not null) { <tr><td><strong>@Loc["CoverageEnd"]</strong></td><td>@_extracted.Insurance.CoverageEnd</td></tr> }
+                                    @if (_extracted.Insurance.InsuredItem is not null) { <tr><td><strong>@Loc["Insured"]</strong></td><td>@_extracted.Insurance.InsuredItem</td></tr> }
                                 </tbody>
                             </MudSimpleTable>
                         }
@@ -127,13 +128,13 @@ else
                         {
                             <MudSimpleTable Dense="true" Elevation="0">
                                 <tbody>
-                                    @if (_extracted.Contract.Counterparty is not null) { <tr><td><strong>Counterparty</strong></td><td>@_extracted.Contract.Counterparty</td></tr> }
-                                    @if (_extracted.Contract.Subject is not null) { <tr><td><strong>Subject</strong></td><td>@_extracted.Contract.Subject</td></tr> }
-                                    @if (_extracted.Contract.StartDate is not null) { <tr><td><strong>Start</strong></td><td>@_extracted.Contract.StartDate</td></tr> }
-                                    @if (_extracted.Contract.EndDate is not null) { <tr><td><strong>End</strong></td><td>@_extracted.Contract.EndDate</td></tr> }
-                                    @if (_extracted.Contract.NoticePeriod is not null) { <tr><td><strong>Notice</strong></td><td>@_extracted.Contract.NoticePeriod</td></tr> }
-                                    @if (_extracted.Contract.AutoRenewal.HasValue) { <tr><td><strong>Auto-renew</strong></td><td>@(_extracted.Contract.AutoRenewal.Value ? "Yes" : "No")</td></tr> }
-                                    @if (_extracted.Contract.RecurringAmount.HasValue) { <tr><td><strong>Amount</strong></td><td>@_extracted.Contract.RecurringAmount (@_extracted.Contract.BillingFrequency)</td></tr> }
+                                    @if (_extracted.Contract.Counterparty is not null) { <tr><td><strong>@Loc["Counterparty"]</strong></td><td>@_extracted.Contract.Counterparty</td></tr> }
+                                    @if (_extracted.Contract.Subject is not null) { <tr><td><strong>@Loc["Subject"]</strong></td><td>@_extracted.Contract.Subject</td></tr> }
+                                    @if (_extracted.Contract.StartDate is not null) { <tr><td><strong>@Loc["Start"]</strong></td><td>@_extracted.Contract.StartDate</td></tr> }
+                                    @if (_extracted.Contract.EndDate is not null) { <tr><td><strong>@Loc["End"]</strong></td><td>@_extracted.Contract.EndDate</td></tr> }
+                                    @if (_extracted.Contract.NoticePeriod is not null) { <tr><td><strong>@Loc["Notice"]</strong></td><td>@_extracted.Contract.NoticePeriod</td></tr> }
+                                    @if (_extracted.Contract.AutoRenewal.HasValue) { <tr><td><strong>@Loc["AutoRenew"]</strong></td><td>@(_extracted.Contract.AutoRenewal.Value ? Loc["Yes"] : Loc["No"])</td></tr> }
+                                    @if (_extracted.Contract.RecurringAmount.HasValue) { <tr><td><strong>@Loc["Amount"]</strong></td><td>@_extracted.Contract.RecurringAmount (@_extracted.Contract.BillingFrequency)</td></tr> }
                                 </tbody>
                             </MudSimpleTable>
                         }
@@ -146,7 +147,7 @@ else
             <MudCard Elevation="0" Style="border: 1px solid rgba(255,255,255,0.06);">
                 <MudCardContent>
                     <MudTabs Elevation="0" ApplyEffectsToContainer="true" PanelClass="pt-4" KeepPanelsAlive="true">
-                        <MudTabPanel Text="Document" Icon="@Icons.Material.Filled.Article">
+                        <MudTabPanel Text="@Loc["DocumentTab"]" Icon="@Icons.Material.Filled.Article">
                             @if (_isImageFile)
                             {
                                 <MudImage Src="@_fileUrl" Alt="@_doc!.Title" Fluid="true" Class="rounded" />
@@ -157,13 +158,13 @@ else
                                         style="width: 100%; height: 75vh; border: 0; border-radius: 4px; background: #ffffff;"></iframe>
                             }
                         </MudTabPanel>
-                        <MudTabPanel Text="Text" Icon="@Icons.Material.Filled.Notes">
+                        <MudTabPanel Text="@Loc["TextTab"]" Icon="@Icons.Material.Filled.Notes">
                             <div class="d-flex align-center justify-space-between mb-4">
-                                <MudText Typo="Typo.subtitle1">OCR content</MudText>
+                                <MudText Typo="Typo.subtitle1">@Loc["OcrContent"]</MudText>
                                 <MudButton Variant="Variant.Outlined" Size="Size.Small" Color="Color.Secondary"
                                            OnClick="RunVisionOcrAsync" Disabled="_isRunningVision"
                                            StartIcon="@Icons.Material.Filled.RemoveRedEye">
-                                    @(_isRunningVision ? "Running Vision OCR..." : "Vision OCR")
+                                    @(_isRunningVision ? Loc["RunningVisionOcr"] : Loc["VisionOcr"])
                                 </MudButton>
                             </div>
 
@@ -173,7 +174,7 @@ else
                             }
                             else if (string.IsNullOrWhiteSpace(_documentContent))
                             {
-                                <MudAlert Severity="Severity.Info">No text content available.</MudAlert>
+                                <MudAlert Severity="Severity.Info">@Loc["NoTextContentAvailable"]</MudAlert>
                             }
                             else
                             {
@@ -246,7 +247,7 @@ else
     {
         if (!VisionOcrService.IsEnabled)
         {
-            Snackbar.Add("Vision OCR is not configured.", Severity.Warning);
+            Snackbar.Add(Loc["VisionOcrNotConfigured"].Value, Severity.Warning);
             return;
         }
 
@@ -256,7 +257,7 @@ else
         var originalBytes = await PaperlessClient.DownloadOriginalAsync(DocumentId);
         if (originalBytes is null)
         {
-            Snackbar.Add("Failed to download original document.", Severity.Error);
+            Snackbar.Add(Loc["FailedToDownloadOriginal"].Value, Severity.Error);
             _isRunningVision = false;
             return;
         }
@@ -265,11 +266,11 @@ else
         if (visionText is not null)
         {
             _documentContent = visionText;
-            Snackbar.Add($"Vision OCR extracted {visionText.Length} characters.", Severity.Success);
+            Snackbar.Add(Loc["VisionOcrExtractedCharacters", visionText.Length].Value, Severity.Success);
         }
         else
         {
-            Snackbar.Add("Vision OCR returned no text.", Severity.Warning);
+            Snackbar.Add(Loc["VisionOcrReturnedNoText"].Value, Severity.Warning);
         }
 
         _isRunningVision = false;
@@ -279,7 +280,7 @@ else
     {
         if (!ExtractionService.IsEnabled)
         {
-            Snackbar.Add("Structured extraction is not configured.", Severity.Warning);
+            Snackbar.Add(Loc["StructuredExtractionNotConfigured"].Value, Severity.Warning);
             return;
         }
 
@@ -290,9 +291,9 @@ else
         _extracted = await ExtractionCache.GetOrExtractAsync(DocumentId, forceRefresh: true);
 
         if (_extracted is not null)
-            Snackbar.Add($"Classified as {_extracted.Category} ({_extracted.Confidence:P0}).", Severity.Success);
+            Snackbar.Add(Loc["ClassifiedAs", _extracted.Category, $"{_extracted.Confidence:P0}"].Value, Severity.Success);
         else
-            Snackbar.Add("Extraction failed — check logs.", Severity.Error);
+            Snackbar.Add(Loc["ExtractionFailedCheckLogs"].Value, Severity.Error);
 
         _isExtracting = false;
     }

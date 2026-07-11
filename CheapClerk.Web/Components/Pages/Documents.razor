@@ -1,12 +1,13 @@
 @page "/documents"
+@inject IStringLocalizer<SharedResources> Loc
 
-<PageTitle>CheapClerk — Documents</PageTitle>
+<PageTitle>@Loc["AppDocumentsTitle"]</PageTitle>
 
-<MudText Typo="Typo.h4" GutterBottom="true">Documents</MudText>
+<MudText Typo="Typo.h4" GutterBottom="true">@Loc["Documents"]</MudText>
 
 <MudGrid Class="mb-4">
     <MudItem xs="12" sm="4">
-        <MudSelect T="string" Label="Correspondent" Value="_selectedCorrespondent" ValueChanged="OnCorrespondentChanged"
+        <MudSelect T="string" Label="@Loc["Correspondent"]" Value="_selectedCorrespondent" ValueChanged="OnCorrespondentChanged"
                    Clearable="true" Variant="Variant.Outlined" Dense="true">
             @if (_correspondents is not null)
             {
@@ -18,7 +19,7 @@
         </MudSelect>
     </MudItem>
     <MudItem xs="12" sm="4">
-        <MudSelect T="string" Label="Tag" Value="_selectedTag" ValueChanged="OnTagChanged"
+        <MudSelect T="string" Label="@Loc["Tag"]" Value="_selectedTag" ValueChanged="OnTagChanged"
                    Clearable="true" Variant="Variant.Outlined" Dense="true">
             @if (_tags is not null)
             {
@@ -32,7 +33,7 @@
     <MudItem xs="12" sm="4" Class="d-flex align-end">
         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="LoadDocumentsAsync"
                    Disabled="_isLoading" StartIcon="@Icons.Material.Filled.Refresh">
-            @(_isLoading ? "Loading..." : "Apply")
+            @(_isLoading ? Loc["Loading"] : Loc["Apply"])
         </MudButton>
     </MudItem>
 </MudGrid>
@@ -46,10 +47,10 @@ else if (_documents is not null)
     <MudTable Items="_documents" Hover="true" Elevation="0" Dense="true"
               Style="border: 1px solid rgba(255,255,255,0.06);">
         <HeaderContent>
-            <MudTh>ID</MudTh>
-            <MudTh>Title</MudTh>
-            <MudTh>Created</MudTh>
-            <MudTh>Added</MudTh>
+            <MudTh>@Loc["Id"]</MudTh>
+            <MudTh>@Loc["Title"]</MudTh>
+            <MudTh>@Loc["Created"]</MudTh>
+            <MudTh>@Loc["Added"]</MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd>@context.Id</MudTd>

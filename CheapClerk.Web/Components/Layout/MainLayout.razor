@@ -12,7 +12,14 @@
         <MudIcon Icon="@Icons.Material.Filled.Description" Color="Color.Primary" Class="ml-2" />
         <MudText Typo="Typo.h6" Class="ml-1" Style="font-weight: 700; letter-spacing: 1px;">CHEAPCLERK</MudText>
         <MudSpacer />
-        <MudTooltip Text="Toggle Dark Mode">
+        <MudIcon Icon="@Icons.Material.Filled.Language" Color="Color.Inherit" Class="mr-1" Size="Size.Small" />
+        <MudLink Href="@($"/culture/set?culture=en&redirectUri={Uri.EscapeDataString(CurrentPath)}")"
+                 Color="Color.Inherit" Underline="Underline.None" Class="mx-1"
+                 data-enhance-nav="false">English</MudLink>
+        <MudLink Href="@($"/culture/set?culture=nl&redirectUri={Uri.EscapeDataString(CurrentPath)}")"
+                 Color="Color.Inherit" Underline="Underline.None" Class="mr-2"
+                 data-enhance-nav="false">Nederlands</MudLink>
+        <MudTooltip Text="@Loc["ToggleDarkMode"]">
             <MudIconButton Icon="@(_isDarkMode ? Icons.Material.Filled.LightMode : Icons.Material.Filled.DarkMode)"
                            Color="Color.Inherit"
                            OnClick="@(() => _isDarkMode = !_isDarkMode)" />
@@ -26,12 +33,12 @@
             <MudText Typo="Typo.body1" Class="ml-2" Style="font-weight: 600;">Clerk</MudText>
         </MudDrawerHeader>
         <MudNavMenu Bordered="true" Color="Color.Primary">
-            <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">Dashboard</MudNavLink>
-            <MudNavLink Href="/documents" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.FolderOpen">Documents</MudNavLink>
-            <MudNavLink Href="/search" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Search">Search</MudNavLink>
-            <MudNavLink Href="/tags" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Label">Tags</MudNavLink>
-            <MudNavLink Href="/expiring" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Schedule">Expiring</MudNavLink>
-            <MudNavLink Href="/review" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.RateReview">Review</MudNavLink>
+            <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">@Loc["Dashboard"]</MudNavLink>
+            <MudNavLink Href="/documents" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.FolderOpen">@Loc["Documents"]</MudNavLink>
+            <MudNavLink Href="/search" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Search">@Loc["Search"]</MudNavLink>
+            <MudNavLink Href="/tags" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Label">@Loc["Tags"]</MudNavLink>
+            <MudNavLink Href="/expiring" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Schedule">@Loc["Expiring"]</MudNavLink>
+            <MudNavLink Href="/review" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.RateReview">@Loc["Review"]</MudNavLink>
         </MudNavMenu>
         <MudSpacer />
         <MudText Typo="Typo.caption" Class="pa-3" Style="opacity: 0.2;">@CheapClerk.AppVersion.Display</MudText>
@@ -43,6 +50,12 @@
 </MudLayout>
 
 @code {
+    [Inject] private IStringLocalizer<SharedResources> Loc { get; set; } = null!;
+    [Inject] private NavigationManager Navigation { get; set; } = null!;
+
     private bool _drawerOpen = true;
     private bool _isDarkMode = true;
+
+    // The culture endpoint only accepts app-local paths, never absolute URIs
+    private string CurrentPath => new Uri(Navigation.Uri).PathAndQuery;
 }

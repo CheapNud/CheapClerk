@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!--
+    Microsoft ResX Schema
+
+    Version 2.0
+
+    The primary goals of this format is to allow a simple XML format
+    that is mostly human readable. The generation and parsing of the
+    various data types are done through the TypeConverter classes
+    associated with the data types.
+
+    Example:
+
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+
+    There are any number of "resheader" rows that contain simple
+    name/value pairs.
+
+    Each data row contains a name, and value. The row also contains a
+    type or mimetype. Type corresponds to a .NET class that support
+    text/value conversion through the TypeConverter architecture.
+    Classes that don't support this are serialized and stored with the
+    mimetype set.
+
+    The mimetype is used for serialized objects, and tells the
+    ResXResourceReader how to depersist the object. This is currently not
+    extensible. For a given mimetype the value must be set accordingly.
+
+    Note - application/x-microsoft.net.object.binary.base64 is the format
+    that the ResXResourceWriter will generate, however the reader can
+    read any of the formats listed below.
+
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <!-- Navigation / layout -->
+  <data name="Dashboard" xml:space="preserve"><value>Dashboard</value></data>
+  <data name="Documents" xml:space="preserve"><value>Documents</value></data>
+  <data name="Search" xml:space="preserve"><value>Search</value></data>
+  <data name="Tags" xml:space="preserve"><value>Tags</value></data>
+  <data name="Expiring" xml:space="preserve"><value>Expiring</value></data>
+  <data name="Review" xml:space="preserve"><value>Review</value></data>
+  <data name="ToggleDarkMode" xml:space="preserve"><value>Toggle Dark Mode</value></data>
+  <!-- Home / Dashboard page -->
+  <data name="AppDashboardTitle" xml:space="preserve"><value>CheapClerk — Dashboard</value></data>
+  <data name="HomeSubtitle" xml:space="preserve"><value>Your household documents at a glance.</value></data>
+  <data name="Correspondents" xml:space="preserve"><value>Correspondents</value></data>
+  <data name="ExpiringIn30Days" xml:space="preserve"><value>Expiring in 30 days</value></data>
+  <data name="InInbox" xml:space="preserve"><value>In inbox</value></data>
+  <data name="Processing" xml:space="preserve"><value>Processing...</value></data>
+  <data name="ProcessNow" xml:space="preserve"><value>Process now</value></data>
+  <data name="NeedsReview" xml:space="preserve"><value>Needs review</value></data>
+  <data name="RecentlyAdded" xml:space="preserve"><value>Recently Added</value></data>
+  <data name="NoDocumentsFoundStartScanning" xml:space="preserve"><value>No documents found. Start scanning!</value></data>
+  <data name="Id" xml:space="preserve"><value>ID</value></data>
+  <data name="Title" xml:space="preserve"><value>Title</value></data>
+  <data name="Added" xml:space="preserve"><value>Added</value></data>
+  <data name="InboxProcessingSkipped" xml:space="preserve"><value>Inbox processing skipped: {0}</value></data>
+  <data name="InboxProcessed" xml:space="preserve"><value>Inbox processed: {0} filed, {1} sent to review, {2} failed.</value></data>
+  <!-- Documents page -->
+  <data name="AppDocumentsTitle" xml:space="preserve"><value>CheapClerk — Documents</value></data>
+  <data name="Correspondent" xml:space="preserve"><value>Correspondent</value></data>
+  <data name="Tag" xml:space="preserve"><value>Tag</value></data>
+  <data name="Loading" xml:space="preserve"><value>Loading...</value></data>
+  <data name="Apply" xml:space="preserve"><value>Apply</value></data>
+  <data name="Created" xml:space="preserve"><value>Created</value></data>
+  <!-- Search page -->
+  <data name="AppSearchTitle" xml:space="preserve"><value>CheapClerk — Search</value></data>
+  <data name="SearchDocuments" xml:space="preserve"><value>Search Documents</value></data>
+  <data name="SearchQuery" xml:space="preserve"><value>Search query</value></data>
+  <data name="SearchPlaceholderExample" xml:space="preserve"><value>e.g. home insurance deductible</value></data>
+  <data name="TagFilter" xml:space="preserve"><value>Tag filter</value></data>
+  <data name="Searching" xml:space="preserve"><value>Searching...</value></data>
+  <data name="NoDocumentsFoundMatching" xml:space="preserve"><value>No documents found matching "{0}".</value></data>
+  <data name="FoundDocumentsCount" xml:space="preserve"><value>Found {0} document(s)</value></data>
+  <!-- Tags page -->
+  <data name="AppTagsTitle" xml:space="preserve"><value>CheapClerk — Tags</value></data>
+  <data name="NoTagsFoundInPaperless" xml:space="preserve"><value>No tags found in Paperless.</value></data>
+  <!-- Expiring page -->
+  <data name="AppExpiringTitle" xml:space="preserve"><value>CheapClerk — Expiring</value></data>
+  <data name="ExpiringDocuments" xml:space="preserve"><value>Expiring Documents</value></data>
+  <data name="Analyzing" xml:space="preserve"><value>Analyzing...</value></data>
+  <data name="AnalyzeAll" xml:space="preserve"><value>Analyze All</value></data>
+  <data name="DaysAhead" xml:space="preserve"><value>Days ahead</value></data>
+  <data name="CachedCountInExtractionCache" xml:space="preserve"><value>{0} document(s) in the extraction cache</value></data>
+  <data name="RunningExtractionAllDocuments" xml:space="preserve"><value>Running extraction on all documents. This may take a few minutes.</value></data>
+  <data name="NoDocumentsExpiringWithinDays" xml:space="preserve"><value>No documents expiring within {0} days.</value></data>
+  <data name="ExtractionCacheEmptyPrompt" xml:space="preserve"><value>The extraction cache is empty. Click "{0}" to run structured extraction on your documents.</value></data>
+  <data name="Category" xml:space="preserve"><value>Category</value></data>
+  <data name="Expires" xml:space="preserve"><value>Expires</value></data>
+  <data name="DaysLeft" xml:space="preserve"><value>Days Left</value></data>
+  <data name="Summary" xml:space="preserve"><value>Summary</value></data>
+  <data name="CacheRefreshed" xml:space="preserve"><value>Cache refreshed: {0} processed, {1} classified, {2} skipped.</value></data>
+  <data name="RefreshFailed" xml:space="preserve"><value>Refresh failed: {0}</value></data>
+  <!-- Review page -->
+  <data name="AppReviewQueueTitle" xml:space="preserve"><value>CheapClerk — Review Queue</value></data>
+  <data name="ReviewQueue" xml:space="preserve"><value>Review Queue</value></data>
+  <data name="ReviewQueueSubtitle" xml:space="preserve"><value>Documents the clerk wasn't confident enough to file automatically.</value></data>
+  <data name="ReviewQueueEmpty" xml:space="preserve"><value>Review queue is empty — the clerk has no doubts.</value></data>
+  <data name="ForceVisionOcrOnRerun" xml:space="preserve"><value>Force Vision OCR on re-run</value></data>
+  <data name="Doc" xml:space="preserve"><value>Doc</value></data>
+  <data name="Type" xml:space="preserve"><value>Type</value></data>
+  <data name="Date" xml:space="preserve"><value>Date</value></data>
+  <data name="Actions" xml:space="preserve"><value>Actions</value></data>
+  <data name="Accept" xml:space="preserve"><value>Accept</value></data>
+  <data name="Rerun" xml:space="preserve"><value>Re-run</value></data>
+  <data name="FiledAs" xml:space="preserve"><value>Filed as "{0}"</value></data>
+  <data name="FailedToApply" xml:space="preserve"><value>Failed to apply: {0}</value></data>
+  <data name="Reclassified" xml:space="preserve"><value>Re-classified.</value></data>
+  <data name="RerunFailed" xml:space="preserve"><value>Re-run failed: {0}</value></data>
+  <!-- Document detail page -->
+  <data name="AppDocumentDetailTitle" xml:space="preserve"><value>CheapClerk — Document {0}</value></data>
+  <data name="DocumentNotFound" xml:space="preserve"><value>Document {0} not found.</value></data>
+  <data name="Metadata" xml:space="preserve"><value>Metadata</value></data>
+  <data name="DocumentIdLabel" xml:space="preserve"><value>Document ID</value></data>
+  <data name="OriginalFile" xml:space="preserve"><value>Original File</value></data>
+  <data name="Asn" xml:space="preserve"><value>ASN</value></data>
+  <data name="ExtractedData" xml:space="preserve"><value>Extracted Data</value></data>
+  <data name="Extracting" xml:space="preserve"><value>Extracting...</value></data>
+  <data name="Extract" xml:space="preserve"><value>Extract</value></data>
+  <data name="ClickExtractToClassify" xml:space="preserve"><value>Click Extract to classify and pull structured fields via Claude.</value></data>
+  <data name="ConfidencePercent" xml:space="preserve"><value>{0} confidence</value></data>
+  <data name="Vendor" xml:space="preserve"><value>Vendor</value></data>
+  <data name="InvoiceNumber" xml:space="preserve"><value>Invoice #</value></data>
+  <data name="Total" xml:space="preserve"><value>Total</value></data>
+  <data name="Issued" xml:space="preserve"><value>Issued</value></data>
+  <data name="Due" xml:space="preserve"><value>Due</value></data>
+  <data name="Account" xml:space="preserve"><value>Account</value></data>
+  <data name="Reference" xml:space="preserve"><value>Reference</value></data>
+  <data name="Iban" xml:space="preserve"><value>IBAN</value></data>
+  <data name="Insurer" xml:space="preserve"><value>Insurer</value></data>
+  <data name="PolicyNumber" xml:space="preserve"><value>Policy #</value></data>
+  <data name="Premium" xml:space="preserve"><value>Premium</value></data>
+  <data name="Deductible" xml:space="preserve"><value>Deductible</value></data>
+  <data name="CoverageStart" xml:space="preserve"><value>Coverage Start</value></data>
+  <data name="CoverageEnd" xml:space="preserve"><value>Coverage End</value></data>
+  <data name="Insured" xml:space="preserve"><value>Insured</value></data>
+  <data name="Counterparty" xml:space="preserve"><value>Counterparty</value></data>
+  <data name="Subject" xml:space="preserve"><value>Subject</value></data>
+  <data name="Start" xml:space="preserve"><value>Start</value></data>
+  <data name="End" xml:space="preserve"><value>End</value></data>
+  <data name="Notice" xml:space="preserve"><value>Notice</value></data>
+  <data name="AutoRenew" xml:space="preserve"><value>Auto-renew</value></data>
+  <data name="Amount" xml:space="preserve"><value>Amount</value></data>
+  <data name="Yes" xml:space="preserve"><value>Yes</value></data>
+  <data name="No" xml:space="preserve"><value>No</value></data>
+  <data name="DocumentTab" xml:space="preserve"><value>Document</value></data>
+  <data name="TextTab" xml:space="preserve"><value>Text</value></data>
+  <data name="OcrContent" xml:space="preserve"><value>OCR content</value></data>
+  <data name="RunningVisionOcr" xml:space="preserve"><value>Running Vision OCR...</value></data>
+  <data name="VisionOcr" xml:space="preserve"><value>Vision OCR</value></data>
+  <data name="NoTextContentAvailable" xml:space="preserve"><value>No text content available.</value></data>
+  <data name="VisionOcrNotConfigured" xml:space="preserve"><value>Vision OCR is not configured.</value></data>
+  <data name="FailedToDownloadOriginal" xml:space="preserve"><value>Failed to download original document.</value></data>
+  <data name="VisionOcrExtractedCharacters" xml:space="preserve"><value>Vision OCR extracted {0} characters.</value></data>
+  <data name="VisionOcrReturnedNoText" xml:space="preserve"><value>Vision OCR returned no text.</value></data>
+  <data name="StructuredExtractionNotConfigured" xml:space="preserve"><value>Structured extraction is not configured.</value></data>
+  <data name="ClassifiedAs" xml:space="preserve"><value>Classified as {0} ({1}).</value></data>
+  <data name="ExtractionFailedCheckLogs" xml:space="preserve"><value>Extraction failed — check logs.</value></data>
+  <!-- Reconnect modal (Blazor Server disconnect overlay) -->
+  <data name="ReconnectRejoining" xml:space="preserve"><value>Rejoining the server...</value></data>
+  <data name="ReconnectRetryPrefix" xml:space="preserve"><value>Rejoin failed... trying again in </value></data>
+  <data name="ReconnectRetrySuffix" xml:space="preserve"><value> seconds.</value></data>
+  <data name="ReconnectFailedTitle" xml:space="preserve"><value>Failed to rejoin.</value></data>
+  <data name="ReconnectRetryOrReload" xml:space="preserve"><value>Please retry or reload the page.</value></data>
+  <data name="ReconnectButtonRetry" xml:space="preserve"><value>Retry</value></data>
+  <data name="ReconnectPaused" xml:space="preserve"><value>The session has been paused by the server.</value></data>
+  <data name="ReconnectResumeFailedTitle" xml:space="preserve"><value>Failed to resume the session.</value></data>
+  <data name="ReconnectButtonResume" xml:space="preserve"><value>Resume</value></data>
+</root>

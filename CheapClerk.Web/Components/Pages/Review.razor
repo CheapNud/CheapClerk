@@ -1,10 +1,11 @@
 @page "/review"
 @using CheapClerk.Models.Classification
+@inject IStringLocalizer<SharedResources> Loc
 
-<PageTitle>CheapClerk — Review Queue</PageTitle>
+<PageTitle>@Loc["AppReviewQueueTitle"]</PageTitle>
 
-<MudText Typo="Typo.h4" GutterBottom="true">Review Queue</MudText>
-<MudText Typo="Typo.body1" Class="mb-6" Style="opacity: 0.6;">Documents the clerk wasn't confident enough to file automatically.</MudText>
+<MudText Typo="Typo.h4" GutterBottom="true">@Loc["ReviewQueue"]</MudText>
+<MudText Typo="Typo.body1" Class="mb-6" Style="opacity: 0.6;">@Loc["ReviewQueueSubtitle"]</MudText>
 
 @if (_rows is null)
 {
@@ -12,22 +13,22 @@
 }
 else if (_rows.Count == 0)
 {
-    <MudAlert Severity="Severity.Info">Review queue is empty — the clerk has no doubts.</MudAlert>
+    <MudAlert Severity="Severity.Info">@Loc["ReviewQueueEmpty"]</MudAlert>
 }
 else
 {
-    <MudSwitch T="bool" @bind-Value="_forceVision" Label="Force Vision OCR on re-run" Class="mb-4" />
+    <MudSwitch T="bool" @bind-Value="_forceVision" Label="@Loc["ForceVisionOcrOnRerun"]" Class="mb-4" />
 
     <MudTable Items="_rows" Hover="true" Elevation="0" Dense="true"
               Style="border: 1px solid rgba(255,255,255,0.06);">
         <HeaderContent>
-            <MudTh>Doc</MudTh>
-            <MudTh>Title</MudTh>
-            <MudTh>Correspondent</MudTh>
-            <MudTh>Type</MudTh>
-            <MudTh>Tags</MudTh>
-            <MudTh>Date</MudTh>
-            <MudTh>Actions</MudTh>
+            <MudTh>@Loc["Doc"]</MudTh>
+            <MudTh>@Loc["Title"]</MudTh>
+            <MudTh>@Loc["Correspondent"]</MudTh>
+            <MudTh>@Loc["Type"]</MudTh>
+            <MudTh>@Loc["Tags"]</MudTh>
+            <MudTh>@Loc["Date"]</MudTh>
+            <MudTh>@Loc["Actions"]</MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd>
@@ -46,12 +47,12 @@ else
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
                            Disabled="@(context.Busy)"
                            OnClick="@(() => AcceptAsync(context))">
-                    Accept
+                    @Loc["Accept"]
                 </MudButton>
                 <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Small" Class="ml-2"
                            Disabled="@(context.Busy)"
                            OnClick="@(() => RerunAsync(context))">
-                    Re-run
+                    @Loc["Rerun"]
                 </MudButton>
             </MudTd>
         </RowTemplate>
@@ -93,12 +94,12 @@ else
             var outcome = await ReviewQueue.ApplyAsync(row.Entry.DocumentId, finalDecision);
             if (outcome.Applied)
             {
-                Snackbar.Add($"Filed as \"{outcome.NewTitle}\"", Severity.Success);
+                Snackbar.Add(Loc["FiledAs", outcome.NewTitle ?? string.Empty].Value, Severity.Success);
                 _rows?.Remove(row);
             }
             else
             {
-                Snackbar.Add($"Failed to apply: {outcome.Error}", Severity.Error);
+                Snackbar.Add(Loc["FailedToApply", outcome.Error ?? string.Empty].Value, Severity.Error);
             }
         }
         finally
@@ -116,11 +117,11 @@ else
             if (entry is not null)
             {
                 row.Refresh(entry);
-                Snackbar.Add("Re-classified.", Severity.Success);
+                Snackbar.Add(Loc["Reclassified"].Value, Severity.Success);
             }
             else
             {
-                Snackbar.Add($"Re-run failed: {error}", Severity.Error);
+                Snackbar.Add(Loc["RerunFailed", error ?? string.Empty].Value, Severity.Error);
             }
         }
         finally

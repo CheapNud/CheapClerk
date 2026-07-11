@@ -1,24 +1,25 @@
 @page "/expiring"
 @using CheapClerk.Models.Extraction
+@inject IStringLocalizer<SharedResources> Loc
 
-<PageTitle>CheapClerk — Expiring</PageTitle>
+<PageTitle>@Loc["AppExpiringTitle"]</PageTitle>
 
 <div class="d-flex align-center justify-space-between mb-4">
-    <MudText Typo="Typo.h4">Expiring Documents</MudText>
+    <MudText Typo="Typo.h4">@Loc["ExpiringDocuments"]</MudText>
     <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="RefreshCacheAsync"
                Disabled="_isRefreshing" StartIcon="@Icons.Material.Filled.Autorenew">
-        @(_isRefreshing ? "Analyzing..." : "Analyze All")
+        @(_isRefreshing ? Loc["Analyzing"] : Loc["AnalyzeAll"])
     </MudButton>
 </div>
 
 <MudGrid Class="mb-4">
     <MudItem xs="12" sm="4">
-        <MudNumericField T="int" @bind-Value="_daysAhead" Label="Days ahead" Min="1" Max="365"
+        <MudNumericField T="int" @bind-Value="_daysAhead" Label="@Loc["DaysAhead"]" Min="1" Max="365"
                          Variant="Variant.Outlined" Immediate="true" OnBlur="LoadAsync" />
     </MudItem>
     <MudItem xs="12" sm="8" Class="d-flex align-center">
         <MudText Typo="Typo.body2" Style="opacity: 0.6;">
-            @_cachedCount document(s) in the extraction cache
+            @Loc["CachedCountInExtractionCache", _cachedCount]
         </MudText>
     </MudItem>
 </MudGrid>
@@ -26,7 +27,7 @@
 @if (_isRefreshing)
 {
     <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
-    <MudText Typo="Typo.body2" Class="mt-2" Style="opacity: 0.6;">Running extraction on all documents. This may take a few minutes.</MudText>
+    <MudText Typo="Typo.body2" Class="mt-2" Style="opacity: 0.6;">@Loc["RunningExtractionAllDocuments"]</MudText>
 }
 else if (_expiring is null)
 {
@@ -34,11 +35,11 @@ else if (_expiring is null)
 }
 else if (_expiring.Count == 0)
 {
-    <MudAlert Severity="Severity.Success">No documents expiring within @_daysAhead days.</MudAlert>
+    <MudAlert Severity="Severity.Success">@Loc["NoDocumentsExpiringWithinDays", _daysAhead]</MudAlert>
     @if (_cachedCount == 0)
     {
         <MudAlert Severity="Severity.Info" Class="mt-3">
-            The extraction cache is empty. Click "Analyze All" to run structured extraction on your documents.
+            @Loc["ExtractionCacheEmptyPrompt", Loc["AnalyzeAll"]]
         </MudAlert>
     }
 }
@@ -47,11 +48,11 @@ else
     <MudTable Items="_expiring" Hover="true" Elevation="0" Dense="true"
               Style="border: 1px solid rgba(255,255,255,0.06);">
         <HeaderContent>
-            <MudTh>ID</MudTh>
-            <MudTh>Category</MudTh>
-            <MudTh>Expires</MudTh>
-            <MudTh>Days Left</MudTh>
-            <MudTh>Summary</MudTh>
+            <MudTh>@Loc["Id"]</MudTh>
+            <MudTh>@Loc["Category"]</MudTh>
+            <MudTh>@Loc["Expires"]</MudTh>
+            <MudTh>@Loc["DaysLeft"]</MudTh>
+            <MudTh>@Loc["Summary"]</MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd>
@@ -98,13 +99,13 @@ else
         try
         {
             var summary = await ExtractionCache.RefreshAllAsync();
-            Snackbar.Add($"Cache refreshed: {summary.Processed} processed, {summary.Classified} classified, {summary.Skipped} skipped.",
+            Snackbar.Add(Loc["CacheRefreshed", summary.Processed, summary.Classified, summary.Skipped].Value,
                 Severity.Success);
             await LoadAsync();
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Refresh failed: {ex.Message}", Severity.Error);
+            Snackbar.Add(Loc["RefreshFailed", ex.Message].Value, Severity.Error);
         }
         finally
         {

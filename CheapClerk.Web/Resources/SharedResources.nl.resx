@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!--
+    Microsoft ResX Schema
+
+    Version 2.0
+
+    The primary goals of this format is to allow a simple XML format
+    that is mostly human readable. The generation and parsing of the
+    various data types are done through the TypeConverter classes
+    associated with the data types.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <!-- Navigation / layout -->
+  <data name="Dashboard" xml:space="preserve"><value>Dashboard</value></data>
+  <data name="Documents" xml:space="preserve"><value>Documenten</value></data>
+  <data name="Search" xml:space="preserve"><value>Zoeken</value></data>
+  <data name="Tags" xml:space="preserve"><value>Tags</value></data>
+  <data name="Expiring" xml:space="preserve"><value>Vervalt binnenkort</value></data>
+  <data name="Review" xml:space="preserve"><value>Controle</value></data>
+  <data name="ToggleDarkMode" xml:space="preserve"><value>Donkere modus wisselen</value></data>
+  <!-- Home / Dashboard page -->
+  <data name="AppDashboardTitle" xml:space="preserve"><value>CheapClerk — Dashboard</value></data>
+  <data name="HomeSubtitle" xml:space="preserve"><value>Uw huishoudelijke documenten in één oogopslag.</value></data>
+  <data name="Correspondents" xml:space="preserve"><value>Correspondenten</value></data>
+  <data name="ExpiringIn30Days" xml:space="preserve"><value>Vervalt binnen 30 dagen</value></data>
+  <data name="InInbox" xml:space="preserve"><value>In inbox</value></data>
+  <data name="Processing" xml:space="preserve"><value>Bezig met verwerken...</value></data>
+  <data name="ProcessNow" xml:space="preserve"><value>Nu verwerken</value></data>
+  <data name="NeedsReview" xml:space="preserve"><value>Te controleren</value></data>
+  <data name="RecentlyAdded" xml:space="preserve"><value>Recent toegevoegd</value></data>
+  <data name="NoDocumentsFoundStartScanning" xml:space="preserve"><value>Geen documenten gevonden. Begin met scannen!</value></data>
+  <data name="Id" xml:space="preserve"><value>ID</value></data>
+  <data name="Title" xml:space="preserve"><value>Titel</value></data>
+  <data name="Added" xml:space="preserve"><value>Toegevoegd</value></data>
+  <data name="InboxProcessingSkipped" xml:space="preserve"><value>Verwerking van inbox overgeslagen: {0}</value></data>
+  <data name="InboxProcessed" xml:space="preserve"><value>Inbox verwerkt: {0} gearchiveerd, {1} naar controle gestuurd, {2} mislukt.</value></data>
+  <!-- Documents page -->
+  <data name="AppDocumentsTitle" xml:space="preserve"><value>CheapClerk — Documenten</value></data>
+  <data name="Correspondent" xml:space="preserve"><value>Correspondent</value></data>
+  <data name="Tag" xml:space="preserve"><value>Tag</value></data>
+  <data name="Loading" xml:space="preserve"><value>Bezig met laden...</value></data>
+  <data name="Apply" xml:space="preserve"><value>Toepassen</value></data>
+  <data name="Created" xml:space="preserve"><value>Aangemaakt</value></data>
+  <!-- Search page -->
+  <data name="AppSearchTitle" xml:space="preserve"><value>CheapClerk — Zoeken</value></data>
+  <data name="SearchDocuments" xml:space="preserve"><value>Documenten zoeken</value></data>
+  <data name="SearchQuery" xml:space="preserve"><value>Zoekopdracht</value></data>
+  <data name="SearchPlaceholderExample" xml:space="preserve"><value>bv. eigen risico woonverzekering</value></data>
+  <data name="TagFilter" xml:space="preserve"><value>Tagfilter</value></data>
+  <data name="Searching" xml:space="preserve"><value>Bezig met zoeken...</value></data>
+  <data name="NoDocumentsFoundMatching" xml:space="preserve"><value>Geen documenten gevonden die overeenkomen met "{0}".</value></data>
+  <data name="FoundDocumentsCount" xml:space="preserve"><value>{0} document(en) gevonden</value></data>
+  <!-- Tags page -->
+  <data name="AppTagsTitle" xml:space="preserve"><value>CheapClerk — Tags</value></data>
+  <data name="NoTagsFoundInPaperless" xml:space="preserve"><value>Geen tags gevonden in Paperless.</value></data>
+  <!-- Expiring page -->
+  <data name="AppExpiringTitle" xml:space="preserve"><value>CheapClerk — Vervalt binnenkort</value></data>
+  <data name="ExpiringDocuments" xml:space="preserve"><value>Vervallende documenten</value></data>
+  <data name="Analyzing" xml:space="preserve"><value>Bezig met analyseren...</value></data>
+  <data name="AnalyzeAll" xml:space="preserve"><value>Alles analyseren</value></data>
+  <data name="DaysAhead" xml:space="preserve"><value>Aantal dagen vooruit</value></data>
+  <data name="CachedCountInExtractionCache" xml:space="preserve"><value>{0} document(en) in de extractiecache</value></data>
+  <data name="RunningExtractionAllDocuments" xml:space="preserve"><value>Extractie wordt uitgevoerd op alle documenten. Dit kan enkele minuten duren.</value></data>
+  <data name="NoDocumentsExpiringWithinDays" xml:space="preserve"><value>Geen documenten die binnen {0} dagen vervallen.</value></data>
+  <data name="ExtractionCacheEmptyPrompt" xml:space="preserve"><value>De extractiecache is leeg. Klik op "{0}" om gestructureerde extractie op uw documenten uit te voeren.</value></data>
+  <data name="Category" xml:space="preserve"><value>Categorie</value></data>
+  <data name="Expires" xml:space="preserve"><value>Vervalt</value></data>
+  <data name="DaysLeft" xml:space="preserve"><value>Dagen resterend</value></data>
+  <data name="Summary" xml:space="preserve"><value>Samenvatting</value></data>
+  <data name="CacheRefreshed" xml:space="preserve"><value>Cache vernieuwd: {0} verwerkt, {1} geclassificeerd, {2} overgeslagen.</value></data>
+  <data name="RefreshFailed" xml:space="preserve"><value>Vernieuwen mislukt: {0}</value></data>
+  <!-- Review page -->
+  <data name="AppReviewQueueTitle" xml:space="preserve"><value>CheapClerk — Controlewachtrij</value></data>
+  <data name="ReviewQueue" xml:space="preserve"><value>Controlewachtrij</value></data>
+  <data name="ReviewQueueSubtitle" xml:space="preserve"><value>Documenten waarover de klerk niet zeker genoeg was om ze automatisch te archiveren.</value></data>
+  <data name="ReviewQueueEmpty" xml:space="preserve"><value>De controlewachtrij is leeg — de klerk twijfelt nergens over.</value></data>
+  <data name="ForceVisionOcrOnRerun" xml:space="preserve"><value>Vision OCR forceren bij opnieuw uitvoeren</value></data>
+  <data name="Doc" xml:space="preserve"><value>Doc</value></data>
+  <data name="Type" xml:space="preserve"><value>Type</value></data>
+  <data name="Date" xml:space="preserve"><value>Datum</value></data>
+  <data name="Actions" xml:space="preserve"><value>Acties</value></data>
+  <data name="Accept" xml:space="preserve"><value>Accepteren</value></data>
+  <data name="Rerun" xml:space="preserve"><value>Opnieuw</value></data>
+  <data name="FiledAs" xml:space="preserve"><value>Gearchiveerd als "{0}"</value></data>
+  <data name="FailedToApply" xml:space="preserve"><value>Toepassen mislukt: {0}</value></data>
+  <data name="Reclassified" xml:space="preserve"><value>Opnieuw geclassificeerd.</value></data>
+  <data name="RerunFailed" xml:space="preserve"><value>Opnieuw uitvoeren mislukt: {0}</value></data>
+  <!-- Document detail page -->
+  <data name="AppDocumentDetailTitle" xml:space="preserve"><value>CheapClerk — Document {0}</value></data>
+  <data name="DocumentNotFound" xml:space="preserve"><value>Document {0} niet gevonden.</value></data>
+  <data name="Metadata" xml:space="preserve"><value>Metadata</value></data>
+  <data name="DocumentIdLabel" xml:space="preserve"><value>Document-ID</value></data>
+  <data name="OriginalFile" xml:space="preserve"><value>Oorspronkelijk bestand</value></data>
+  <data name="Asn" xml:space="preserve"><value>ASN</value></data>
+  <data name="ExtractedData" xml:space="preserve"><value>Geëxtraheerde gegevens</value></data>
+  <data name="Extracting" xml:space="preserve"><value>Bezig met extraheren...</value></data>
+  <data name="Extract" xml:space="preserve"><value>Extraheren</value></data>
+  <data name="ClickExtractToClassify" xml:space="preserve"><value>Klik op Extraheren om te classificeren en gestructureerde velden op te halen via Claude.</value></data>
+  <data name="ConfidencePercent" xml:space="preserve"><value>{0} betrouwbaarheid</value></data>
+  <data name="Vendor" xml:space="preserve"><value>Leverancier</value></data>
+  <data name="InvoiceNumber" xml:space="preserve"><value>Factuurnr.</value></data>
+  <data name="Total" xml:space="preserve"><value>Totaal</value></data>
+  <data name="Issued" xml:space="preserve"><value>Uitgegeven</value></data>
+  <data name="Due" xml:space="preserve"><value>Vervaldatum</value></data>
+  <data name="Account" xml:space="preserve"><value>Rekening</value></data>
+  <data name="Reference" xml:space="preserve"><value>Referentie</value></data>
+  <data name="Iban" xml:space="preserve"><value>IBAN</value></data>
+  <data name="Insurer" xml:space="preserve"><value>Verzekeraar</value></data>
+  <data name="PolicyNumber" xml:space="preserve"><value>Polisnr.</value></data>
+  <data name="Premium" xml:space="preserve"><value>Premie</value></data>
+  <data name="Deductible" xml:space="preserve"><value>Eigen risico</value></data>
+  <data name="CoverageStart" xml:space="preserve"><value>Start dekking</value></data>
+  <data name="CoverageEnd" xml:space="preserve"><value>Einde dekking</value></data>
+  <data name="Insured" xml:space="preserve"><value>Verzekerde</value></data>
+  <data name="Counterparty" xml:space="preserve"><value>Tegenpartij</value></data>
+  <data name="Subject" xml:space="preserve"><value>Onderwerp</value></data>
+  <data name="Start" xml:space="preserve"><value>Start</value></data>
+  <data name="End" xml:space="preserve"><value>Einde</value></data>
+  <data name="Notice" xml:space="preserve"><value>Opzegtermijn</value></data>
+  <data name="AutoRenew" xml:space="preserve"><value>Automatische verlenging</value></data>
+  <data name="Amount" xml:space="preserve"><value>Bedrag</value></data>
+  <data name="Yes" xml:space="preserve"><value>Ja</value></data>
+  <data name="No" xml:space="preserve"><value>Nee</value></data>
+  <data name="DocumentTab" xml:space="preserve"><value>Document</value></data>
+  <data name="TextTab" xml:space="preserve"><value>Tekst</value></data>
+  <data name="OcrContent" xml:space="preserve"><value>OCR-inhoud</value></data>
+  <data name="RunningVisionOcr" xml:space="preserve"><value>Vision OCR wordt uitgevoerd...</value></data>
+  <data name="VisionOcr" xml:space="preserve"><value>Vision OCR</value></data>
+  <data name="NoTextContentAvailable" xml:space="preserve"><value>Geen tekstinhoud beschikbaar.</value></data>
+  <data name="VisionOcrNotConfigured" xml:space="preserve"><value>Vision OCR is niet geconfigureerd.</value></data>
+  <data name="FailedToDownloadOriginal" xml:space="preserve"><value>Downloaden van origineel document mislukt.</value></data>
+  <data name="VisionOcrExtractedCharacters" xml:space="preserve"><value>Vision OCR heeft {0} tekens geëxtraheerd.</value></data>
+  <data name="VisionOcrReturnedNoText" xml:space="preserve"><value>Vision OCR heeft geen tekst teruggegeven.</value></data>
+  <data name="StructuredExtractionNotConfigured" xml:space="preserve"><value>Gestructureerde extractie is niet geconfigureerd.</value></data>
+  <data name="ClassifiedAs" xml:space="preserve"><value>Geclassificeerd als {0} ({1}).</value></data>
+  <data name="ExtractionFailedCheckLogs" xml:space="preserve"><value>Extractie mislukt — controleer de logs.</value></data>
+  <!-- Reconnect modal (Blazor Server disconnect overlay) -->
+  <data name="ReconnectRejoining" xml:space="preserve"><value>Opnieuw verbinden met de server...</value></data>
+  <data name="ReconnectRetryPrefix" xml:space="preserve"><value>Opnieuw verbinden mislukt... nieuwe poging over </value></data>
+  <data name="ReconnectRetrySuffix" xml:space="preserve"><value> seconden.</value></data>
+  <data name="ReconnectFailedTitle" xml:space="preserve"><value>Opnieuw verbinden mislukt.</value></data>
+  <data name="ReconnectRetryOrReload" xml:space="preserve"><value>Probeer het opnieuw of herlaad de pagina.</value></data>
+  <data name="ReconnectButtonRetry" xml:space="preserve"><value>Opnieuw proberen</value></data>
+  <data name="ReconnectPaused" xml:space="preserve"><value>De sessie is onderbroken door de server.</value></data>
+  <data name="ReconnectResumeFailedTitle" xml:space="preserve"><value>Hervatten van de sessie mislukt.</value></data>
+  <data name="ReconnectButtonResume" xml:space="preserve"><value>Hervatten</value></data>
+</root>

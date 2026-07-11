@@ -1,8 +1,9 @@
 @page "/tags"
+@inject IStringLocalizer<SharedResources> Loc
 
-<PageTitle>CheapClerk — Tags</PageTitle>
+<PageTitle>@Loc["AppTagsTitle"]</PageTitle>
 
-<MudText Typo="Typo.h4" GutterBottom="true">Tags</MudText>
+<MudText Typo="Typo.h4" GutterBottom="true">@Loc["Tags"]</MudText>
 
 @if (_tags is null)
 {
@@ -10,15 +11,15 @@
 }
 else if (_tags.Count == 0)
 {
-    <MudAlert Severity="Severity.Info">No tags found in Paperless.</MudAlert>
+    <MudAlert Severity="Severity.Info">@Loc["NoTagsFoundInPaperless"]</MudAlert>
 }
 else
 {
     <MudTable Items="@_tags.OrderByDescending(t => t.DocumentCount)" Hover="true" Elevation="0" Dense="true"
               Style="border: 1px solid rgba(255,255,255,0.06);">
         <HeaderContent>
-            <MudTh>Tag</MudTh>
-            <MudTh>Documents</MudTh>
+            <MudTh>@Loc["Tag"]</MudTh>
+            <MudTh>@Loc["Documents"]</MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd>

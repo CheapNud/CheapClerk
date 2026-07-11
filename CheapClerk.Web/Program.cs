@@ -2,6 +2,7 @@ using CheapClerk.Configuration;
 using CheapClerk.Data;
 using CheapClerk.Services;
 using CheapClerk.Web.Components;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using MudBlazor.Services;
@@ -18,6 +19,8 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents(opt => opt.DetailedErrors = builder.Environment.IsDevelopment());
 
 builder.Services.AddMudServices();
+
+builder.Services.AddLocalization(locOptions => locOptions.ResourcesPath = "Resources");
 
 var paperlessSection = builder.Configuration.GetSection(PaperlessOptions.SectionName);
 var visionSection = builder.Configuration.GetSection(VisionFallbackOptions.SectionName);
@@ -74,7 +77,25 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
 }
 
+var supportedCultures = ClassificationOptions.SupportedCultures;
+app.UseRequestLocalization(new RequestLocalizationOptions()
+    .SetDefaultCulture("en")
+    .AddSupportedCultures(supportedCultures)
+    .AddSupportedUICultures(supportedCultures));
+
 app.UseAntiforgery();
+
+app.MapGet("/culture/set", (string culture, string redirectUri, HttpContext http) =>
+{
+    if (ClassificationOptions.SupportedCultures.Contains(culture))
+    {
+        http.Response.Cookies.Append(
+            CookieRequestCultureProvider.DefaultCookieName,
+            CookieRequestCultureProvider.MakeCookieValue(new RequestCulture(culture)),
+            new CookieOptions { Expires = DateTimeOffset.UtcNow.AddYears(1), IsEssential = true });
+    }
+    return Results.LocalRedirect(LocalRedirectGuard.Sanitize(redirectUri));
+});
 
 app.MapPost("/api/inbox/process", (HttpContext http,
     Microsoft.Extensions.Options.IOptions<ClassificationOptions> classificationConfig,

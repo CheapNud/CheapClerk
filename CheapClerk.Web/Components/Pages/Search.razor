@@ -1,18 +1,19 @@
 @page "/search"
+@inject IStringLocalizer<SharedResources> Loc
 
-<PageTitle>CheapClerk — Search</PageTitle>
+<PageTitle>@Loc["AppSearchTitle"]</PageTitle>
 
-<MudText Typo="Typo.h4" GutterBottom="true">Search Documents</MudText>
+<MudText Typo="Typo.h4" GutterBottom="true">@Loc["SearchDocuments"]</MudText>
 
 <MudGrid Class="mb-4">
     <MudItem xs="12" sm="6">
-        <MudTextField T="string" @bind-Value="_searchQuery" Label="Search query" Variant="Variant.Outlined"
+        <MudTextField T="string" @bind-Value="_searchQuery" Label="@Loc["SearchQuery"]" Variant="Variant.Outlined"
                       Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search"
                       OnAdornmentClick="SearchAsync" OnKeyDown="OnSearchKeyDown"
-                      Placeholder="e.g. home insurance deductible" />
+                      Placeholder="@Loc["SearchPlaceholderExample"]" />
     </MudItem>
     <MudItem xs="12" sm="3">
-        <MudSelect T="string" Label="Tag filter" Value="_tagFilter" ValueChanged="@(v => { _tagFilter = v; })"
+        <MudSelect T="string" Label="@Loc["TagFilter"]" Value="_tagFilter" ValueChanged="@(v => { _tagFilter = v; })"
                    Clearable="true" Variant="Variant.Outlined">
             @if (_tags is not null)
             {
@@ -27,7 +28,7 @@
         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SearchAsync"
                    Disabled="_isSearching" FullWidth="true"
                    StartIcon="@Icons.Material.Filled.Search">
-            @(_isSearching ? "Searching..." : "Search")
+            @(_isSearching ? Loc["Searching"] : Loc["Search"])
         </MudButton>
     </MudItem>
 </MudGrid>
@@ -40,11 +41,11 @@ else if (_matches is not null)
 {
     @if (_matches.Count == 0)
     {
-        <MudAlert Severity="Severity.Info">No documents found matching "@_searchQuery".</MudAlert>
+        <MudAlert Severity="Severity.Info">@Loc["NoDocumentsFoundMatching", _searchQuery ?? string.Empty]</MudAlert>
     }
     else
     {
-        <MudText Typo="Typo.body2" Class="mb-3" Style="opacity: 0.6;">Found @_matches.Count document(s)</MudText>
+        <MudText Typo="Typo.body2" Class="mb-3" Style="opacity: 0.6;">@Loc["FoundDocumentsCount", _matches.Count]</MudText>
 
         @foreach (var match in _matches)
         {
