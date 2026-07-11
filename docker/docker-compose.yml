@@ -55,6 +55,8 @@ services:
       - ASPNETCORE_ENVIRONMENT=Production
       - Paperless__BaseUrl=http://192.168.1.15:8010
       - Paperless__ApiToken=${PAPERLESS_API_TOKEN}
+      # The SQLite cache MUST live in the mounted volume or it dies with the container
+      - Cache__DatabasePath=/app/data/cheapclerk.db
       # Auto-classification needs an LLM; set the key in .env or disable
       - Llm__Anthropic__ApiKey=${ANTHROPIC_API_KEY}
       # - Classification__Enabled=false

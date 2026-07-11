@@ -26,6 +26,9 @@ public sealed class DocumentClassifierService(
         Rules:
         - STRONGLY prefer existing tags/correspondents/document types. Only invent a
           new one when nothing existing fits. Reuse exact existing spelling.
+        - Give EVERY document 1-3 topical tags. When no existing tag fits, create ONE
+          short, reusable Dutch tag (like 'Belastingen' or 'Pensioen') rather than
+          leaving the document untagged.
         - The correspondent is who SENT the document, not the recipient.
         - Title: short and specific, in the document's language. Never include dates
           the DocumentDate field already captures.
