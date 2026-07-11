@@ -9,31 +9,42 @@ namespace CheapClerk.Services;
 public sealed class DocumentClassifierService(
     IChatClient chatClient,
     IOptions<LlmOptions> llmOptions,
+    IOptions<ClassificationOptions> classificationOptions,
     ILogger<DocumentClassifierService> logger)
 {
     private readonly LlmOptions _llm = llmOptions.Value;
+    private readonly ClassificationOptions _classification = classificationOptions.Value;
 
     private const int MaxDocumentChars = 8_000;
 
-    private const string SystemPrompt = """
-        You are a filing clerk for Belgian household paperwork (invoices, insurance
-        policies, contracts, tax documents, receipts, warranties, official letters).
-        Documents are usually Dutch, sometimes French, German or English.
+    internal static string BuildSystemPrompt(string taxonomyLanguage)
+    {
+        var (languageName, tagExample) = taxonomyLanguage switch
+        {
+            "en" => ("English", "'Taxes' or 'Pension'"),
+            _ => ("Dutch", "'Belastingen' or 'Pensioen'")
+        };
 
-        Given the OCR text of ONE document plus the existing organizational taxonomy,
-        decide how to file it: title, correspondent, document type, tags, document date.
+        return $"""
+            You are a filing clerk for Belgian household paperwork (invoices, insurance
+            policies, contracts, tax documents, receipts, warranties, official letters).
+            Documents are usually Dutch, sometimes French, German or English.
 
-        Rules:
-        - STRONGLY prefer existing tags/correspondents/document types. Only invent a
-          new one when nothing existing fits. Reuse exact existing spelling.
-        - Give EVERY document 1-3 topical tags. When no existing tag fits, create ONE
-          short, reusable Dutch tag (like 'Belastingen' or 'Pensioen') rather than
-          leaving the document untagged.
-        - The correspondent is who SENT the document, not the recipient.
-        - Title: short and specific, in the document's language. Never include dates
-          the DocumentDate field already captures.
-        - Report honest confidence; below 0.5 when the text is garbled or ambiguous.
-        """;
+            Given the OCR text of ONE document plus the existing organizational taxonomy,
+            decide how to file it: title, correspondent, document type, tags, document date.
+
+            Rules:
+            - STRONGLY prefer existing tags/correspondents/document types. Only invent a
+              new one when nothing existing fits. Reuse exact existing spelling.
+            - Give EVERY document 1-3 topical tags. When no existing tag fits, create ONE
+              short, reusable {languageName} tag (like {tagExample}) rather than
+              leaving the document untagged.
+            - The correspondent is who SENT the document, not the recipient.
+            - Title: short and specific, in the document's language. Never include dates
+              the DocumentDate field already captures.
+            - Report honest confidence; below 0.5 when the text is garbled or ambiguous.
+            """;
+    }
 
     public bool IsEnabled => _llm.Provider switch
     {
@@ -87,7 +98,7 @@ public sealed class DocumentClassifierService(
         {
             var classificationPrompt = new List<ChatMessage>
             {
-                new(ChatRole.System, SystemPrompt),
+                new(ChatRole.System, BuildSystemPrompt(_classification.TaxonomyLanguage)),
                 new(ChatRole.User, BuildTaxonomyMessage(
                     documentText, existingTags, existingCorrespondents, existingDocumentTypes))
             };

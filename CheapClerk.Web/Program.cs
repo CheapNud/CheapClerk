@@ -53,6 +53,8 @@ builder.Services.AddSingleton<ClassificationApplier>();
 builder.Services.AddSingleton<SuggestionStore>();
 builder.Services.AddSingleton<InboxProcessorService>();
 builder.Services.AddSingleton<ReviewQueueService>();
+builder.Services.AddSingleton<TranslationStore>();
+builder.Services.AddSingleton<TaxonomyTranslationService>();
 builder.Services.AddSingleton(sp => new InboxRunCoordinator(
     ct => sp.GetRequiredService<InboxProcessorService>().ProcessInboxAsync(ct),
     sp.GetRequiredService<ILogger<InboxRunCoordinator>>()));

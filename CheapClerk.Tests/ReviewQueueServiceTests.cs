@@ -129,7 +129,7 @@ public sealed class ReviewQueueServiceTests : IAsyncLifetime
             Anthropic = new AnthropicProviderOptions { ApiKey = string.Empty }
         });
         var classifier = new DocumentClassifierService(
-            new ThrowingChatClient(), llmOptions, NullLogger<DocumentClassifierService>.Instance);
+            new ThrowingChatClient(), llmOptions, classificationOptions, NullLogger<DocumentClassifierService>.Instance);
 
         var ocrQualityChecker = new OcrQualityChecker(Options.Create(new VisionFallbackOptions()));
         var visionOcrService = new VisionOcrService(

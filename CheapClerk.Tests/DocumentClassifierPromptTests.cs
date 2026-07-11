@@ -30,4 +30,22 @@ public sealed class DocumentClassifierPromptTests
         Assert.True(message.Length < 12_000);
         Assert.Contains("[truncated]", message);
     }
+
+    [Fact]
+    public void BuildSystemPrompt_Dutch_MentionsDutchTagCoinage()
+    {
+        var prompt = DocumentClassifierService.BuildSystemPrompt("nl");
+
+        Assert.Contains("reusable Dutch tag (like 'Belastingen' or 'Pensioen')", prompt);
+        Assert.DoesNotContain("English tag", prompt);
+    }
+
+    [Fact]
+    public void BuildSystemPrompt_English_MentionsEnglishTagCoinage()
+    {
+        var prompt = DocumentClassifierService.BuildSystemPrompt("en");
+
+        Assert.Contains("reusable English tag (like 'Taxes' or 'Pension')", prompt);
+        Assert.DoesNotContain("Dutch tag", prompt);
+    }
 }

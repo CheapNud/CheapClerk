@@ -13,4 +13,7 @@ public sealed class ClassificationOptions
     public bool AutoCreateTags { get; set; } = true;
     public int MaxDocumentsPerRun { get; set; } = 20;
     public string? WebhookToken { get; set; }
+    public string TaxonomyLanguage { get; set; } = "nl";
+
+    public static readonly string[] SupportedCultures = ["en", "nl"];
 }

@@ -44,6 +44,8 @@ builder.Services.AddSingleton<ClassificationApplier>();
 builder.Services.AddSingleton<SuggestionStore>();
 builder.Services.AddSingleton<InboxProcessorService>();
 builder.Services.AddSingleton<ReviewQueueService>();
+builder.Services.AddSingleton<TranslationStore>();
+builder.Services.AddSingleton<TaxonomyTranslationService>();
 
 builder.Services.AddMcpServer()
     .WithStdioServerTransport()
