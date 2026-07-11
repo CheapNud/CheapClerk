@@ -195,11 +195,11 @@ The Blazor UI supports English (en) and Dutch (nl) cultures, configured via a cu
 
 ### Data Translation
 
-Document taxonomy (tags and document types) can be displayed in multiple languages while keeping canonical writes in English:
+Document taxonomy (tags and document types) can be displayed in multiple languages while writes stay canonical:
 
-- **Canonical storage**: All tag and document-type names in Paperless remain English
+- **Canonical storage**: Tag and document-type names in Paperless keep their canonical form — the language the classifier coins them in (`Classification:TaxonomyLanguage`, default Dutch)
 - **Display-only translation**: The `TaxonomyTranslationService` maintains a local SQLite translation map, keyed by (tag/type name, culture), populated on-demand by the configured LLM
-- **Self-healing on renames**: When a tag is renamed in Paperless, the translation map automatically falls back to the English name for that key. No manual cleanup needed
+- **Self-healing on renames**: When a tag is renamed in Paperless, the translation map automatically falls back to the canonical name for that key. No manual cleanup needed
 
 The `translate_taxonomy` MCP tool backfills translations for any missing entries across all supported cultures when called (typically after adding new tags).
 

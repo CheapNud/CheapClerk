@@ -19,7 +19,7 @@
             {
                 @foreach (var paperlessTag in _tags)
                 {
-                    <MudSelectItem T="string" Value="@paperlessTag.Name">@paperlessTag.Name</MudSelectItem>
+                    <MudSelectItem T="string" Value="@paperlessTag.Name">@TagLabel(paperlessTag.Name)</MudSelectItem>
                 }
             }
         </MudSelect>
@@ -78,17 +78,23 @@ else if (_matches is not null)
 
 @code {
     [Inject] private PaperlessClient PaperlessClient { get; set; } = null!;
+    [Inject] private TaxonomyTranslationService Taxonomy { get; set; } = null!;
 
     private string? _searchQuery;
     private string? _tagFilter;
     private List<DocumentMatch>? _matches;
     private List<PaperlessTag>? _tags;
     private bool _isSearching;
+    private Dictionary<string, string> _tagLabels = new(StringComparer.OrdinalIgnoreCase);
 
     protected override async Task OnInitializedAsync()
     {
         _tags = await PaperlessClient.GetTagsAsync();
+        _tagLabels = await Taxonomy.GetDisplayMapAsync("tag", System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName);
     }
+
+    private string TagLabel(string canonical) =>
+        _tagLabels.TryGetValue(canonical, out var label) ? label : canonical;
 
     private async Task OnSearchKeyDown(KeyboardEventArgs keyArgs)
     {
