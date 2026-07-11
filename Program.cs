@@ -58,6 +58,7 @@ builder.Services.AddMcpServer()
     .WithTools<FindExpiringDocumentsTool>()
     .WithTools<RefreshExtractionCacheTool>()
     .WithTools<ProcessInboxTool>()
+    .WithTools<TranslateTaxonomyTool>()
     .WithTools<ListReviewQueueTool>()
     .WithTools<ApplySuggestionTool>()
     .WithTools<ReclassifyDocumentTool>();

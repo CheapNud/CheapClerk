@@ -173,6 +173,36 @@ async Task<string> ReclassifyDocument(
 
 Returns: the refreshed suggestion (also stored as the document's latest).
 
+### `translate_taxonomy`
+Fill in missing tag and document-type translations for every supported culture. Run after adding tags or when labels show untranslated.
+
+```csharp
+[Tool("translate_taxonomy")]
+async Task<string> TranslateTaxonomy()
+```
+
+Returns: per-culture translation summary (already translated, newly translated, failed).
+
+---
+
+## Localization
+
+CheapClerk supports multi-language UI and taxonomy data translation.
+
+### UI Localization
+
+The Blazor UI supports English (en) and Dutch (nl) cultures, configured via a culture picker and persisted in a culture cookie. The UI strings live in `Resources/` resx files, one per language.
+
+### Data Translation
+
+Document taxonomy (tags and document types) can be displayed in multiple languages while keeping canonical writes in English:
+
+- **Canonical storage**: All tag and document-type names in Paperless remain English
+- **Display-only translation**: The `TaxonomyTranslationService` maintains a local SQLite translation map, keyed by (tag/type name, culture), populated on-demand by the configured LLM
+- **Self-healing on renames**: When a tag is renamed in Paperless, the translation map automatically falls back to the English name for that key. No manual cleanup needed
+
+The `translate_taxonomy` MCP tool backfills translations for any missing entries across all supported cultures when called (typically after adding new tags).
+
 ---
 
 ## Vision OCR Fallback
@@ -340,6 +370,7 @@ Configuration (`Classification` section):
 | `MaxTagsPerDocument` | `4` | Cap on applied tags, existing matches first |
 | `AutoCreateTags` | `true` | Allow the LLM to introduce new tags |
 | `MaxDocumentsPerRun` | `20` | Batch size per run; the poller drains over successive runs |
+| `TaxonomyLanguage` | `nl` | Display language for taxonomy in UI and MCP tools; affects what translations are cached and offered |
 | `WebhookToken` | (unset) | Shared secret for the webhook endpoint; unset = endpoint returns 404 |
 
 Classification uses the same `Llm.Provider` switch as extraction — without an Anthropic key (or Ollama endpoint) configured, the processor logs that the provider is unconfigured and leaves the inbox untouched.

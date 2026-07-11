@@ -1,6 +1,6 @@
 <!--
   TODO.md — CheapClerk project work tracker
-  Last updated: 2026-07-06 (review queue implemented)
+  Last updated: 2026-07-11 (localization infra and translate_taxonomy tool)
 
   RULES FOR AI AGENTS:
   - Update the "Last updated" date above whenever you modify this file
@@ -32,6 +32,8 @@ _Nothing blocking._
 
 ## Planned
 
+- [x] (2026-07-11 → 2026-07-11) Localization — EN/NL UI (resx + culture picker) and taxonomy translation layer (SQLite map, LLM-filled, display-only) [user]
+  - Writes stay canonical; name-keyed rows self-heal on tag renames; translate_taxonomy MCP tool backfills
 - [ ] (2026-07-11) Add authentication to cheapclerk-web BEFORE any exposure beyond the trusted LAN [audit]
   - App has no auth by design (single-user LAN); all pages and the file proxy expose the full archive
   - Hard gate: never proxy through Hidden-Valley / NPM without ASP.NET Identity in place first
