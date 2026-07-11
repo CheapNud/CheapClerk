@@ -9,7 +9,8 @@
 
 <MudGrid>
     <MudItem xs="12" sm="6" md="4">
-        <MudCard Elevation="0" Style="border: 1px solid rgba(255,255,255,0.06);">
+        <MudCard Elevation="0" Style="border: 1px solid rgba(255,255,255,0.06); cursor: pointer;"
+                 @onclick="@(() => Navigation.NavigateTo("/documents"))">
             <MudCardContent Class="d-flex align-center gap-4">
                 <MudIcon Icon="@Icons.Material.Filled.Description" Color="Color.Primary" Size="Size.Large" />
                 <div>
@@ -20,7 +21,8 @@
         </MudCard>
     </MudItem>
     <MudItem xs="12" sm="6" md="4">
-        <MudCard Elevation="0" Style="border: 1px solid rgba(255,255,255,0.06);">
+        <MudCard Elevation="0" Style="border: 1px solid rgba(255,255,255,0.06); cursor: pointer;"
+                 @onclick="@(() => Navigation.NavigateTo("/tags"))">
             <MudCardContent Class="d-flex align-center gap-4">
                 <MudIcon Icon="@Icons.Material.Filled.Label" Color="Color.Secondary" Size="Size.Large" />
                 <div>
@@ -42,14 +44,15 @@
         </MudCard>
     </MudItem>
     <MudItem xs="12" sm="6" md="4">
-        <MudCard Elevation="0" Style="@($"border: 1px solid {(_expiringCount > 0 ? "rgba(255,87,34,0.5)" : "rgba(255,255,255,0.06)")};")">
+        <MudCard Elevation="0" Style="@($"border: 1px solid {(_expiringCount > 0 ? "rgba(255,87,34,0.5)" : "rgba(255,255,255,0.06)")}; cursor: pointer;")"
+                 @onclick="@(() => Navigation.NavigateTo("/expiring"))">
             <MudCardContent Class="d-flex align-center gap-4">
                 <MudIcon Icon="@Icons.Material.Filled.Schedule"
                          Color="@(_expiringCount > 0 ? Color.Warning : Color.Default)"
                          Size="Size.Large" />
                 <div>
                     <MudText Typo="Typo.h4">@_expiringCount</MudText>
-                    <MudLink Href="/expiring" Typo="Typo.body2" Style="opacity: 0.6;">Expiring in 30 days</MudLink>
+                    <MudText Typo="Typo.body2" Style="opacity: 0.6;">Expiring in 30 days</MudText>
                 </div>
             </MudCardContent>
         </MudCard>
@@ -73,13 +76,14 @@
         </MudCard>
     </MudItem>
     <MudItem xs="12" sm="6" md="4">
-        <MudCard Elevation="0" Style="@($"border: 1px solid {(_reviewCount > 0 ? "rgba(156,39,176,0.5)" : "rgba(255,255,255,0.06)")};")">
+        <MudCard Elevation="0" Style="@($"border: 1px solid {(_reviewCount > 0 ? "rgba(156,39,176,0.5)" : "rgba(255,255,255,0.06)")}; cursor: pointer;")"
+                 @onclick="@(() => Navigation.NavigateTo("/review"))">
             <MudCardContent Class="d-flex align-center gap-4">
                 <MudIcon Icon="@Icons.Material.Filled.RateReview"
                          Color="@(_reviewCount > 0 ? Color.Secondary : Color.Default)" Size="Size.Large" />
                 <div>
                     <MudText Typo="Typo.h4">@_reviewCount</MudText>
-                    <MudLink Href="/review" Typo="Typo.body2" Style="opacity: 0.6;">Needs review</MudLink>
+                    <MudText Typo="Typo.body2" Style="opacity: 0.6;">Needs review</MudText>
                 </div>
             </MudCardContent>
         </MudCard>
@@ -121,6 +125,7 @@ else
     [Inject] private InboxProcessorService InboxProcessor { get; set; } = null!;
     [Inject] private IOptions<ClassificationOptions> ClassificationConfig { get; set; } = null!;
     [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private NavigationManager Navigation { get; set; } = null!;
 
     private List<PaperlessDocument>? _recentDocuments;
     private int _documentCount;
