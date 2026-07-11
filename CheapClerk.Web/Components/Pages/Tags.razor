@@ -1,5 +1,7 @@
 @page "/tags"
+@using System.Globalization
 @inject IStringLocalizer<SharedResources> Loc
+@inject TaxonomyTranslationService Taxonomy
 
 <PageTitle>@Loc["AppTagsTitle"]</PageTitle>
 
@@ -23,7 +25,11 @@ else
         </HeaderContent>
         <RowTemplate>
             <MudTd>
-                <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary">@context.Name</MudChip>
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary">@TagLabel(context.Name)</MudChip>
+                @if (!string.Equals(TagLabel(context.Name), context.Name, StringComparison.Ordinal))
+                {
+                    <MudText Typo="Typo.caption" Class="ml-2" Style="opacity: 0.6;">@context.Name</MudText>
+                }
             </MudTd>
             <MudTd>@context.DocumentCount</MudTd>
         </RowTemplate>
@@ -34,9 +40,13 @@ else
     [Inject] private PaperlessClient PaperlessClient { get; set; } = null!;
 
     private List<PaperlessTag>? _tags;
+    private Dictionary<string, string> _tagLabels = new(StringComparer.OrdinalIgnoreCase);
 
     protected override async Task OnInitializedAsync()
     {
         _tags = await PaperlessClient.GetTagsAsync();
+        _tagLabels = await Taxonomy.GetDisplayMapAsync("tag", CultureInfo.CurrentUICulture.TwoLetterISOLanguageName);
     }
+
+    private string TagLabel(string canonical) => _tagLabels.TryGetValue(canonical, out var label) ? label : canonical;
 }

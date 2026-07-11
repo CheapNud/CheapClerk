@@ -1,6 +1,8 @@
 @page "/review"
 @using CheapClerk.Models.Classification
+@using System.Globalization
 @inject IStringLocalizer<SharedResources> Loc
+@inject TaxonomyTranslationService Taxonomy
 
 <PageTitle>@Loc["AppReviewQueueTitle"]</PageTitle>
 
@@ -41,7 +43,13 @@ else
             <MudTd><MudTextField T="string" @bind-Value="context.Title" /></MudTd>
             <MudTd><MudTextField T="string" @bind-Value="context.Correspondent" /></MudTd>
             <MudTd><MudTextField T="string" @bind-Value="context.DocumentType" /></MudTd>
-            <MudTd><MudTextField T="string" @bind-Value="context.TagsCsv" /></MudTd>
+            <MudTd>
+                <MudTextField T="string" @bind-Value="context.TagsCsv" />
+                @if (HasLocalizedTags(context.TagsCsv))
+                {
+                    <MudText Typo="Typo.caption" Style="opacity: 0.6;">@LocalizedTagsCsv(context.TagsCsv)</MudText>
+                }
+            </MudTd>
             <MudTd><MudTextField T="string" @bind-Value="context.DocumentDate" /></MudTd>
             <MudTd>
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
@@ -64,13 +72,26 @@ else
     [Inject] private ISnackbar Snackbar { get; set; } = null!;
 
     private List<ReviewRow>? _rows;
+    private Dictionary<string, string> _tagLabels = new(StringComparer.OrdinalIgnoreCase);
     private bool _forceVision;
 
     protected override async Task OnInitializedAsync()
     {
         var queue = await ReviewQueue.GetQueueAsync();
         _rows = queue.Select(entry => new ReviewRow(entry)).ToList();
+        _tagLabels = await Taxonomy.GetDisplayMapAsync("tag", CultureInfo.CurrentUICulture.TwoLetterISOLanguageName);
     }
+
+    private string TagLabel(string canonical) => _tagLabels.TryGetValue(canonical, out var label) ? label : canonical;
+
+    private static List<string> SplitTagsCsv(string canonicalCsv) => canonicalCsv
+        .Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+        .ToList();
+
+    private bool HasLocalizedTags(string canonicalCsv) => SplitTagsCsv(canonicalCsv)
+        .Any(tag => !string.Equals(TagLabel(tag), tag, StringComparison.Ordinal));
+
+    private string LocalizedTagsCsv(string canonicalCsv) => string.Join(", ", SplitTagsCsv(canonicalCsv).Select(TagLabel));
 
     private async Task AcceptAsync(ReviewRow row)
     {

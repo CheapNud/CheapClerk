@@ -1,5 +1,7 @@
 @page "/documents"
+@using System.Globalization
 @inject IStringLocalizer<SharedResources> Loc
+@inject TaxonomyTranslationService Taxonomy
 
 <PageTitle>@Loc["AppDocumentsTitle"]</PageTitle>
 
@@ -25,7 +27,7 @@
             {
                 @foreach (var paperlessTag in _tags)
                 {
-                    <MudSelectItem T="string" Value="@paperlessTag.Name">@paperlessTag.Name (@paperlessTag.DocumentCount)</MudSelectItem>
+                    <MudSelectItem T="string" Value="@paperlessTag.Name">@TagLabel(paperlessTag.Name) (@paperlessTag.DocumentCount)</MudSelectItem>
                 }
             }
         </MudSelect>
@@ -69,6 +71,7 @@ else if (_documents is not null)
     private List<PaperlessDocument>? _documents;
     private List<PaperlessTag>? _tags;
     private List<PaperlessCorrespondent>? _correspondents;
+    private Dictionary<string, string> _tagLabels = new(StringComparer.OrdinalIgnoreCase);
     private string? _selectedCorrespondent;
     private string? _selectedTag;
     private bool _isLoading;
@@ -78,13 +81,17 @@ else if (_documents is not null)
         var tagsTask = PaperlessClient.GetTagsAsync();
         var corrsTask = PaperlessClient.GetCorrespondentsAsync();
         var docsTask = PaperlessClient.ListDocumentsAsync(maxResults: 50);
+        var tagLabelsTask = Taxonomy.GetDisplayMapAsync("tag", CultureInfo.CurrentUICulture.TwoLetterISOLanguageName);
 
-        await Task.WhenAll(tagsTask, corrsTask, docsTask);
+        await Task.WhenAll(tagsTask, corrsTask, docsTask, tagLabelsTask);
 
         _tags = await tagsTask;
         _correspondents = await corrsTask;
         _documents = await docsTask;
+        _tagLabels = await tagLabelsTask;
     }
+
+    private string TagLabel(string canonical) => _tagLabels.TryGetValue(canonical, out var label) ? label : canonical;
 
     private async Task OnCorrespondentChanged(string corrName)
     {

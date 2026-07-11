@@ -1,6 +1,8 @@
 @page "/documents/{DocumentId:int}"
 @using CheapClerk.Models.Extraction
+@using System.Globalization
 @inject IStringLocalizer<SharedResources> Loc
+@inject TaxonomyTranslationService Taxonomy
 
 <PageTitle>@Loc["AppDocumentDetailTitle", DocumentId]</PageTitle>
 
@@ -53,7 +55,7 @@ else
                         <MudText Typo="Typo.subtitle2" Class="mt-4 mb-2">@Loc["Tags"]</MudText>
                         @foreach (var tagName in _tagNames)
                         {
-                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary" Class="mr-1 mb-1">@tagName</MudChip>
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary" Class="mr-1 mb-1">@TagLabel(tagName)</MudChip>
                         }
                     }
                 </MudCardContent>
@@ -203,6 +205,7 @@ else
     private string? _documentContent;
     private string? _correspondentName;
     private List<string> _tagNames = [];
+    private Dictionary<string, string> _tagLabels = new(StringComparer.OrdinalIgnoreCase);
     private bool _notFound;
     private bool _isRunningVision;
     private bool _isExtracting;
@@ -233,6 +236,8 @@ else
 
         if (_doc.CorrespondentId.HasValue && correspondentLookup.TryGetValue(_doc.CorrespondentId.Value, out var corrName))
             _correspondentName = corrName;
+
+        _tagLabels = await Taxonomy.GetDisplayMapAsync("tag", CultureInfo.CurrentUICulture.TwoLetterISOLanguageName);
 
         _extracted = await ExtractionCache.GetCachedAsync(DocumentId);
 
@@ -297,4 +302,6 @@ else
 
         _isExtracting = false;
     }
+
+    private string TagLabel(string canonical) => _tagLabels.TryGetValue(canonical, out var label) ? label : canonical;
 }
