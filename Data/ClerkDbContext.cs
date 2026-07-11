@@ -6,6 +6,7 @@ public sealed class ClerkDbContext(DbContextOptions<ClerkDbContext> options) : D
 {
     public DbSet<CachedExtraction> CachedExtractions => Set<CachedExtraction>();
     public DbSet<CachedSuggestion> CachedSuggestions => Set<CachedSuggestion>();
+    public DbSet<NameTranslation> NameTranslations => Set<NameTranslation>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -17,5 +18,7 @@ public sealed class ClerkDbContext(DbContextOptions<ClerkDbContext> options) : D
             entity.HasIndex(e => e.ExpiryDate);
             entity.HasIndex(e => e.Category);
         });
+
+        modelBuilder.Entity<NameTranslation>().HasKey(t => new { t.Kind, t.CanonicalName, t.Culture });
     }
 }

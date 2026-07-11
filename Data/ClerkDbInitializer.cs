@@ -20,5 +20,16 @@ public static class ClerkDbInitializer
                 "SuggestedAtUtc" TEXT NOT NULL
             );
             """);
+        await db.Database.ExecuteSqlRawAsync(
+            """
+            CREATE TABLE IF NOT EXISTS "NameTranslations" (
+                "Kind" TEXT NOT NULL,
+                "CanonicalName" TEXT NOT NULL,
+                "Culture" TEXT NOT NULL,
+                "Label" TEXT NOT NULL,
+                "TranslatedAtUtc" TEXT NOT NULL,
+                CONSTRAINT "PK_NameTranslations" PRIMARY KEY ("Kind", "CanonicalName", "Culture")
+            );
+            """);
     }
 }
