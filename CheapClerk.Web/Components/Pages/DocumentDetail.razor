@@ -179,6 +179,7 @@ else
     [Inject] private OcrQualityChecker OcrQualityChecker { get; set; } = null!;
     [Inject] private VisionOcrService VisionOcrService { get; set; } = null!;
     [Inject] private StructuredExtractionService ExtractionService { get; set; } = null!;
+    [Inject] private ExtractionCacheService ExtractionCache { get; set; } = null!;
     [Inject] private ISnackbar Snackbar { get; set; } = null!;
 
     private PaperlessDocument? _doc;
@@ -211,6 +212,8 @@ else
 
         if (_doc.CorrespondentId.HasValue && correspondentLookup.TryGetValue(_doc.CorrespondentId.Value, out var corrName))
             _correspondentName = corrName;
+
+        _extracted = await ExtractionCache.GetCachedAsync(DocumentId);
     }
 
     private async Task RunVisionOcrAsync()
@@ -254,16 +257,11 @@ else
             return;
         }
 
-        if (string.IsNullOrWhiteSpace(_documentContent))
-        {
-            Snackbar.Add("No text content to extract from.", Severity.Warning);
-            return;
-        }
-
         _isExtracting = true;
         StateHasChanged();
 
-        _extracted = await ExtractionService.ExtractAsync(_documentContent);
+        // Runs through the cache so results survive page refreshes
+        _extracted = await ExtractionCache.GetOrExtractAsync(DocumentId, forceRefresh: true);
 
         if (_extracted is not null)
             Snackbar.Add($"Classified as {_extracted.Category} ({_extracted.Confidence:P0}).", Severity.Success);

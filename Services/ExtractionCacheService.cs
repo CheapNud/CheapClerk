@@ -20,6 +20,17 @@ public sealed class ExtractionCacheService(
         DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
     };
 
+    public async Task<ExtractionResult?> GetCachedAsync(
+        int documentId,
+        CancellationToken cancellationToken = default)
+    {
+        await using var db = await dbFactory.CreateDbContextAsync(cancellationToken);
+        var cachedRow = await db.CachedExtractions.FindAsync([documentId], cancellationToken);
+        return cachedRow is null
+            ? null
+            : JsonSerializer.Deserialize<ExtractionResult>(cachedRow.PayloadJson, JsonSettings);
+    }
+
     public async Task<ExtractionResult?> GetOrExtractAsync(
         int documentId,
         bool forceRefresh = false,
