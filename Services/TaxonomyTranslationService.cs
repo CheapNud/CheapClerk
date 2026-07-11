@@ -88,12 +88,13 @@ public sealed class TaxonomyTranslationService(
             (canonicalTagNames.Count - missingTagNames.Count) +
             (canonicalDocumentTypeNames.Count - missingDocumentTypeNames.Count);
 
-        var missingTagSet = new HashSet<string>(missingTagNames, StringComparer.OrdinalIgnoreCase);
-        var missingDocumentTypeSet = new HashSet<string>(missingDocumentTypeNames, StringComparer.OrdinalIgnoreCase);
+        // Dedupe only for the LLM prompt — a name missing in both kinds still needs
+        // two upserted rows, so counting stays per (kind, name) below.
         var missingNames = missingTagNames
             .Concat(missingDocumentTypeNames)
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
+        var totalMissingRows = missingTagNames.Count + missingDocumentTypeNames.Count;
 
         if (missingNames.Count == 0)
             return new TranslationSweep(alreadyTranslated, 0, 0);
@@ -101,7 +102,7 @@ public sealed class TaxonomyTranslationService(
         if (!IsEnabled)
         {
             logger.LogWarning("Taxonomy translation skipped: LLM provider not configured");
-            return new TranslationSweep(alreadyTranslated, 0, missingNames.Count);
+            return new TranslationSweep(alreadyTranslated, 0, totalMissingRows);
         }
 
         var translations = await TranslateAsync(missingNames, culture, ct);
@@ -109,18 +110,32 @@ public sealed class TaxonomyTranslationService(
         var tagUpserts = new Dictionary<string, string>();
         var documentTypeUpserts = new Dictionary<string, string>();
         var newlyTranslated = 0;
+        var failed = 0;
 
-        foreach (var name in missingNames)
+        foreach (var name in missingTagNames)
         {
-            if (!translations.TryGetValue(name, out var label) || string.IsNullOrWhiteSpace(label))
-                continue;
-
-            if (missingTagSet.Contains(name))
+            if (translations.TryGetValue(name, out var label) && !string.IsNullOrWhiteSpace(label))
+            {
                 tagUpserts[name] = label;
-            if (missingDocumentTypeSet.Contains(name))
-                documentTypeUpserts[name] = label;
+                newlyTranslated++;
+            }
+            else
+            {
+                failed++;
+            }
+        }
 
-            newlyTranslated++;
+        foreach (var name in missingDocumentTypeNames)
+        {
+            if (translations.TryGetValue(name, out var label) && !string.IsNullOrWhiteSpace(label))
+            {
+                documentTypeUpserts[name] = label;
+                newlyTranslated++;
+            }
+            else
+            {
+                failed++;
+            }
         }
 
         if (tagUpserts.Count > 0)
@@ -128,7 +143,7 @@ public sealed class TaxonomyTranslationService(
         if (documentTypeUpserts.Count > 0)
             await translationStore.UpsertRangeAsync(DocumentTypeKind, culture, documentTypeUpserts, ct);
 
-        return new TranslationSweep(alreadyTranslated, newlyTranslated, missingNames.Count - newlyTranslated);
+        return new TranslationSweep(alreadyTranslated, newlyTranslated, failed);
     }
 
     private async Task<Dictionary<string, string>> TranslateAsync(

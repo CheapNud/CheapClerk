@@ -62,6 +62,35 @@ public sealed class TaxonomyTranslationServiceTests : IAsyncLifetime
         public void Dispose() { }
     }
 
+    /// <summary>Returns a fixed fenced-JSON reply and records the outbound prompt — exercises
+    /// the real translate path (positive-path coverage for <see cref="TaxonomyTranslationService"/>).</summary>
+    private sealed class CannedChatClient(string reply) : IChatClient
+    {
+        public ChatClientMetadata Metadata { get; } = new("canned");
+        public int CallCount { get; private set; }
+        public string? LastUserMessageText { get; private set; }
+
+        public Task<ChatResponse> GetResponseAsync(
+            IEnumerable<ChatMessage> chatMessages,
+            ChatOptions? chatOptions = null,
+            CancellationToken cancellationToken = default)
+        {
+            CallCount++;
+            LastUserMessageText = chatMessages.LastOrDefault(m => m.Role == ChatRole.User)?.Text;
+            return Task.FromResult(new ChatResponse(new ChatMessage(ChatRole.Assistant, reply)));
+        }
+
+        public IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
+            IEnumerable<ChatMessage> chatMessages,
+            ChatOptions? chatOptions = null,
+            CancellationToken cancellationToken = default) =>
+            throw new NotSupportedException("Streaming not exercised by these tests.");
+
+        public object? GetService(Type serviceType, object? serviceKey = null) => null;
+
+        public void Dispose() { }
+    }
+
     private static HttpResponseMessage Ok(string json) =>
         new(HttpStatusCode.OK) { Content = new StringContent(json, Encoding.UTF8, "application/json") };
 
@@ -93,11 +122,44 @@ public sealed class TaxonomyTranslationServiceTests : IAsyncLifetime
         return Ok("{\"count\":0,\"results\":[]}");
     }
 
+    /// <summary>Builds a taxonomy responder serving the given tag and document-type names,
+    /// with the standard Inbox/Needs Review workflow tags mixed in so exclusion is exercised.</summary>
+    private static Func<HttpRequestMessage, HttpResponseMessage> RespondWithTaxonomy(
+        IReadOnlyList<string> tagNames, IReadOnlyList<string> documentTypeNames)
+    {
+        return incoming =>
+        {
+            var url = incoming.RequestUri!.ToString();
+
+            if (url.Contains("api/tags/"))
+            {
+                var allTagNames = new List<string> { "Inbox", "Needs Review" };
+                allTagNames.AddRange(tagNames);
+
+                var tagResults = allTagNames
+                    .Select((name, index) => $$"""{"id":{{index + 1}},"name":"{{name}}","is_inbox_tag":{{(name == "Inbox").ToString().ToLowerInvariant()}}}""");
+
+                return Ok($$"""{"count":{{allTagNames.Count}},"results":[{{string.Join(",", tagResults)}}]}""");
+            }
+
+            if (url.Contains("api/document_types/"))
+            {
+                var documentTypeResults = documentTypeNames
+                    .Select((name, index) => $$"""{"id":{{index + 1}},"name":"{{name}}"}""");
+
+                return Ok($$"""{"count":{{documentTypeNames.Count}},"results":[{{string.Join(",", documentTypeResults)}}]}""");
+            }
+
+            return Ok("{\"count\":0,\"results\":[]}");
+        };
+    }
+
     private TaxonomyTranslationService BuildService(
         StubHttpHandler stub,
         TranslationStore translationStore,
         IChatClient chatClient,
-        TimeProvider? clock = null)
+        TimeProvider? clock = null,
+        string anthropicApiKey = "")
     {
         var paperlessClient = new PaperlessClient(
             new HttpClient(stub) { BaseAddress = new Uri("http://paperless.test/") },
@@ -107,7 +169,7 @@ public sealed class TaxonomyTranslationServiceTests : IAsyncLifetime
         var llmOptions = Options.Create(new LlmOptions
         {
             Provider = LlmProvider.Anthropic,
-            Anthropic = new AnthropicProviderOptions { ApiKey = string.Empty }
+            Anthropic = new AnthropicProviderOptions { ApiKey = anthropicApiKey }
         });
         var classificationOptions = Options.Create(new ClassificationOptions());
 
@@ -180,5 +242,59 @@ public sealed class TaxonomyTranslationServiceTests : IAsyncLifetime
 
         var tagRequests = stub.Requests.Count(r => r.RequestUri!.ToString().Contains("api/tags/"));
         Assert.Equal(2, tagRequests);
+    }
+
+    [Fact]
+    public async Task Ensure_TranslatesMissingLabels_AndUpsertsPerKind()
+    {
+        var stub = new StubHttpHandler(RespondWithTaxonomy(["Belastingen"], ["Factuur"]));
+        var translationStore = new TranslationStore(_dbFactory);
+        var chatClient = new CannedChatClient("""
+            ```json
+            {"Belastingen":"Taxes","Factuur":"Invoice"}
+            ```
+            """);
+        var taxonomyTranslator = BuildService(stub, translationStore, chatClient, anthropicApiKey: "test-key");
+
+        var sweep = await taxonomyTranslator.EnsureTranslationsAsync("en");
+
+        Assert.Equal(0, sweep.AlreadyTranslated);
+        Assert.Equal(2, sweep.NewlyTranslated);
+        Assert.Equal(0, sweep.Failed);
+
+        var tagMap = await translationStore.GetMapAsync("tag", "en");
+        var documentTypeMap = await translationStore.GetMapAsync("document_type", "en");
+        Assert.Equal("Taxes", tagMap["Belastingen"]);
+        Assert.Equal("Invoice", documentTypeMap["Factuur"]);
+
+        Assert.Equal(1, chatClient.CallCount);
+    }
+
+    [Fact]
+    public async Task Ensure_CrossKindNameCollision_CountsPerKindRow()
+    {
+        var stub = new StubHttpHandler(RespondWithTaxonomy(["Contract"], ["Contract"]));
+        var translationStore = new TranslationStore(_dbFactory);
+        var chatClient = new CannedChatClient("""
+            ```json
+            {"Contract":"Contract"}
+            ```
+            """);
+        var taxonomyTranslator = BuildService(stub, translationStore, chatClient, anthropicApiKey: "test-key");
+
+        var sweep = await taxonomyTranslator.EnsureTranslationsAsync("en");
+
+        Assert.Equal(2, sweep.NewlyTranslated);
+
+        var tagMap = await translationStore.GetMapAsync("tag", "en");
+        var documentTypeMap = await translationStore.GetMapAsync("document_type", "en");
+        Assert.Equal("Contract", tagMap["Contract"]);
+        Assert.Equal("Contract", documentTypeMap["Contract"]);
+
+        Assert.Equal(1, chatClient.CallCount);
+        Assert.NotNull(chatClient.LastUserMessageText);
+        var occurrences = chatClient.LastUserMessageText!
+            .Split("Contract", StringSplitOptions.None).Length - 1;
+        Assert.Equal(1, occurrences);
     }
 }
