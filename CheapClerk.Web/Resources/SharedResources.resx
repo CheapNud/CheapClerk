@@ -125,6 +125,20 @@
   <data name="Expiring" xml:space="preserve"><value>Expiring</value></data>
   <data name="Review" xml:space="preserve"><value>Review</value></data>
   <data name="ToggleDarkMode" xml:space="preserve"><value>Toggle Dark Mode</value></data>
+  <!-- Upload dialog -->
+  <data name="Upload" xml:space="preserve"><value>Upload</value></data>
+  <data name="UploadDocuments" xml:space="preserve"><value>Upload documents</value></data>
+  <data name="ChooseFiles" xml:space="preserve"><value>Choose files</value></data>
+  <data name="SupportedFileTypesHint" xml:space="preserve"><value>Supported: {0} · Max {1} MB</value></data>
+  <data name="NoFilesSelected" xml:space="preserve"><value>No files selected yet.</value></data>
+  <data name="UploadSelected" xml:space="preserve"><value>Upload {0} file(s)</value></data>
+  <data name="Close" xml:space="preserve"><value>Close</value></data>
+  <data name="UploadPending" xml:space="preserve"><value>Waiting to upload</value></data>
+  <data name="UploadUploading" xml:space="preserve"><value>Uploading...</value></data>
+  <data name="UploadConsumed" xml:space="preserve"><value>Filed as document #{0}</value></data>
+  <data name="UploadFailedAs" xml:space="preserve"><value>Upload failed: {0}</value></data>
+  <data name="UploadStillProcessing" xml:space="preserve"><value>Still processing — will be filed automatically</value></data>
+  <data name="UploadRejectedReason" xml:space="preserve"><value>Rejected: {0}</value></data>
   <!-- Home / Dashboard page -->
   <data name="AppDashboardTitle" xml:space="preserve"><value>CheapClerk — Dashboard</value></data>
   <data name="HomeSubtitle" xml:space="preserve"><value>Your household documents at a glance.</value></data>

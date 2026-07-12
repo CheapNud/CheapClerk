@@ -76,6 +76,20 @@
   <data name="Expiring" xml:space="preserve"><value>Vervalt binnenkort</value></data>
   <data name="Review" xml:space="preserve"><value>Controle</value></data>
   <data name="ToggleDarkMode" xml:space="preserve"><value>Donkere modus wisselen</value></data>
+  <!-- Upload dialog -->
+  <data name="Upload" xml:space="preserve"><value>Upload</value></data>
+  <data name="UploadDocuments" xml:space="preserve"><value>Documenten uploaden</value></data>
+  <data name="ChooseFiles" xml:space="preserve"><value>Bestanden kiezen</value></data>
+  <data name="SupportedFileTypesHint" xml:space="preserve"><value>Ondersteund: {0} · Max {1} MB</value></data>
+  <data name="NoFilesSelected" xml:space="preserve"><value>Nog geen bestanden geselecteerd.</value></data>
+  <data name="UploadSelected" xml:space="preserve"><value>{0} bestand(en) uploaden</value></data>
+  <data name="Close" xml:space="preserve"><value>Sluiten</value></data>
+  <data name="UploadPending" xml:space="preserve"><value>Wacht op upload</value></data>
+  <data name="UploadUploading" xml:space="preserve"><value>Bezig met uploaden...</value></data>
+  <data name="UploadConsumed" xml:space="preserve"><value>Gearchiveerd als document #{0}</value></data>
+  <data name="UploadFailedAs" xml:space="preserve"><value>Uploaden mislukt: {0}</value></data>
+  <data name="UploadStillProcessing" xml:space="preserve"><value>Wordt nog verwerkt — wordt automatisch gearchiveerd</value></data>
+  <data name="UploadRejectedReason" xml:space="preserve"><value>Geweigerd: {0}</value></data>
   <!-- Home / Dashboard page -->
   <data name="AppDashboardTitle" xml:space="preserve"><value>CheapClerk — Dashboard</value></data>
   <data name="HomeSubtitle" xml:space="preserve"><value>Uw huishoudelijke documenten in één oogopslag.</value></data>

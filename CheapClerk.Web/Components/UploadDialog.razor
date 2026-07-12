@@ -1,0 +1,178 @@
+@inject UploadTracker Tracker
+@inject IStringLocalizer<SharedResources> Loc
+
+<MudDialog>
+    <DialogContent>
+        <MudFileUpload T="IReadOnlyList<IBrowserFile>" FilesChanged="OnFilesSelected"
+                       Accept="@AcceptList"
+                       Disabled="_busy">
+            <CustomContent>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.AttachFile"
+                           OnClick="@context.OpenFilePickerAsync"
+                           Disabled="_busy">
+                    @Loc["ChooseFiles"]
+                </MudButton>
+            </CustomContent>
+        </MudFileUpload>
+
+        <MudText Typo="Typo.caption" Class="mt-2 d-block" Style="opacity: 0.6;">
+            @Loc["SupportedFileTypesHint", string.Join(", ", UploadRules.UploadableExtensions), UploadRules.MaxUploadBytes / (1024 * 1024)]
+        </MudText>
+
+        @if (_rows.Count == 0)
+        {
+            <MudText Typo="Typo.body2" Class="mt-4" Style="opacity: 0.6;">@Loc["NoFilesSelected"]</MudText>
+        }
+        else
+        {
+            <MudStack Class="mt-4" Spacing="2">
+                @foreach (var row in _rows)
+                {
+                    <MudPaper Class="pa-2 d-flex align-center" Elevation="0" Style="border: 1px solid rgba(255,255,255,0.08);">
+                        @if (row.Status == UploadRowStatus.Uploading)
+                        {
+                            <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Primary" Class="mr-3" />
+                        }
+                        else
+                        {
+                            <MudIcon Icon="@RowIcon(row)" Color="@RowColor(row)" Size="Size.Small" Class="mr-3" />
+                        }
+                        <div class="flex-grow-1">
+                            <MudText Typo="Typo.body2">@row.FileName</MudText>
+                            <MudText Typo="Typo.caption" Style="opacity: 0.6;">@RowStatusText(row)</MudText>
+                        </div>
+                    </MudPaper>
+                }
+            </MudStack>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton Disabled="_busy" OnClick="@(() => MudDialog.Close())">@Loc["Close"]</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                   Disabled="@(_busy || !_rows.Any(row => row.Status == UploadRowStatus.Pending))"
+                   OnClick="UploadPendingAsync">
+            @Loc["UploadSelected", _rows.Count(row => row.Status == UploadRowStatus.Pending)]
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    private readonly List<UploadRow> _rows = [];
+    private bool _busy;
+
+    private static string AcceptList => string.Join(",", UploadRules.UploadableExtensions);
+
+    private void OnFilesSelected(IReadOnlyList<IBrowserFile> files)
+    {
+        foreach (var file in files)
+            _rows.Add(new UploadRow(file));
+    }
+
+    private async Task UploadPendingAsync()
+    {
+        _busy = true;
+        try
+        {
+            foreach (var row in _rows.Where(row => row.Status == UploadRowStatus.Pending).ToList())
+            {
+                await UploadRowAsync(row);
+                StateHasChanged();
+            }
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task UploadRowAsync(UploadRow row)
+    {
+        var rejectionReason = UploadRules.Validate(row.FileName, row.File.Size);
+        if (rejectionReason is not null)
+        {
+            row.Status = UploadRowStatus.Rejected;
+            row.Detail = rejectionReason;
+            return;
+        }
+
+        row.Status = UploadRowStatus.Uploading;
+        StateHasChanged();
+
+        try
+        {
+            using var memoryStream = new MemoryStream();
+            await using var readStream = row.File.OpenReadStream(UploadRules.MaxUploadBytes);
+            await readStream.CopyToAsync(memoryStream);
+
+            var outcome = await Tracker.UploadAndTrackAsync(memoryStream.ToArray(), row.FileName, TimeSpan.FromSeconds(30));
+            ApplyOutcome(row, outcome);
+        }
+        catch (IOException ex)
+        {
+            row.Status = UploadRowStatus.Rejected;
+            row.Detail = ex.Message;
+        }
+        catch (Exception ex)
+        {
+            row.Status = UploadRowStatus.Failed;
+            row.Detail = ex.Message;
+        }
+    }
+
+    private static void ApplyOutcome(UploadRow row, UploadOutcome outcome)
+    {
+        row.DocumentId = outcome.DocumentId;
+        row.Detail = outcome.Detail;
+        row.Status = outcome.Kind switch
+        {
+            UploadOutcomeKind.Consumed => UploadRowStatus.Consumed,
+            UploadOutcomeKind.Failed => UploadRowStatus.Failed,
+            UploadOutcomeKind.StillProcessing => UploadRowStatus.StillProcessing,
+            UploadOutcomeKind.UploadRejected => UploadRowStatus.Rejected,
+            _ => UploadRowStatus.Failed
+        };
+    }
+
+    private static string RowIcon(UploadRow row) => row.Status switch
+    {
+        UploadRowStatus.Consumed => Icons.Material.Filled.CheckCircle,
+        UploadRowStatus.Failed => Icons.Material.Filled.Error,
+        UploadRowStatus.StillProcessing => Icons.Material.Filled.Schedule,
+        UploadRowStatus.Rejected => Icons.Material.Filled.Block,
+        _ => Icons.Material.Filled.HourglassEmpty
+    };
+
+    private static Color RowColor(UploadRow row) => row.Status switch
+    {
+        UploadRowStatus.Consumed => Color.Success,
+        UploadRowStatus.Failed => Color.Error,
+        UploadRowStatus.Rejected => Color.Error,
+        UploadRowStatus.StillProcessing => Color.Warning,
+        _ => Color.Default
+    };
+
+    private string RowStatusText(UploadRow row) => row.Status switch
+    {
+        UploadRowStatus.Pending => Loc["UploadPending"].Value,
+        UploadRowStatus.Uploading => Loc["UploadUploading"].Value,
+        UploadRowStatus.Consumed => Loc["UploadConsumed", row.DocumentId?.ToString() ?? "—"].Value,
+        UploadRowStatus.Failed => Loc["UploadFailedAs", row.Detail ?? string.Empty].Value,
+        UploadRowStatus.StillProcessing => Loc["UploadStillProcessing"].Value,
+        UploadRowStatus.Rejected => Loc["UploadRejectedReason", row.Detail ?? string.Empty].Value,
+        _ => string.Empty
+    };
+
+    private enum UploadRowStatus { Pending, Uploading, Consumed, Failed, StillProcessing, Rejected }
+
+    private sealed class UploadRow(IBrowserFile file)
+    {
+        public IBrowserFile File { get; } = file;
+        public string FileName => File.Name;
+        public UploadRowStatus Status { get; set; } = UploadRowStatus.Pending;
+        public string? Detail { get; set; }
+        public int? DocumentId { get; set; }
+    }
+}
