@@ -60,6 +60,7 @@ builder.Services.AddMcpServer()
     .WithTools<RefreshExtractionCacheTool>()
     .WithTools<ProcessInboxTool>()
     .WithTools<TranslateTaxonomyTool>()
+    .WithTools<UploadDocumentTool>()
     .WithTools<ListReviewQueueTool>()
     .WithTools<ApplySuggestionTool>()
     .WithTools<ReclassifyDocumentTool>();
