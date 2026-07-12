@@ -46,6 +46,7 @@ builder.Services.AddSingleton<InboxProcessorService>();
 builder.Services.AddSingleton<ReviewQueueService>();
 builder.Services.AddSingleton<TranslationStore>();
 builder.Services.AddSingleton<TaxonomyTranslationService>();
+builder.Services.AddSingleton<UploadTracker>();
 
 builder.Services.AddMcpServer()
     .WithStdioServerTransport()
