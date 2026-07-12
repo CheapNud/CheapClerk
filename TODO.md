@@ -1,6 +1,6 @@
 <!--
   TODO.md — CheapClerk project work tracker
-  Last updated: 2026-07-11 (localization infra and translate_taxonomy tool)
+  Last updated: 2026-07-12 (title translation noted as future work)
 
   RULES FOR AI AGENTS:
   - Update the "Last updated" date above whenever you modify this file
@@ -70,6 +70,9 @@ _Nothing blocking._
 
 ## Future
 
+- [ ] (2026-07-12) Per-culture document TITLE translations [user]
+  - Deliberately skipped in the v1.5.0 localization layer (YAGNI): titles are per-document data, so the map grows one row per document per culture and each new document costs an extra LLM call per culture
+  - Becomes worth it if CheapClerk is ever packaged for wider use; design would mirror NameTranslations (display-only, canonical writes) with translate-at-classification-time batching
 
 ## Done
 
