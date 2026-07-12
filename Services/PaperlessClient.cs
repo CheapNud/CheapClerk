@@ -314,4 +314,30 @@ public sealed class PaperlessClient(
             return null;
         }
     }
+
+    public async Task<string?> UploadDocumentAsync(byte[] fileBytes, string fileName, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            using var multipart = new MultipartFormDataContent();
+            var filePart = new ByteArrayContent(fileBytes);
+            multipart.Add(filePart, "document", fileName);
+            var uploadReply = await httpClient.PostAsync("api/documents/post_document/", multipart, cancellationToken);
+            uploadReply.EnsureSuccessStatusCode();
+            var rawReply = await uploadReply.Content.ReadAsStringAsync(cancellationToken);
+            return rawReply.Trim().Trim('"');
+        }
+        catch (HttpRequestException ex)
+        {
+            logger.LogError(ex, "Failed to upload document {FileName}", fileName);
+            return null;
+        }
+    }
+
+    public async Task<PaperlessTaskStatus?> GetTaskStatusAsync(string taskUuid, CancellationToken cancellationToken = default)
+    {
+        var statuses = await GetAsync<List<PaperlessTaskStatus>>(
+            $"api/tasks/?task_id={Uri.EscapeDataString(taskUuid)}", cancellationToken);
+        return statuses?.FirstOrDefault();
+    }
 }
