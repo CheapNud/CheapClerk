@@ -5,6 +5,7 @@
     <DialogContent>
         <MudFileUpload T="IReadOnlyList<IBrowserFile>" FilesChanged="OnFilesSelected"
                        Accept="@AcceptList"
+                       MaximumFileCount="100"
                        Disabled="_busy">
             <CustomContent>
                 <MudButton Variant="Variant.Filled" Color="Color.Primary"
@@ -67,6 +68,12 @@
 
     private void OnFilesSelected(IReadOnlyList<IBrowserFile> files)
     {
+        // Blazor invalidates previously issued IBrowserFile handles whenever the picker
+        // reopens (the JS file-ID map is rebuilt per change event), so any rows still
+        // waiting to be uploaded from an earlier round now hold dead handles and must
+        // be dropped before adding this round's selection.
+        _rows.RemoveAll(row => row.Status == UploadRowStatus.Pending);
+
         foreach (var file in files)
             _rows.Add(new UploadRow(file));
     }
