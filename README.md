@@ -160,6 +160,16 @@ async Task<string> ApplySuggestion(
 
 Parameters are merged onto the stored suggestion; explicit values override the cached fields. Returns: confirmation of the filed document.
 
+### `upload_document`
+Upload a new document for ingestion into Paperless-ngx. Consumes the file, tracks progress (~30s), auto-classifies once consumption completes, and surfaces any duplicate-rejection feedback.
+
+```csharp
+[Tool("upload_document")]
+async Task<string> UploadDocument(string filePath)
+```
+
+Allowed file types: PDF, PNG, JPG, JPEG, WebP, GIF, TIFF (50MB cap). Returns: consumption status, auto-classification result, or duplicate-rejection reason.
+
 ### `reclassify_document`
 Re-run classification on a document already tagged with `Needs Review`, optionally forcing a fresh Vision OCR pass. Stores the new suggestion and updates the review queue.
 
@@ -384,6 +394,18 @@ The `/review` page in CheapClerk.Web displays all queued documents awaiting revi
 - **Accept** — applies the suggestion (or user edits) through the same filing path as auto-classification: PATCH the metadata back to Paperless and remove the `Needs Review` tag.
 - **Edit** — modify any suggested field before accepting.
 - **Re-run** — request a fresh classification attempt with an optional `forceVisionOcr` flag to skip the quality check and re-extract text via Claude Vision even if Tesseract looks acceptable.
+
+### Uploading
+
+Documents may be uploaded via the Blazor app's upload dialog in the app bar, or directly from Claude Code using the `upload_document` MCP tool. Supported formats: PDF, PNG, JPG, JPEG, WebP, GIF, TIFF, with a 50MB per-file cap.
+
+The upload flow:
+1. File sent to Paperless-ngx for consumption (~30 seconds).
+2. Consumption status polled by a shared `UploadTracker` (budget: 30s). `UploadRules` enforces type and size limits.
+3. Duplicate rejection surfaces immediately if Paperless detects a collision.
+4. Upon successful consumption, auto-classification begins (the webhook or a poller picks it up from the inbox).
+
+Outcome states: consumed (waiting for classification), duplicate-rejected (collision detected), still-processing (timeout waiting for consumption). The webhook files everything after consumption; the poller is a safety net.
 
 ---
 
