@@ -76,4 +76,30 @@ public sealed class PaperlessClientUploadTests
 
         Assert.Null(status);
     }
+
+    [Fact]
+    public async Task GetTaskStatusAsync_ParsesNumericRelatedDocument()
+    {
+        var stub = new StubHttpHandler(_ => Ok(
+            "[{\"task_id\":\"abc\",\"status\":\"SUCCESS\",\"result\":\"ok\",\"related_document\":5}]"));
+        var paperless = BuildClient(stub);
+
+        var status = await paperless.GetTaskStatusAsync("abc");
+
+        Assert.NotNull(status);
+        Assert.Equal("5", status!.RelatedDocument);
+    }
+
+    [Fact]
+    public async Task GetTaskStatusAsync_ParsesStringRelatedDocument()
+    {
+        var stub = new StubHttpHandler(_ => Ok(
+            "[{\"task_id\":\"abc\",\"status\":\"SUCCESS\",\"result\":\"ok\",\"related_document\":\"123\"}]"));
+        var paperless = BuildClient(stub);
+
+        var status = await paperless.GetTaskStatusAsync("abc");
+
+        Assert.NotNull(status);
+        Assert.Equal("123", status!.RelatedDocument);
+    }
 }

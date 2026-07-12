@@ -50,4 +50,11 @@ public sealed class UploadRulesTests
         var reason = UploadRules.Validate("large.pdf", 49 * 1024 * 1024);
         Assert.Null(reason);
     }
+
+    [Fact]
+    public void Validate_ExactlyFiftyMegabytes_Accepted()
+    {
+        var reason = UploadRules.Validate("boundary.pdf", 50 * 1024 * 1024);
+        Assert.Null(reason);
+    }
 }
