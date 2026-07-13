@@ -1,6 +1,6 @@
 <!--
   TODO.md — CheapClerk project work tracker
-  Last updated: 2026-07-12 (upload through the clerk)
+  Last updated: 2026-07-13 (Plex auth in front of the web app)
 
   RULES FOR AI AGENTS:
   - Update the "Last updated" date above whenever you modify this file
@@ -36,9 +36,10 @@ _Nothing blocking._
   - Shared UploadTracker polls the Paperless tasks API (30s budget); UploadRules single-sources type/size limits
 - [x] (2026-07-11 → 2026-07-11) Localization — EN/NL UI (resx + culture picker) and taxonomy translation layer (SQLite map, LLM-filled, display-only) [user]
   - Writes stay canonical; name-keyed rows self-heal on tag renames; translate_taxonomy MCP tool backfills
-- [ ] (2026-07-11) Add authentication to cheapclerk-web BEFORE any exposure beyond the trusted LAN [audit]
-  - App has no auth by design (single-user LAN); all pages and the file proxy expose the full archive
-  - Hard gate: never proxy through Hidden-Valley / NPM without ASP.NET Identity in place first
+- [ ] (2026-07-13) Post-exposure hardening: swap Plex CallbackBaseUrl to the public https URL when NPM is configured; sign in via the public URL afterwards; consider firewalling :5030 to NPM + Sierra-Madre [audit]
+- [x] (2026-07-11 → 2026-07-13) Add authentication to cheapclerk-web BEFORE any exposure beyond the trusted LAN [audit]
+  - Plex SSO via CheapHelpers 3.6.0 (server members only), fallback authorization policy, explicit anonymous allow-list (login/plex endpoints/culture/webhook/static)
+  - April's CheapHelpers no-adopt decision now scoped: utilities still out, auth adopted (single-source security code)
 - [ ] (2026-07-06) Recover from cross-host entity-creation races in ClassificationApplier [audit]
   - Duplicate-name POST 400s → CreateTagAsync null → tag silently dropped from the filed doc (Applied still true)
   - On null create, force-refresh the lookup and rematch by name; same for correspondent/type
