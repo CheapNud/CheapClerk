@@ -1,6 +1,6 @@
 <!--
   TODO.md — CheapClerk project work tracker
-  Last updated: 2026-07-13 (Plex auth in front of the web app)
+  Last updated: 2026-07-13 (payment QR on invoices)
 
   RULES FOR AI AGENTS:
   - Update the "Last updated" date above whenever you modify this file
@@ -32,6 +32,8 @@ _Nothing blocking._
 
 ## Planned
 
+- [x] (2026-07-13 → 2026-07-13) Pay-this-bill QR — EPC069-12 SEPA QR on invoice pages + get_payment_details MCP tool [user]
+  - Pure EpcPayment builder rejects sub-cent amounts/non-EUR/malformed IBANs instead of correcting; plain-text verification rows beside the QR
 - [x] (2026-07-12 → 2026-07-12) Upload through the clerk — app-bar dialog + upload_document MCP tool with consumption/duplicate feedback [user]
   - Shared UploadTracker polls the Paperless tasks API (30s budget); UploadRules single-sources type/size limits
 - [x] (2026-07-11 → 2026-07-11) Localization — EN/NL UI (resx + culture picker) and taxonomy translation layer (SQLite map, LLM-filled, display-only) [user]

@@ -193,6 +193,22 @@ async Task<string> TranslateTaxonomy()
 
 Returns: per-culture translation summary (already translated, newly translated, failed).
 
+### `get_payment_details`
+Structured payment data for an extracted invoice, plus the raw EPC069-12 payload (renderable as a SEPA payment QR).
+
+```csharp
+[Tool("get_payment_details")]
+async Task<string> GetPaymentDetails(int documentId)
+```
+
+Requires a cached extraction with an IBAN and amount. Returns: beneficiary, normalized IBAN, amount, reference, due date, and the EPC payload. Amounts with sub-cent precision, non-EUR currencies and malformed IBANs are rejected rather than corrected — a human should read that bill.
+
+---
+
+## Payment QR
+
+Invoices whose extraction contains an IBAN and amount get a **Pay this bill** section on the document page: an EPC069-12 (SEPA) QR code that any Belgian banking app scans directly, alongside the beneficiary, IBAN, amount and reference in plain text — **always verify those against the document before paying**. The QR encodes only what extraction read; validation rejects anything suspicious (sub-cent amounts, non-EUR, malformed IBANs) instead of guessing.
+
 ---
 
 ## Localization

@@ -216,7 +216,7 @@
   <data name="PaymentIban" xml:space="preserve"><value>IBAN</value></data>
   <data name="PaymentAmount" xml:space="preserve"><value>Bedrag</value></data>
   <data name="PaymentReference" xml:space="preserve"><value>Mededeling</value></data>
-  <data name="PaymentVerifyCaution" xml:space="preserve"><value>Controleer het IBAN en het bedrag met het document voor je betaalt.</value></data>
+  <data name="PaymentVerifyCaution" xml:space="preserve"><value>Controleer het IBAN en bedrag aan de hand van het document voordat je betaalt.</value></data>
   <!-- Reconnect modal (Blazor Server disconnect overlay) -->
   <data name="ReconnectRejoining" xml:space="preserve"><value>Opnieuw verbinden met de server...</value></data>
   <data name="ReconnectRetryPrefix" xml:space="preserve"><value>Opnieuw verbinden mislukt... nieuwe poging over </value></data>
