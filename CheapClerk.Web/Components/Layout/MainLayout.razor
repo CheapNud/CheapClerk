@@ -8,13 +8,21 @@
 
 <MudLayout>
     <MudAppBar Elevation="0" Dense="true" Style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@(() => _drawerOpen = !_drawerOpen)" />
+        <AuthorizeView>
+            <Authorized>
+                <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@(() => _drawerOpen = !_drawerOpen)" />
+            </Authorized>
+        </AuthorizeView>
         <MudIcon Icon="@Icons.Material.Filled.Description" Color="Color.Primary" Class="ml-2" />
         <MudText Typo="Typo.h6" Class="ml-1" Style="font-weight: 700; letter-spacing: 1px;">CHEAPCLERK</MudText>
         <MudSpacer />
-        <MudTooltip Text="@Loc["Upload"]">
-            <MudIconButton Icon="@Icons.Material.Filled.UploadFile" Color="Color.Inherit" OnClick="OpenUploadDialogAsync" />
-        </MudTooltip>
+        <AuthorizeView>
+            <Authorized>
+                <MudTooltip Text="@Loc["Upload"]">
+                    <MudIconButton Icon="@Icons.Material.Filled.UploadFile" Color="Color.Inherit" OnClick="OpenUploadDialogAsync" />
+                </MudTooltip>
+            </Authorized>
+        </AuthorizeView>
         <MudIcon Icon="@Icons.Material.Filled.Language" Color="Color.Inherit" Class="mr-1" Size="Size.Small" />
         <MudLink Href="@($"/culture/set?culture=en&redirectUri={Uri.EscapeDataString(CurrentPath)}")"
                  Color="Color.Inherit" Underline="Underline.None" Class="mx-1"
@@ -38,23 +46,27 @@
         </AuthorizeView>
     </MudAppBar>
 
-    <MudDrawer @bind-Open="_drawerOpen" Elevation="0" Variant="DrawerVariant.Mini" OpenMiniOnHover="true"
-               Style="border-right: 1px solid rgba(255,255,255,0.05);">
-        <MudDrawerHeader Dense="true" Class="d-flex align-center">
-            <MudIcon Icon="@Icons.Material.Filled.Description" Color="Color.Primary" />
-            <MudText Typo="Typo.body1" Class="ml-2" Style="font-weight: 600;">Clerk</MudText>
-        </MudDrawerHeader>
-        <MudNavMenu Bordered="true" Color="Color.Primary">
-            <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">@Loc["Dashboard"]</MudNavLink>
-            <MudNavLink Href="/documents" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.FolderOpen">@Loc["Documents"]</MudNavLink>
-            <MudNavLink Href="/search" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Search">@Loc["Search"]</MudNavLink>
-            <MudNavLink Href="/tags" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Label">@Loc["Tags"]</MudNavLink>
-            <MudNavLink Href="/expiring" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Schedule">@Loc["Expiring"]</MudNavLink>
-            <MudNavLink Href="/review" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.RateReview">@Loc["Review"]</MudNavLink>
-        </MudNavMenu>
-        <MudSpacer />
-        <MudText Typo="Typo.caption" Class="pa-3" Style="opacity: 0.2;">@CheapClerk.AppVersion.Display</MudText>
-    </MudDrawer>
+    <AuthorizeView>
+        <Authorized>
+            <MudDrawer @bind-Open="_drawerOpen" Elevation="0" Variant="DrawerVariant.Mini" OpenMiniOnHover="true"
+                       Style="border-right: 1px solid rgba(255,255,255,0.05);">
+                <MudDrawerHeader Dense="true" Class="d-flex align-center">
+                    <MudIcon Icon="@Icons.Material.Filled.Description" Color="Color.Primary" />
+                    <MudText Typo="Typo.body1" Class="ml-2" Style="font-weight: 600;">Clerk</MudText>
+                </MudDrawerHeader>
+                <MudNavMenu Bordered="true" Color="Color.Primary">
+                    <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">@Loc["Dashboard"]</MudNavLink>
+                    <MudNavLink Href="/documents" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.FolderOpen">@Loc["Documents"]</MudNavLink>
+                    <MudNavLink Href="/search" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Search">@Loc["Search"]</MudNavLink>
+                    <MudNavLink Href="/tags" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Label">@Loc["Tags"]</MudNavLink>
+                    <MudNavLink Href="/expiring" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Schedule">@Loc["Expiring"]</MudNavLink>
+                    <MudNavLink Href="/review" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.RateReview">@Loc["Review"]</MudNavLink>
+                </MudNavMenu>
+                <MudSpacer />
+                <MudText Typo="Typo.caption" Class="pa-3" Style="opacity: 0.2;">@CheapClerk.AppVersion.Display</MudText>
+            </MudDrawer>
+        </Authorized>
+    </AuthorizeView>
 
     <MudMainContent Class="pt-14 px-4 pb-4" Style="min-height: 100vh;">
         @Body
