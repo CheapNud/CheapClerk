@@ -15,39 +15,21 @@ public sealed class ExtractStructuredDataTool
         DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
     };
 
-    [McpServerTool(Name = "extract_structured_data"), Description("Classify a document and extract structured fields (invoice, insurance, contract). Uses Claude for analysis.")]
+    [McpServerTool(Name = "extract_structured_data"), Description("Classify a document and extract structured fields (invoice, insurance, contract). Uses Claude for analysis. The result is cached, so find_expiring_documents and get_payment_details see it immediately.")]
     public static async Task<string> ExtractStructuredData(
-        PaperlessClient paperlessClient,
-        OcrQualityChecker ocrQualityChecker,
-        VisionOcrService visionOcrService,
         StructuredExtractionService structuredExtractionService,
+        ExtractionCacheService extractionCache,
         [Description("The Paperless document ID to analyze.")] int documentId,
         CancellationToken cancellationToken = default)
     {
         if (!structuredExtractionService.IsEnabled)
-            return "Structured extraction is disabled. Configure VisionFallback.ApiKey in appsettings.json.";
+            return "Structured extraction is disabled. Configure the Llm provider in appsettings.json.";
 
-        var ocrText = await paperlessClient.GetDocumentContentAsync(documentId, cancellationToken);
-
-        if (ocrQualityChecker.IsOcrQualitySuspect(ocrText) && visionOcrService.IsEnabled)
-        {
-            var originalBytes = await paperlessClient.DownloadOriginalAsync(documentId, cancellationToken);
-            if (originalBytes is not null)
-            {
-                var visionText = await visionOcrService.ExtractTextFromImageAsync(
-                    originalBytes,
-                    cancellationToken: cancellationToken);
-                if (visionText is not null)
-                    ocrText = visionText;
-            }
-        }
-
-        if (string.IsNullOrWhiteSpace(ocrText))
-            return $"Document {documentId} has no text content to analyze.";
-
-        var extracted = await structuredExtractionService.ExtractAsync(ocrText, cancellationToken);
+        // Runs through the cache (content fetch + vision fallback + persistence)
+        // so downstream tools see the result — extraction that evaporates was a bug
+        var extracted = await extractionCache.GetOrExtractAsync(documentId, forceRefresh: true, cancellationToken);
         if (extracted is null)
-            return $"Failed to extract structured data from document {documentId}.";
+            return $"Failed to extract structured data from document {documentId} (no readable text or extraction failed).";
 
         var sb = new StringBuilder();
         sb.AppendLine($"**Document {documentId} — {extracted.Category}**");
