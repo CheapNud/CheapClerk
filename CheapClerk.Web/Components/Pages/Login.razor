@@ -1,0 +1,30 @@
+@page "/login"
+@attribute [AllowAnonymous]
+@inject IStringLocalizer<SharedResources> Loc
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="d-flex flex-column align-center justify-center" Style="min-height: 80vh;">
+    <MudPaper Elevation="4" Class="pa-8" Style="width: 100%; max-width: 420px; border: 1px solid rgba(255,255,255,0.08); background: #141414;">
+        <MudStack AlignItems="AlignItems.Center" Spacing="2" Class="mb-6">
+            <MudIcon Icon="@Icons.Material.Filled.Description" Color="Color.Primary" Style="font-size: 2.75rem;" />
+            <MudText Typo="Typo.h5" Style="font-weight: 700; letter-spacing: 1px;">CHEAPCLERK</MudText>
+            <MudText Typo="Typo.caption" Class="text-center" Style="opacity: 0.6;">@Loc["LoginSubtitle"]</MudText>
+        </MudStack>
+
+        <MudButton Href="/auth/plex-start" Variant="Variant.Filled" Color="Color.Primary"
+                   FullWidth="true" Size="Size.Large" StartIcon="@Icons.Material.Filled.Login">
+            @Loc["SignInWithPlex"]
+        </MudButton>
+
+        @if (Error is not null)
+        {
+            <MudAlert Severity="Severity.Error" Class="mt-4">
+                <strong>@Loc["LoginError"]</strong><br />@Error
+            </MudAlert>
+        }
+    </MudPaper>
+</MudContainer>
+
+@code {
+    [SupplyParameterFromQuery(Name = "error")]
+    public string? Error { get; set; }
+}

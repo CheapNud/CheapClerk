@@ -27,6 +27,15 @@
                            Color="Color.Inherit"
                            OnClick="@(() => _isDarkMode = !_isDarkMode)" />
         </MudTooltip>
+        <AuthorizeView>
+            <Authorized>
+                <MudText Typo="Typo.body2" Class="ml-3" Style="opacity: 0.7;">@context.User.Identity?.Name</MudText>
+                <MudTooltip Text="@Loc["SignOut"]">
+                    <MudIconButton Href="/auth/logout" Icon="@Icons.Material.Filled.Logout" Color="Color.Inherit"
+                                   Class="ml-1" data-enhance-nav="false" />
+                </MudTooltip>
+            </Authorized>
+        </AuthorizeView>
     </MudAppBar>
 
     <MudDrawer @bind-Open="_drawerOpen" Elevation="0" Variant="DrawerVariant.Mini" OpenMiniOnHover="true"

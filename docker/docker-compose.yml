@@ -53,6 +53,9 @@ services:
     environment:
       - ASPNETCORE_URLS=http://+:5000
       - ASPNETCORE_ENVIRONMENT=Production
+      # Plex SSO — server-members-only gate in front of the whole app
+      - Plex__AdminToken=${PLEX_ADMIN_TOKEN}
+      - Plex__CallbackBaseUrl=${CHEAPCLERK_PUBLIC_URL}
       - Paperless__BaseUrl=http://192.168.1.15:8010
       - Paperless__ApiToken=${PAPERLESS_API_TOKEN}
       # The SQLite cache MUST live in the mounted volume or it dies with the container

@@ -2,6 +2,12 @@ using CheapClerk.Configuration;
 using CheapClerk.Data;
 using CheapClerk.Services;
 using CheapClerk.Web.Components;
+using CheapHelpers.Blazor.Extensions;
+using CheapHelpers.Services.Auth.Plex;
+using CheapHelpers.Services.Auth.Plex.Extensions;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -19,6 +25,39 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents(opt => opt.DetailedErrors = builder.Environment.IsDevelopment());
 
 builder.Services.AddMudServices();
+
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(opt =>
+    {
+        opt.LoginPath = "/login";
+        opt.ExpireTimeSpan = TimeSpan.FromDays(30);
+        opt.SlidingExpiration = true;
+    });
+
+// Server members only — everything is protected unless explicitly marked AllowAnonymous.
+builder.Services.AddAuthorization(opt =>
+    opt.FallbackPolicy = new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build());
+builder.Services.AddCascadingAuthenticationState();
+
+builder.Services.AddPlexAuth(opts =>
+{
+    opts.ProductName = "CheapClerk";
+    opts.ClientIdentifier = builder.Configuration["Plex:ClientId"] ?? "CheapClerk";
+    opts.AdminToken = builder.Configuration["Plex:AdminToken"];
+    // Empty string would defeat the package's auto-detect fallback and break the PIN flow
+    var callbackBaseUrl = builder.Configuration["Plex:CallbackBaseUrl"];
+    opts.CallbackBaseUrl = string.IsNullOrWhiteSpace(callbackBaseUrl) ? null : callbackBaseUrl;
+    opts.PinPollAttempts = 5;
+    opts.PinPollDelay = TimeSpan.FromSeconds(1);
+    opts.PostLogoutRedirect = "/login";
+    opts.AuthorizeUser = async (plexUser, sp, ct) =>
+    {
+        var plexAuth = sp.GetRequiredService<IPlexAuthService>();
+        return await plexAuth.HasServerAccessAsync(plexUser.Id, ct);
+    };
+});
 
 builder.Services.AddLocalization(locOptions => locOptions.ResourcesPath = "Resources");
 
@@ -78,13 +117,28 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
 }
 
+// Behind Hidden-Valley NPM the reverse proxy isn't on loopback, so the default
+// KnownNetworks/KnownProxies restriction would silently ignore its headers —
+// clear both to trust the forwarded scheme/client IP from the LAN proxy.
+var forwardedHeaderOptions = new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+};
+forwardedHeaderOptions.KnownIPNetworks.Clear();
+forwardedHeaderOptions.KnownProxies.Clear();
+app.UseForwardedHeaders(forwardedHeaderOptions);
+
 var supportedCultures = ClassificationOptions.SupportedCultures;
 app.UseRequestLocalization(new RequestLocalizationOptions()
     .SetDefaultCulture("en")
     .AddSupportedCultures(supportedCultures)
     .AddSupportedUICultures(supportedCultures));
 
+app.UseAuthentication();
+app.UseAuthorization();
 app.UseAntiforgery();
+
+app.MapPlexAuthEndpoints();
 
 app.MapGet("/culture/set", (string culture, string redirectUri, HttpContext http) =>
 {
@@ -96,7 +150,7 @@ app.MapGet("/culture/set", (string culture, string redirectUri, HttpContext http
             new CookieOptions { Expires = DateTimeOffset.UtcNow.AddYears(1), IsEssential = true });
     }
     return Results.LocalRedirect(LocalRedirectGuard.Sanitize(redirectUri));
-});
+}).AllowAnonymous();
 
 app.MapPost("/api/inbox/process", (HttpContext http,
     Microsoft.Extensions.Options.IOptions<ClassificationOptions> classificationConfig,
@@ -118,7 +172,7 @@ app.MapPost("/api/inbox/process", (HttpContext http,
         coordinator.RequestRun();
         return Results.Accepted();
     }
-});
+}).AllowAnonymous();
 
 // Streams the archived preview (or ?original=true) from Paperless so the
 // browser never needs the API token. Content types outside the viewer's
@@ -141,7 +195,7 @@ app.MapGet("/documents/{documentId:int}/file", async (
     return Results.File(storedFile.Value.Payload, safeContentType);
 });
 
-app.MapStaticAssets();
+app.MapStaticAssets().AllowAnonymous();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 

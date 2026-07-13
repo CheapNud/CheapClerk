@@ -8,7 +8,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MudBlazor" Version="9.2.0" />
+    <PackageReference Include="CheapHelpers.Blazor" Version="3.6.0" />
+    <PackageReference Include="CheapHelpers.Services" Version="3.6.0" />
+    <PackageReference Include="MudBlazor" Version="9.7.0" />
     <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
   </ItemGroup>
 

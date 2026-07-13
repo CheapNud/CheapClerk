@@ -68,6 +68,11 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <!-- Auth / login -->
+  <data name="SignInWithPlex" xml:space="preserve"><value>Aanmelden met Plex</value></data>
+  <data name="LoginSubtitle" xml:space="preserve"><value>Documentbeheer · Meld je aan met je Plex-account</value></data>
+  <data name="SignOut" xml:space="preserve"><value>Afmelden</value></data>
+  <data name="LoginError" xml:space="preserve"><value>Aanmelden mislukt</value></data>
   <!-- Navigation / layout -->
   <data name="Dashboard" xml:space="preserve"><value>Dashboard</value></data>
   <data name="Documents" xml:space="preserve"><value>Documenten</value></data>
