@@ -15,9 +15,10 @@ public sealed class SearchDocumentsTool
         [Description("Optional tag name to filter results.")] string? tag = null,
         [Description("Optional correspondent name to filter results.")] string? correspondent = null,
         [Description("Maximum number of results to return.")] int maxResults = 10,
+        [Description("Optional document type name to filter results.")] string? documentType = null,
         CancellationToken cancellationToken = default)
     {
-        var matches = await paperlessClient.SearchDocumentsAsync(query, tag, correspondent, maxResults, cancellationToken: cancellationToken);
+        var matches = await paperlessClient.SearchDocumentsAsync(query, tag, correspondent, maxResults, documentType, cancellationToken);
 
         if (matches.Count == 0)
             return "No documents found matching the query.";

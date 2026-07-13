@@ -63,11 +63,13 @@ public sealed class PaperlessClientQueryTests
     }
 
     [Fact]
-    public async Task SearchDocuments_WithUnknownDocumentTypeName_DroppsFilter()
+    public async Task SearchDocuments_WithUnknownDocumentTypeName_DropsFilter()
     {
         var stub = new StubHttpHandler(incoming =>
         {
-            if (incoming.Method == HttpMethod.Get && incoming.RequestUri!.Query.Contains("api/document_types"))
+            // Populated type lookup proves the filter drop comes from the name
+            // mismatch, not an accidentally empty lookup
+            if (incoming.Method == HttpMethod.Get && incoming.RequestUri!.AbsolutePath.Contains("api/document_types"))
                 return Ok("{\"count\":1,\"results\":[{\"id\":5,\"name\":\"Invoice\",\"document_count\":10}]}");
             return Ok("{\"count\":0,\"results\":[]}");
         });
@@ -103,8 +105,9 @@ public sealed class PaperlessClientQueryTests
     {
         var stub = new StubHttpHandler(incoming =>
         {
-            if (incoming.Method == HttpMethod.Get && incoming.RequestUri!.Query.Contains("api/document_types"))
-                return Ok("{\"count\":0,\"results\":[]}");
+            // Populated lookup, non-matching name — same rationale as the search variant
+            if (incoming.Method == HttpMethod.Get && incoming.RequestUri!.AbsolutePath.Contains("api/document_types"))
+                return Ok("{\"count\":1,\"results\":[{\"id\":7,\"name\":\"Invoice\",\"document_count\":3}]}");
             return Ok("{\"count\":0,\"results\":[]}");
         });
         var paperless = BuildClient(stub);

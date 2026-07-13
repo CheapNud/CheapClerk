@@ -16,10 +16,11 @@ public sealed class ListDocumentsTool
         [Description("Only show documents added after this date (yyyy-MM-dd).")] DateTime? addedAfter = null,
         [Description("Only show documents added before this date (yyyy-MM-dd).")] DateTime? addedBefore = null,
         [Description("Maximum number of results to return.")] int maxResults = 25,
+        [Description("Filter by document type name.")] string? documentType = null,
         CancellationToken cancellationToken = default)
     {
         var documents = await paperlessClient.ListDocumentsAsync(
-            correspondent, tag, addedAfter, addedBefore, maxResults, cancellationToken: cancellationToken);
+            correspondent, tag, addedAfter, addedBefore, maxResults, documentType, cancellationToken);
 
         if (documents.Count == 0)
             return "No documents found matching the filters.";
