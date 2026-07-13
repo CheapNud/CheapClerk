@@ -1,6 +1,6 @@
 <!--
   TODO.md — CheapClerk project work tracker
-  Last updated: 2026-07-13 (payment QR on invoices)
+  Last updated: 2026-07-13 (MCP parity subset)
 
   RULES FOR AI AGENTS:
   - Update the "Last updated" date above whenever you modify this file
@@ -32,6 +32,8 @@ _Nothing blocking._
 
 ## Planned
 
+- [x] (2026-07-13 → 2026-07-13) MCP parity subset vs barryw/PaperlessMCP — list types/correspondents, update/delete document, type filters, status tool [user]
+  - Full evaluation done: admin-CRUD remainder (bulk ops, storage paths, custom fields, matching rules, colors) deliberately rejected — Paperless-UI territory or replaced by our classifier
 - [x] (2026-07-13 → 2026-07-13) Pay-this-bill QR — EPC069-12 SEPA QR on invoice pages + get_payment_details MCP tool [user]
   - Pure EpcPayment builder rejects sub-cent amounts/non-EUR/malformed IBANs instead of correcting; plain-text verification rows beside the QR
 - [x] (2026-07-12 → 2026-07-12) Upload through the clerk — app-bar dialog + upload_document MCP tool with consumption/duplicate feedback [user]

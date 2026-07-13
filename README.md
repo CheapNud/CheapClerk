@@ -203,6 +203,54 @@ async Task<string> GetPaymentDetails(int documentId)
 
 Requires a cached extraction with an IBAN and amount. Returns: beneficiary, normalized IBAN, amount, reference, due date, and the EPC payload. Amounts with sub-cent precision, non-EUR currencies and malformed IBANs are rejected rather than corrected — a human should read that bill.
 
+### `list_document_types`
+List all document types with document counts (sibling of `list_tags`).
+
+```csharp
+[Tool("list_document_types")]
+async Task<string> ListDocumentTypes()
+```
+
+### `list_correspondents`
+List all correspondents with document counts.
+
+```csharp
+[Tool("list_correspondents")]
+async Task<string> ListCorrespondents()
+```
+
+### `update_document`
+Update a document's title, tags, correspondent or document type using canonical names. Unknown names are rejected with the list of valid options; workflow tags (Inbox / Needs Review) on the document are always preserved.
+
+```csharp
+[Tool("update_document")]
+async Task<string> UpdateDocument(
+    int documentId,
+    string? title = null,
+    string? tags = null,          // comma-separated canonical names, replaces the set
+    string? correspondent = null,
+    string? documentType = null
+)
+```
+
+### `delete_document`
+Delete a document — refuses without explicit confirmation, echoing the title so you know what you're about to lose.
+
+```csharp
+[Tool("delete_document")]
+async Task<string> DeleteDocument(int documentId, bool confirm = false)
+```
+
+### `paperless_status`
+Connectivity and taxonomy-count diagnostic. Honest about its limits: an all-zero reply may mean an empty archive or an unreachable server.
+
+```csharp
+[Tool("paperless_status")]
+async Task<string> PaperlessStatus()
+```
+
+`search_documents` and `list_documents` additionally accept a `documentType` filter alongside the existing tag and correspondent filters.
+
 ---
 
 ## Payment QR
