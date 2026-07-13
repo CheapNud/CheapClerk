@@ -24,8 +24,7 @@ builder.Services.Configure<ClassificationOptions>(classificationSection);
 builder.Services.AddConfiguredChatClient();
 
 var cacheOptions = cacheSection.Get<CacheOptions>() ?? new CacheOptions();
-builder.Services.AddDbContextFactory<ClerkDbContext>(dbOpt =>
-    dbOpt.UseSqlite($"Data Source={cacheOptions.DatabasePath}"));
+builder.Services.AddClerkDb(cacheOptions);
 
 builder.Services.AddHttpClient<PaperlessClient>((sp, httpClient) =>
 {

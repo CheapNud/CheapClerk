@@ -165,7 +165,7 @@ public sealed class ExtractionCacheService(
         await db.SaveChangesAsync(cancellationToken);
     }
 
-    private static DateTime? ResolveExpiryDate(ExtractionResult extracted)
+    internal static DateTime? ResolveExpiryDate(ExtractionResult extracted)
     {
         var candidate = extracted.Category switch
         {
@@ -177,7 +177,11 @@ public sealed class ExtractionCacheService(
 
         if (string.IsNullOrWhiteSpace(candidate)) return null;
 
-        return DateTime.TryParseExact(candidate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsed)
+        // AssumeUniversal + AdjustToUniversal forces Kind=Utc — Npgsql rejects
+        // Unspecified-kind DateTimes for timestamptz columns.
+        return DateTime.TryParseExact(
+            candidate, "yyyy-MM-dd", CultureInfo.InvariantCulture,
+            DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var parsed)
             ? parsed
             : null;
     }
