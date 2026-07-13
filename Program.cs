@@ -63,7 +63,8 @@ builder.Services.AddMcpServer()
     .WithTools<UploadDocumentTool>()
     .WithTools<ListReviewQueueTool>()
     .WithTools<ApplySuggestionTool>()
-    .WithTools<ReclassifyDocumentTool>();
+    .WithTools<ReclassifyDocumentTool>()
+    .WithTools<GetPaymentDetailsTool>();
 
 // MCP stdio uses stdin/stdout — log to stderr only
 builder.Logging.AddConsole(consoleOptions =>
