@@ -211,6 +211,12 @@
   <data name="StructuredExtractionNotConfigured" xml:space="preserve"><value>Gestructureerde extractie is niet geconfigureerd.</value></data>
   <data name="ClassifiedAs" xml:space="preserve"><value>Geclassificeerd als {0} ({1}).</value></data>
   <data name="ExtractionFailedCheckLogs" xml:space="preserve"><value>Extractie mislukt — controleer de logs.</value></data>
+  <data name="PayThisBill" xml:space="preserve"><value>Betaal deze factuur</value></data>
+  <data name="PaymentBeneficiary" xml:space="preserve"><value>Begunstigde</value></data>
+  <data name="PaymentIban" xml:space="preserve"><value>IBAN</value></data>
+  <data name="PaymentAmount" xml:space="preserve"><value>Bedrag</value></data>
+  <data name="PaymentReference" xml:space="preserve"><value>Mededeling</value></data>
+  <data name="PaymentVerifyCaution" xml:space="preserve"><value>Controleer het IBAN en het bedrag met het document voor je betaalt.</value></data>
   <!-- Reconnect modal (Blazor Server disconnect overlay) -->
   <data name="ReconnectRejoining" xml:space="preserve"><value>Opnieuw verbinden met de server...</value></data>
   <data name="ReconnectRetryPrefix" xml:space="preserve"><value>Opnieuw verbinden mislukt... nieuwe poging over </value></data>

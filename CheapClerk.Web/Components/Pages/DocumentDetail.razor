@@ -1,5 +1,7 @@
 @page "/documents/{DocumentId:int}"
 @using CheapClerk.Models.Extraction
+@using CheapClerk.Services
+@using CheapClerk.Web.Services
 @using System.Globalization
 @inject IStringLocalizer<SharedResources> Loc
 @inject TaxonomyTranslationService Taxonomy
@@ -110,6 +112,23 @@ else
                                     @if (_extracted.Invoice.BeneficiaryIban is not null) { <tr><td><strong>@Loc["Iban"]</strong></td><td>@_extracted.Invoice.BeneficiaryIban</td></tr> }
                                 </tbody>
                             </MudSimpleTable>
+
+                            @if (_paymentQr is not null)
+                            {
+                                <MudText Typo="Typo.subtitle2" Class="mt-4 mb-2">@Loc["PayThisBill"]</MudText>
+                                <MudImage Src="@_paymentQr" Width="200" Class="rounded mb-2" />
+
+                                <MudSimpleTable Dense="true" Elevation="0">
+                                    <tbody>
+                                        <tr><td><strong>@Loc["PaymentBeneficiary"]</strong></td><td>@(_extracted.Invoice.Vendor ?? _correspondentName)</td></tr>
+                                        <tr><td><strong>@Loc["PaymentIban"]</strong></td><td>@(_paymentPayload!.Split('\n')[6])</td></tr>
+                                        <tr><td><strong>@Loc["PaymentAmount"]</strong></td><td>@_extracted.Invoice.TotalAmount @_extracted.Invoice.Currency</td></tr>
+                                        <tr><td><strong>@Loc["PaymentReference"]</strong></td><td>@(_extracted.Invoice.PaymentReference ?? _extracted.Invoice.InvoiceNumber)</td></tr>
+                                    </tbody>
+                                </MudSimpleTable>
+
+                                <MudText Typo="Typo.caption" Class="mt-2" Style="opacity: 0.6;">@Loc["PaymentVerifyCaution"]</MudText>
+                            }
                         }
                         else if (_extracted.Insurance is not null)
                         {
@@ -210,6 +229,8 @@ else
     private bool _isRunningVision;
     private bool _isExtracting;
     private ExtractionResult? _extracted;
+    private string? _paymentPayload;
+    private string? _paymentQr;
     private bool _isImageFile;
     private string _fileUrl = string.Empty;
 
@@ -240,6 +261,7 @@ else
         _tagLabels = await Taxonomy.GetDisplayMapAsync("tag", CultureInfo.CurrentUICulture.TwoLetterISOLanguageName);
 
         _extracted = await ExtractionCache.GetCachedAsync(DocumentId);
+        ComputePaymentQr();
 
         var fileExtension = Path.GetExtension(_doc.OriginalFileName ?? string.Empty);
         _isImageFile = ImageExtensions.Contains(fileExtension, StringComparer.OrdinalIgnoreCase);
@@ -294,6 +316,7 @@ else
 
         // Runs through the cache so results survive page refreshes
         _extracted = await ExtractionCache.GetOrExtractAsync(DocumentId, forceRefresh: true);
+        ComputePaymentQr();
 
         if (_extracted is not null)
             Snackbar.Add(Loc["ClassifiedAs", _extracted.Category, $"{_extracted.Confidence:P0}"].Value, Severity.Success);
@@ -304,4 +327,10 @@ else
     }
 
     private string TagLabel(string canonical) => _tagLabels.TryGetValue(canonical, out var label) ? label : canonical;
+
+    private void ComputePaymentQr()
+    {
+        _paymentPayload = _extracted?.Invoice is not null ? EpcPayment.BuildForInvoice(_extracted.Invoice, _correspondentName) : null;
+        _paymentQr = _paymentPayload is not null ? PaymentQrRenderer.ToDataUri(_paymentPayload) : null;
+    }
 }

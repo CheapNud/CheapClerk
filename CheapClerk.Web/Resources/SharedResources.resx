@@ -260,6 +260,12 @@
   <data name="StructuredExtractionNotConfigured" xml:space="preserve"><value>Structured extraction is not configured.</value></data>
   <data name="ClassifiedAs" xml:space="preserve"><value>Classified as {0} ({1}).</value></data>
   <data name="ExtractionFailedCheckLogs" xml:space="preserve"><value>Extraction failed — check logs.</value></data>
+  <data name="PayThisBill" xml:space="preserve"><value>Pay this bill</value></data>
+  <data name="PaymentBeneficiary" xml:space="preserve"><value>Beneficiary</value></data>
+  <data name="PaymentIban" xml:space="preserve"><value>IBAN</value></data>
+  <data name="PaymentAmount" xml:space="preserve"><value>Amount</value></data>
+  <data name="PaymentReference" xml:space="preserve"><value>Reference</value></data>
+  <data name="PaymentVerifyCaution" xml:space="preserve"><value>Verify the IBAN and amount against the document before paying.</value></data>
   <!-- Reconnect modal (Blazor Server disconnect overlay) -->
   <data name="ReconnectRejoining" xml:space="preserve"><value>Rejoining the server...</value></data>
   <data name="ReconnectRetryPrefix" xml:space="preserve"><value>Rejoin failed... trying again in </value></data>
