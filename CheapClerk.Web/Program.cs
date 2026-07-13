@@ -118,14 +118,18 @@ if (!app.Environment.IsDevelopment())
 }
 
 // Behind Hidden-Valley NPM the reverse proxy isn't on loopback, so the default
-// KnownNetworks/KnownProxies restriction would silently ignore its headers —
-// clear both to trust the forwarded scheme/client IP from the LAN proxy.
+// Trust forwarded scheme/client IP ONLY from configured proxies (NPM on
+// Hidden-Valley in production); unconfigured = framework default (loopback),
+// so a direct LAN client cannot spoof X-Forwarded-* headers.
 var forwardedHeaderOptions = new ForwardedHeadersOptions
 {
     ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
 };
-forwardedHeaderOptions.KnownIPNetworks.Clear();
-forwardedHeaderOptions.KnownProxies.Clear();
+foreach (var proxyAddress in app.Configuration.GetSection("Proxy:KnownProxies").Get<string[]>() ?? [])
+{
+    if (System.Net.IPAddress.TryParse(proxyAddress, out var parsedProxy))
+        forwardedHeaderOptions.KnownProxies.Add(parsedProxy);
+}
 app.UseForwardedHeaders(forwardedHeaderOptions);
 
 var supportedCultures = ClassificationOptions.SupportedCultures;
