@@ -60,8 +60,9 @@ services:
       - Proxy__KnownProxies__0=${TRUSTED_PROXY_IP}
       - Paperless__BaseUrl=http://192.168.1.15:8010
       - Paperless__ApiToken=${PAPERLESS_API_TOKEN}
-      # The SQLite cache MUST live in the mounted volume or it dies with the container
-      - Cache__DatabasePath=/app/data/cheapclerk.db
+      # Cache lives in PostgreSQL on Vault-Tec like every other app; SQLite is dev/test only
+      - Cache__Provider=Postgres
+      - Cache__ConnectionString=Host=192.168.1.14;Port=5432;Database=cheapclerk;Username=cheapclerk;Password=${CHEAPCLERK_DB_PASSWORD}
       # Auto-classification needs an LLM; set the key in .env or disable
       - Llm__Anthropic__ApiKey=${ANTHROPIC_API_KEY}
       # - Classification__Enabled=false
@@ -70,7 +71,6 @@ services:
       - Serilog__WriteTo__0__Name=Seq
       - Serilog__WriteTo__0__Args__serverUrl=http://192.168.1.15:5341
     volumes:
-      - cheapclerk-data:/app/data
       - dataprotection-keys:/root/.aspnet/DataProtection-Keys
     ports:
       - "5030:5000"
@@ -79,5 +79,4 @@ volumes:
   paperless-redis:
   paperless-data:
   paperless-consume:
-  cheapclerk-data:
   dataprotection-keys:

@@ -1,6 +1,6 @@
 <!--
   TODO.md — CheapClerk project work tracker
-  Last updated: 2026-07-13 (MCP parity subset)
+  Last updated: 2026-07-13 (Postgres cache)
 
   RULES FOR AI AGENTS:
   - Update the "Last updated" date above whenever you modify this file
@@ -32,6 +32,8 @@ _Nothing blocking._
 
 ## Planned
 
+- [x] (2026-07-13 → 2026-07-13) Move production cache DB from container-local SQLite to PostgreSQL on Vault-Tec [user]
+  - Cache:Provider switch (Sqlite stays for dev/tests); cheapclerk DB + role on 192.168.1.14; no data migration — cache self-refills
 - [x] (2026-07-13 → 2026-07-13) MCP parity subset vs barryw/PaperlessMCP — list types/correspondents, update/delete document, type filters, status tool [user]
   - Full evaluation done: admin-CRUD remainder (bulk ops, storage paths, custom fields, matching rules, colors) deliberately rejected — Paperless-UI territory or replaced by our classifier
 - [x] (2026-07-13 → 2026-07-13) Pay-this-bill QR — EPC069-12 SEPA QR on invoice pages + get_payment_details MCP tool [user]

@@ -272,7 +272,7 @@ The Blazor UI supports English (en) and Dutch (nl) cultures, configured via a cu
 Document taxonomy (tags and document types) can be displayed in multiple languages while writes stay canonical:
 
 - **Canonical storage**: Tag and document-type names in Paperless keep their canonical form — the language the classifier coins them in (`Classification:TaxonomyLanguage`, default Dutch)
-- **Display-only translation**: The `TaxonomyTranslationService` maintains a local SQLite translation map, keyed by (tag/type name, culture), populated on-demand by the configured LLM
+- **Display-only translation**: The `TaxonomyTranslationService` maintains a translation map in the cache database, keyed by (tag/type name, culture), populated on-demand by the configured LLM
 - **Self-healing on renames**: When a tag is renamed in Paperless, the translation map automatically falls back to the canonical name for that key. No manual cleanup needed
 
 The `translate_taxonomy` MCP tool backfills translations for any missing entries across all supported cultures when called (typically after adding new tags).
@@ -404,6 +404,20 @@ Add to `~/.claude.json` (global) or `.claude/settings.json` (project):
 
 **LLM providers:** Structured extraction uses the configured `Llm.Provider` (`Anthropic` or `Ollama`). Vision OCR fallback always uses Anthropic since local vision models are still unreliable for Belgian household documents. To run fully offline, set `Provider: Ollama` and disable `VisionFallback.Enabled`.
 
+**Cache database:** Extractions, parked review suggestions and taxonomy translations live in a small cache database. `Cache:Provider` selects the backend:
+
+```json
+{
+  "Cache": {
+    "Provider": "Sqlite",          // local dev and tests
+    "DatabasePath": "cheapclerk.db",
+    "ConnectionString": null       // required when Provider is "Postgres"
+  }
+}
+```
+
+Production runs `Provider: Postgres` against the shared PostgreSQL instance (see the compose file) — SQLite is only for local dev and tests. The schema is created automatically on first start; no migrations to run.
+
 ---
 
 ## Paperless-ngx Docker Compose
@@ -451,7 +465,7 @@ Classification uses the same `Llm.Provider` switch as extraction — without an 
 
 ### Review queue
 
-Low-confidence documents — those below the `MinConfidence` threshold — receive a `Needs Review` tag instead of auto-filed suggestions. The classification run stores its LLM-generated suggestion (title, correspondent, document type, tags, document date) in a local SQLite cache at the moment of low-confidence detection; only the latest suggestion per document is retained.
+Low-confidence documents — those below the `MinConfidence` threshold — receive a `Needs Review` tag instead of auto-filed suggestions. The classification run stores its LLM-generated suggestion (title, correspondent, document type, tags, document date) in the cache database at the moment of low-confidence detection; only the latest suggestion per document is retained.
 
 The `/review` page in CheapClerk.Web displays all queued documents awaiting review. Each shows the stored suggested fields (title, correspondent, document type, tags, date) in editable form. Three actions are available:
 
