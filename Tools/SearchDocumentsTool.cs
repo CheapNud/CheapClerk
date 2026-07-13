@@ -17,7 +17,7 @@ public sealed class SearchDocumentsTool
         [Description("Maximum number of results to return.")] int maxResults = 10,
         CancellationToken cancellationToken = default)
     {
-        var matches = await paperlessClient.SearchDocumentsAsync(query, tag, correspondent, maxResults, cancellationToken);
+        var matches = await paperlessClient.SearchDocumentsAsync(query, tag, correspondent, maxResults, cancellationToken: cancellationToken);
 
         if (matches.Count == 0)
             return "No documents found matching the query.";

@@ -19,7 +19,7 @@ public sealed class ListDocumentsTool
         CancellationToken cancellationToken = default)
     {
         var documents = await paperlessClient.ListDocumentsAsync(
-            correspondent, tag, addedAfter, addedBefore, maxResults, cancellationToken);
+            correspondent, tag, addedAfter, addedBefore, maxResults, cancellationToken: cancellationToken);
 
         if (documents.Count == 0)
             return "No documents found matching the filters.";

@@ -34,6 +34,7 @@ public sealed class PaperlessClient(
         string? tagName = null,
         string? correspondentName = null,
         int maxResults = 10,
+        string? documentTypeName = null,
         CancellationToken cancellationToken = default)
     {
         var tagLookup = await GetTagLookupAsync(cancellationToken);
@@ -54,6 +55,16 @@ public sealed class PaperlessClient(
                 .FirstOrDefault(c => c.Value.Equals(correspondentName, StringComparison.OrdinalIgnoreCase)).Key;
             if (correspondentId > 0)
                 url += $"&correspondent__id={correspondentId}";
+        }
+
+        if (documentTypeName is not null)
+        {
+            var documentTypeLookup = await GetDocumentTypeLookupAsync(cancellationToken);
+            // Unknown document type name is silently dropped, matching tag/correspondent filter behavior
+            var documentTypeId = documentTypeLookup
+                .FirstOrDefault(dt => dt.Value.Equals(documentTypeName, StringComparison.OrdinalIgnoreCase)).Key;
+            if (documentTypeId > 0)
+                url += $"&document_type__id={documentTypeId}";
         }
 
         var page = await GetAsync<PaperlessPage<PaperlessDocument>>(url, cancellationToken);
@@ -129,6 +140,7 @@ public sealed class PaperlessClient(
         DateTime? addedAfter = null,
         DateTime? addedBefore = null,
         int maxResults = 25,
+        string? documentTypeName = null,
         CancellationToken cancellationToken = default)
     {
         var url = $"api/documents/?page_size={maxResults}&ordering=-added";
@@ -148,6 +160,16 @@ public sealed class PaperlessClient(
             var tagId = tagLookup.FirstOrDefault(t => t.Value.Equals(tagName, StringComparison.OrdinalIgnoreCase)).Key;
             if (tagId > 0)
                 url += $"&tags__id={tagId}";
+        }
+
+        if (documentTypeName is not null)
+        {
+            var documentTypeLookup = await GetDocumentTypeLookupAsync(cancellationToken);
+            // Unknown document type name is silently dropped, matching tag/correspondent filter behavior
+            var documentTypeId = documentTypeLookup
+                .FirstOrDefault(dt => dt.Value.Equals(documentTypeName, StringComparison.OrdinalIgnoreCase)).Key;
+            if (documentTypeId > 0)
+                url += $"&document_type__id={documentTypeId}";
         }
 
         if (addedAfter.HasValue)
@@ -247,6 +269,21 @@ public sealed class PaperlessClient(
         catch (HttpRequestException ex)
         {
             logger.LogError(ex, "Failed to update document {DocumentId}", documentId);
+            return false;
+        }
+    }
+
+    public async Task<bool> DeleteDocumentAsync(int documentId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var deleteReply = await httpClient.DeleteAsync($"api/documents/{documentId}/", cancellationToken);
+            deleteReply.EnsureSuccessStatusCode();
+            return true;
+        }
+        catch (HttpRequestException ex)
+        {
+            logger.LogError(ex, "Failed to delete document {DocumentId}", documentId);
             return false;
         }
     }
