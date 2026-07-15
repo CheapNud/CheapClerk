@@ -265,9 +265,12 @@ else
 
         var fileExtension = Path.GetExtension(_doc.OriginalFileName ?? string.Empty);
         _isImageFile = ImageExtensions.Contains(fileExtension, StringComparer.OrdinalIgnoreCase);
+        // Root-relative so the iframe inherits the page scheme/host — an absolute
+        // URL built from BaseUri renders http:// inside an https:// page and the
+        // browser blocks it as mixed content
         _fileUrl = _isImageFile
-            ? $"{Navigation.BaseUri}documents/{DocumentId}/file?original=true"
-            : $"{Navigation.BaseUri}documents/{DocumentId}/file";
+            ? $"/documents/{DocumentId}/file?original=true"
+            : $"/documents/{DocumentId}/file";
     }
 
     private async Task RunVisionOcrAsync()
