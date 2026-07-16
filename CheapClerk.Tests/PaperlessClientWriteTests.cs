@@ -55,7 +55,9 @@ public sealed class PaperlessClientWriteTests
         var storedFile = await paperless.GetFileAsync(9, original: true);
 
         Assert.Equal("image/jpeg", storedFile!.Value.ContentType);
-        Assert.Equal("http://paperless.test/api/documents/9/download/", Assert.Single(stub.Requests).RequestUri!.ToString());
+        // ?original=true is essential — bare /download/ serves the archived PDF,
+        // not the original image the viewer asked for
+        Assert.Equal("http://paperless.test/api/documents/9/download/?original=true", Assert.Single(stub.Requests).RequestUri!.ToString());
     }
 
     [Fact]

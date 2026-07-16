@@ -118,8 +118,10 @@ public sealed class PaperlessClient(
     {
         try
         {
+            // ?original=true must be forwarded — bare /download/ returns the archived
+            // PDF, which an <img> tag renders as a silent broken image
             var relativeUrl = original
-                ? $"api/documents/{documentId}/download/"
+                ? $"api/documents/{documentId}/download/?original=true"
                 : $"api/documents/{documentId}/preview/";
             var fileReply = await httpClient.GetAsync(relativeUrl, cancellationToken);
             fileReply.EnsureSuccessStatusCode();
