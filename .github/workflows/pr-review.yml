@@ -100,6 +100,17 @@ jobs:
            - **REQUEST CHANGES** — there are issues that should be fixed before merging. List the specific changes needed as a short bullet list directly under the verdict
            - **REJECT** — code has fundamental or critical problems that require a rethink
 
+        Project-specific rules to enforce:
+        - Primary constructors preferred over traditional constructors for DI
+        - Lambda LINQ only — never query syntax
+        - Debug.WriteLine() not Console.WriteLine()
+        - Add() not AddAsync() for EF Core
+        - SaveChangesAsync() must not be inside loops
+        - IDbContextFactory pattern required in Blazor Server
+        - No async void
+        - No Task.FromResult
+        - MudBlazor components preferred over raw HTML
+
         Rules:
         - Do NOT comment on style, naming, or minor preferences
         - Do NOT suggest nice-to-have improvements or refactors
