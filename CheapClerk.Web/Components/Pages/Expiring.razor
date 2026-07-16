@@ -56,7 +56,11 @@ else
         </HeaderContent>
         <RowTemplate>
             <MudTd>
-                <MudLink Href="@($"/documents/{context.DocumentId}")">@context.DocumentId</MudLink>
+                <MudButton Href="@($"/documents/{context.DocumentId}")" Variant="Variant.Outlined"
+                           Size="Size.Small" Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.OpenInNew">
+                    #@context.DocumentId
+                </MudButton>
             </MudTd>
             <MudTd>
                 <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="@CategoryColor(context.Category)">

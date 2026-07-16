@@ -51,6 +51,7 @@ else if (_documents is not null)
         <HeaderContent>
             <MudTh>@Loc["Id"]</MudTh>
             <MudTh>@Loc["Title"]</MudTh>
+            <MudTh>@Loc["Tags"]</MudTh>
             <MudTh>@Loc["Created"]</MudTh>
             <MudTh>@Loc["Added"]</MudTh>
         </HeaderContent>
@@ -58,6 +59,12 @@ else if (_documents is not null)
             <MudTd>@context.Id</MudTd>
             <MudTd>
                 <MudLink Href="@($"/documents/{context.Id}")">@context.Title</MudLink>
+            </MudTd>
+            <MudTd>
+                @foreach (var tagId in context.Tags)
+                {
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary">@TagLabelById(tagId)</MudChip>
+                }
             </MudTd>
             <MudTd>@(context.Created?.ToString("yyyy-MM-dd") ?? "—")</MudTd>
             <MudTd>@(context.Added?.ToString("yyyy-MM-dd") ?? "—")</MudTd>
@@ -92,6 +99,9 @@ else if (_documents is not null)
     }
 
     private string TagLabel(string canonical) => _tagLabels.TryGetValue(canonical, out var label) ? label : canonical;
+
+    private string TagLabelById(int tagId) =>
+        _tags?.FirstOrDefault(t => t.Id == tagId) is { } matched ? TagLabel(matched.Name) : $"#{tagId}";
 
     private async Task OnCorrespondentChanged(string corrName)
     {

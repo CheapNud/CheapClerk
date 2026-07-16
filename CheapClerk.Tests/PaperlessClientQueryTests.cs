@@ -45,6 +45,21 @@ public sealed class PaperlessClientQueryTests
     }
 
     [Fact]
+    public async Task GetTags_FollowsNextLinks_AcrossPages()
+    {
+        var stub = new StubHttpHandler(incoming =>
+            incoming.RequestUri!.Query.Contains("page=2")
+                ? Ok("{\"count\":2,\"next\":null,\"results\":[{\"id\":2,\"name\":\"Second\",\"document_count\":0}]}")
+                : Ok("{\"count\":2,\"next\":\"http://paperless.test/api/tags/?page=2&page_size=100\",\"results\":[{\"id\":1,\"name\":\"First\",\"document_count\":0}]}"));
+        var paperless = BuildClient(stub);
+
+        var tags = await paperless.GetTagsAsync();
+
+        Assert.Equal(2, tags.Count);
+        Assert.Equal(["First", "Second"], tags.Select(t => t.Name).ToArray());
+    }
+
+    [Fact]
     public async Task SearchDocuments_WithDocumentTypeName_AppendsDocumentTypeFilter()
     {
         var stub = new StubHttpHandler(incoming =>

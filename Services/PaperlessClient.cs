@@ -192,17 +192,26 @@ public sealed class PaperlessClient(
         return page?.Entries ?? [];
     }
 
-    public async Task<List<PaperlessTag>> GetTagsAsync(CancellationToken cancellationToken = default)
-    {
-        var page = await GetAsync<PaperlessPage<PaperlessTag>>("api/tags/?page_size=100", cancellationToken);
-        return page?.Entries ?? [];
-    }
+    public async Task<List<PaperlessTag>> GetTagsAsync(CancellationToken cancellationToken = default) =>
+        await GetAllPagesAsync<PaperlessTag>("api/tags/?page_size=100", cancellationToken);
 
-    public async Task<List<PaperlessCorrespondent>> GetCorrespondentsAsync(CancellationToken cancellationToken = default)
+    public async Task<List<PaperlessCorrespondent>> GetCorrespondentsAsync(CancellationToken cancellationToken = default) =>
+        await GetAllPagesAsync<PaperlessCorrespondent>("api/correspondents/?page_size=100", cancellationToken);
+
+    // Taxonomy fetches must see EVERY entry — a truncated tag list makes workflow
+    // tags unresolvable and aborts classification once the taxonomy passes 100
+    private async Task<List<T>> GetAllPagesAsync<T>(string firstUrl, CancellationToken cancellationToken)
     {
-        var page = await GetAsync<PaperlessPage<PaperlessCorrespondent>>(
-            "api/correspondents/?page_size=100", cancellationToken);
-        return page?.Entries ?? [];
+        List<T> allEntries = [];
+        var nextUrl = firstUrl;
+        while (nextUrl is not null)
+        {
+            var page = await GetAsync<PaperlessPage<T>>(nextUrl, cancellationToken);
+            if (page is null) break;
+            allEntries.AddRange(page.Entries);
+            nextUrl = page.Next;
+        }
+        return allEntries;
     }
 
     public async Task<Dictionary<int, string>> GetTagLookupAsync(CancellationToken cancellationToken = default)
@@ -290,12 +299,8 @@ public sealed class PaperlessClient(
         }
     }
 
-    public async Task<List<PaperlessDocumentType>> GetDocumentTypesAsync(CancellationToken cancellationToken = default)
-    {
-        var page = await GetAsync<PaperlessPage<PaperlessDocumentType>>(
-            "api/document_types/?page_size=100", cancellationToken);
-        return page?.Entries ?? [];
-    }
+    public async Task<List<PaperlessDocumentType>> GetDocumentTypesAsync(CancellationToken cancellationToken = default) =>
+        await GetAllPagesAsync<PaperlessDocumentType>("api/document_types/?page_size=100", cancellationToken);
 
     public async Task<Dictionary<int, string>> GetDocumentTypeLookupAsync(CancellationToken cancellationToken = default)
     {

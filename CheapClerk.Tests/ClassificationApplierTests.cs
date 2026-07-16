@@ -58,6 +58,35 @@ public sealed class ClassificationApplierTests
     }
 
     [Fact]
+    public async Task Apply_RecoversTagFromCrossHostRace_ByRematchingName()
+    {
+        // Create fails (duplicate-name 400 — another host won the race), but the
+        // fresh tag fetch finds it; the tag must land on the document anyway
+        var stub = new StubHttpHandler(incoming =>
+        {
+            if (incoming.Method == HttpMethod.Post && incoming.RequestUri!.AbsolutePath.Contains("api/tags"))
+                return new HttpResponseMessage(HttpStatusCode.BadRequest);
+            if (incoming.Method == HttpMethod.Get && incoming.RequestUri!.AbsolutePath.Contains("api/tags"))
+                return Ok("{\"count\":1,\"next\":null,\"results\":[{\"id\":33,\"name\":\"Water\",\"document_count\":0}]}");
+            return Ok("{}");
+        });
+        var applier = BuildApplier(stub);
+        var doc = new PaperlessDocument { Id = 42, Title = "scan", Tags = [1] };
+        var classification = new ClassificationResult
+        {
+            SuggestedTitle = "Waterfactuur",
+            Tags = ["Water"],
+            Confidence = 0.9
+        };
+
+        var applied = await applier.ApplyAsync(doc, classification, BuildTagContext());
+
+        Assert.NotNull(applied);
+        Assert.Contains("\"tags\":[33]", stub.RequestBodies.Last()!);
+        Assert.Contains("Water", applied!.AppliedTags);
+    }
+
+    [Fact]
     public async Task Apply_ClampsTitleTo128Chars()
     {
         var stub = new StubHttpHandler(_ => Ok("{}"));

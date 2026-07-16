@@ -41,6 +41,14 @@ public sealed class ClassificationApplier(
                 }
 
                 var createdTag = await paperlessClient.CreateTagAsync(missingName, cancellationToken: cancellationToken);
+                if (createdTag is null)
+                {
+                    // A duplicate-name 400 means another host created it between our
+                    // lookup and now — refetch (uncached) and rematch instead of
+                    // silently dropping the tag from the filed document
+                    createdTag = (await paperlessClient.GetTagsAsync(cancellationToken))
+                        .FirstOrDefault(t => t.Name.Equals(missingName, StringComparison.OrdinalIgnoreCase));
+                }
                 if (createdTag is not null)
                 {
                     createdTagIds.Add(createdTag.Id);
@@ -63,6 +71,12 @@ public sealed class ClassificationApplier(
             {
                 var createdCorrespondent = await paperlessClient.CreateCorrespondentAsync(
                     classification.Correspondent, cancellationToken);
+                if (createdCorrespondent is null)
+                {
+                    // Same cross-host race recovery as tags
+                    createdCorrespondent = (await paperlessClient.GetCorrespondentsAsync(cancellationToken))
+                        .FirstOrDefault(c => c.Name.Equals(classification.Correspondent, StringComparison.OrdinalIgnoreCase));
+                }
                 if (createdCorrespondent is not null)
                 {
                     correspondentId = createdCorrespondent.Id;
@@ -84,6 +98,12 @@ public sealed class ClassificationApplier(
             {
                 var createdDocumentType = await paperlessClient.CreateDocumentTypeAsync(
                     classification.DocumentType, cancellationToken);
+                if (createdDocumentType is null)
+                {
+                    // Same cross-host race recovery as tags
+                    createdDocumentType = (await paperlessClient.GetDocumentTypesAsync(cancellationToken))
+                        .FirstOrDefault(dt => dt.Name.Equals(classification.DocumentType, StringComparison.OrdinalIgnoreCase));
+                }
                 if (createdDocumentType is not null)
                 {
                     documentTypeId = createdDocumentType.Id;

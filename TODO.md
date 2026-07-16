@@ -1,6 +1,6 @@
 <!--
   TODO.md — CheapClerk project work tracker
-  Last updated: 2026-07-16 (upload dialog wait)
+  Last updated: 2026-07-16 (pagination + race recovery + table UX)
 
   RULES FOR AI AGENTS:
   - Update the "Last updated" date above whenever you modify this file
@@ -47,7 +47,7 @@ _Nothing blocking._
 - [x] (2026-07-11 → 2026-07-13) Add authentication to cheapclerk-web BEFORE any exposure beyond the trusted LAN [audit]
   - Plex SSO via CheapHelpers 3.6.0 (server members only), fallback authorization policy, explicit anonymous allow-list (login/plex endpoints/culture/webhook/static)
   - April's CheapHelpers no-adopt decision now scoped: utilities still out, auth adopted (single-source security code)
-- [ ] (2026-07-06) Recover from cross-host entity-creation races in ClassificationApplier [audit]
+- [x] (2026-07-06 → 2026-07-16) Recover from cross-host entity-creation races in ClassificationApplier [audit]
   - Duplicate-name POST 400s → CreateTagAsync null → tag silently dropped from the filed doc (Applied still true)
   - On null create, force-refresh the lookup and rematch by name; same for correspondent/type
 - [ ] (2026-07-06) Review queue capped at MaxDocumentsPerRun with no "more" indicator [audit]
@@ -59,7 +59,7 @@ _Nothing blocking._
 - [ ] (2026-07-06) Typed SkippedReason so the coordinator can requeue webhook runs that lose the gate race [audit]
   - Webhook run contending with a poller-held semaphore is silently consumed; doc waits for next poll
   - Watch for "Triggered inbox run skipped: a processing run is already in progress" in Seq — promote if frequent
-- [ ] (2026-07-06) Paginate tag fetch or use name__iexact lookup in EnsureWorkflowTagsAsync [audit]
+- [x] (2026-07-06 → 2026-07-16) Paginate tag fetch or use name__iexact lookup in EnsureWorkflowTagsAsync [audit]
   - GetTagsAsync caps at page_size=100; once the taxonomy outgrows page 1, workflow tags stop resolving and every run aborts
   - AutoCreateTags makes this a when, not an if
 - [ ] (2026-07-06) Sanitize LLM-created tag/correspondent names (length cap, strip newlines) [audit]
