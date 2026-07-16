@@ -1,6 +1,6 @@
 <!--
   TODO.md — CheapClerk project work tracker
-  Last updated: 2026-07-13 (Postgres cache)
+  Last updated: 2026-07-16 (upload dialog wait)
 
   RULES FOR AI AGENTS:
   - Update the "Last updated" date above whenever you modify this file
@@ -42,7 +42,8 @@ _Nothing blocking._
   - Shared UploadTracker polls the Paperless tasks API (30s budget); UploadRules single-sources type/size limits
 - [x] (2026-07-11 → 2026-07-11) Localization — EN/NL UI (resx + culture picker) and taxonomy translation layer (SQLite map, LLM-filled, display-only) [user]
   - Writes stay canonical; name-keyed rows self-heal on tag renames; translate_taxonomy MCP tool backfills
-- [ ] (2026-07-13) Post-exposure hardening: swap Plex CallbackBaseUrl to the public https URL when NPM is configured; sign in via the public URL afterwards; consider firewalling :5030 to NPM + Sierra-Madre [audit]
+- [x] (2026-07-13 → 2026-07-16) Post-exposure hardening: CallbackBaseUrl swapped to https://clerk.cheapludes.be, public sign-in verified [audit]
+  - Firewalling :5030 rejected: app enforces Plex auth itself, LAN is trusted, webhook needs the port
 - [x] (2026-07-11 → 2026-07-13) Add authentication to cheapclerk-web BEFORE any exposure beyond the trusted LAN [audit]
   - Plex SSO via CheapHelpers 3.6.0 (server members only), fallback authorization policy, explicit anonymous allow-list (login/plex endpoints/culture/webhook/static)
   - April's CheapHelpers no-adopt decision now scoped: utilities still out, auth adopted (single-source security code)

@@ -114,7 +114,10 @@
             await using var readStream = row.File.OpenReadStream(UploadRules.MaxUploadBytes);
             await readStream.CopyToAsync(memoryStream);
 
-            var outcome = await Tracker.UploadAndTrackAsync(memoryStream.ToArray(), row.FileName, TimeSpan.FromSeconds(30));
+            // Short budget: duplicates fail within a poll or two (checksum check runs
+            // early in consume); real OCR takes longer than anyone should stare at a
+            // dialog, so it degrades to StillProcessing and the webhook files it
+            var outcome = await Tracker.UploadAndTrackAsync(memoryStream.ToArray(), row.FileName, TimeSpan.FromSeconds(5));
             ApplyOutcome(row, outcome);
         }
         catch (IOException ex)
