@@ -1,6 +1,6 @@
 <!--
   TODO.md — CheapClerk project work tracker
-  Last updated: 2026-07-16 (pagination + race recovery + table UX)
+  Last updated: 2026-07-17 (mirror PAT fixed)
 
   RULES FOR AI AGENTS:
   - Update the "Last updated" date above whenever you modify this file
@@ -70,9 +70,7 @@ _Nothing blocking._
   - Paperless inbox tag marks incoming docs; clerk polls + dashboard button + process_inbox MCP tool
   - Low-confidence docs get a Needs Review tag instead of guesses; existing taxonomy preferred over new tags
   - Requires Llm config (Anthropic key or Ollama) on the web host — without it the processor no-ops
-- [ ] (2026-07-04) Regenerate GitHub mirror PAT with workflow scope and recreate Gitea push mirror [bug]
-  - Mirror push fails (GH013) when commits touch .github/workflows/; credentials can't be edited in place
-  - Until fixed: push workflow changes to GitHub first, then fast-forward Gitea
+- [x] (2026-07-04 → 2026-07-17) Regenerate GitHub mirror PAT with workflow scope and recreate Gitea push mirror [bug]
 - [x] (2026-04-15 → 2026-07-04) Deploy Paperless-ngx and configure PAPERLESS_API_TOKEN for CheapClerk [plan]
   - Target changed Megaton → Sierra-Madre (Megaton RAM/disk exhausted; documents belong on mirrored bfa pool, not ssd-vms RAID0)
   - Stack at /opt/paperless on Sierra-Madre (:8010), media/export on /mnt/bfa-appdata/paperless, DB on Vault-Tec Postgres
