@@ -13,6 +13,7 @@ public sealed class InboxProcessorService(
     TagContextFactory tagContextFactory,
     ClassificationApplier applier,
     SuggestionStore suggestionStore,
+    ExtractionCacheService extractionCache,
     IOptions<ClassificationOptions> classificationOptions,
     ILogger<InboxProcessorService> logger)
 {
@@ -157,6 +158,18 @@ public sealed class InboxProcessorService(
                         // A confidently filed document no longer needs its parked suggestion
                         await suggestionStore.DeleteAsync(doc.Id, cancellationToken);
                         applied++;
+
+                        // One document, one visit: extract structured data right after
+                        // filing so the detail page never shows an empty Extracted card.
+                        // Failure here must not fail the filing that already happened.
+                        try
+                        {
+                            await extractionCache.GetOrExtractAsync(doc.Id, forceRefresh: false, cancellationToken);
+                        }
+                        catch (Exception extractionEx)
+                        {
+                            logger.LogWarning(extractionEx, "Post-filing extraction failed for document {DocumentId}", doc.Id);
+                        }
                     }
                     else
                     {

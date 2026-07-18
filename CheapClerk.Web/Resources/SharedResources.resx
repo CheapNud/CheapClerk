@@ -287,4 +287,6 @@
   <data name="DeleteFailed" xml:space="preserve"><value>Delete failed.</value></data>
   <data name="DocumentUpdated" xml:space="preserve"><value>Document updated.</value></data>
   <data name="TagsCommaSeparated" xml:space="preserve"><value>Tags (comma-separated)</value></data>
+  <data name="Classification" xml:space="preserve"><value>Classification</value></data>
+  <data name="ClerkSuggestion" xml:space="preserve"><value>Pending clerk suggestion</value></data>
 </root>

@@ -136,12 +136,21 @@ public sealed class ReviewQueueServiceTests : IAsyncLifetime
             Options.Create(new VisionFallbackOptions { Enabled = false }),
             llmOptions,
             NullLogger<VisionOcrService>.Instance);
+        // Disabled-LLM extraction cache: post-accept extraction becomes a no-op
+        var extractionCache = new ExtractionCacheService(
+            _dbFactory,
+            paperlessClient,
+            ocrQualityChecker,
+            visionOcrService,
+            new StructuredExtractionService(new ThrowingChatClient(), Options.Create(new LlmOptions()), NullLogger<StructuredExtractionService>.Instance),
+            NullLogger<ExtractionCacheService>.Instance);
 
         return new ReviewQueueService(
             paperlessClient,
             tagContextFactory,
             applier,
             suggestionStore,
+            extractionCache,
             classifier,
             ocrQualityChecker,
             visionOcrService,

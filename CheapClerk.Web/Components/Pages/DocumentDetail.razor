@@ -99,6 +99,41 @@ else
 
             <MudCard Elevation="0" Class="mt-4" Style="border: 1px solid rgba(255,255,255,0.06);">
                 <MudCardContent>
+                    <MudText Typo="Typo.h6" GutterBottom="true">@Loc["Classification"]</MudText>
+
+                    @if (_suggestion?.Classification is { } parked)
+                    {
+                        <MudText Typo="Typo.caption" Style="opacity: 0.6;">@Loc["ClerkSuggestion"] — @Loc["ConfidencePercent", $"{_suggestion.Value.Confidence:P0}"]</MudText>
+                        <MudSimpleTable Dense="true" Elevation="0" Class="mt-1 mb-3">
+                            <tbody>
+                                @if (!string.IsNullOrWhiteSpace(parked.SuggestedTitle)) { <tr><td><strong>@Loc["Title"]</strong></td><td>@parked.SuggestedTitle</td></tr> }
+                                @if (!string.IsNullOrWhiteSpace(parked.Correspondent)) { <tr><td><strong>@Loc["Correspondent"]</strong></td><td>@parked.Correspondent</td></tr> }
+                                @if (!string.IsNullOrWhiteSpace(parked.DocumentType)) { <tr><td><strong>@Loc["Type"]</strong></td><td>@parked.DocumentType</td></tr> }
+                                @if (parked.Tags.Count > 0) { <tr><td><strong>@Loc["Tags"]</strong></td><td>@string.Join(", ", parked.Tags)</td></tr> }
+                                @if (!string.IsNullOrWhiteSpace(parked.DocumentDate)) { <tr><td><strong>@Loc["Date"]</strong></td><td>@parked.DocumentDate</td></tr> }
+                            </tbody>
+                        </MudSimpleTable>
+                        <div class="d-flex flex-wrap gap-2 mb-2">
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
+                                       OnClick="ApplySuggestionAsync" Disabled="@(_isSaving || _isRerunning)">@Loc["Accept"]</MudButton>
+                            <MudButton Variant="Variant.Outlined" Size="Size.Small"
+                                       OnClick="EditFromSuggestion" Disabled="@(_isSaving || _isRerunning)">@Loc["Edit"]</MudButton>
+                        </div>
+                    }
+
+                    <div class="d-flex align-center flex-wrap gap-2">
+                        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Small"
+                                   OnClick="RerunClassificationAsync" Disabled="@(_isSaving || _isRerunning)"
+                                   StartIcon="@Icons.Material.Filled.Autorenew">
+                            @(_isRerunning ? Loc["Analyzing"] : Loc["Rerun"])
+                        </MudButton>
+                        <MudSwitch T="bool" @bind-Value="_forceVision" Size="Size.Small" Label="@Loc["ForceVisionOcrOnRerun"]" />
+                    </div>
+                </MudCardContent>
+            </MudCard>
+
+            <MudCard Elevation="0" Class="mt-4" Style="border: 1px solid rgba(255,255,255,0.06);">
+                <MudCardContent>
                     <div class="d-flex align-center justify-space-between mb-3">
                         <MudText Typo="Typo.h6">@Loc["ExtractedData"]</MudText>
                         <MudButton Variant="Variant.Outlined" Size="Size.Small" Color="Color.Tertiary"
@@ -263,6 +298,9 @@ else
     private string? _documentTypeName;
     private bool _isEditing;
     private bool _isSaving;
+    private bool _isRerunning;
+    private bool _forceVision;
+    private (ClassificationResult? Classification, double Confidence, DateTime SuggestedAtUtc)? _suggestion;
     private string _editTitle = string.Empty;
     private string _editCorrespondent = string.Empty;
     private string _editDocumentType = string.Empty;
@@ -313,6 +351,8 @@ else
         _editDocumentType = _documentTypeName ?? string.Empty;
         _editTagsCsv = string.Join(", ", _tagNames);
 
+        _suggestion = await SuggestionStore.GetAsync(DocumentId);
+
         _tagLabels = await Taxonomy.GetDisplayMapAsync("tag", CultureInfo.CurrentUICulture.TwoLetterISOLanguageName);
 
         _extracted = await ExtractionCache.GetCachedAsync(DocumentId);
@@ -359,6 +399,63 @@ else
         finally
         {
             _isSaving = false;
+        }
+    }
+
+    private async Task ApplySuggestionAsync()
+    {
+        if (_suggestion?.Classification is not { } parked) return;
+
+        _isSaving = true;
+        try
+        {
+            var outcome = await ReviewQueue.ApplyAsync(DocumentId, parked);
+            if (outcome.Applied)
+            {
+                Snackbar.Add(Loc["FiledAs", outcome.NewTitle ?? string.Empty].Value, Severity.Success);
+                await LoadAsync();
+            }
+            else
+            {
+                Snackbar.Add(Loc["FailedToApply", outcome.Error ?? string.Empty].Value, Severity.Error);
+            }
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private void EditFromSuggestion()
+    {
+        if (_suggestion?.Classification is not { } parked) return;
+
+        _editTitle = string.IsNullOrWhiteSpace(parked.SuggestedTitle) ? _doc!.Title : parked.SuggestedTitle;
+        _editCorrespondent = parked.Correspondent ?? string.Empty;
+        _editDocumentType = parked.DocumentType ?? string.Empty;
+        _editTagsCsv = string.Join(", ", parked.Tags);
+        _isEditing = true;
+    }
+
+    private async Task RerunClassificationAsync()
+    {
+        _isRerunning = true;
+        try
+        {
+            var (entry, rerunError) = await ReviewQueue.ReclassifyAsync(DocumentId, _forceVision);
+            if (entry is not null)
+            {
+                Snackbar.Add(Loc["Reclassified"].Value, Severity.Success);
+                await LoadAsync();
+            }
+            else
+            {
+                Snackbar.Add(Loc["RerunFailed", rerunError ?? string.Empty].Value, Severity.Error);
+            }
+        }
+        finally
+        {
+            _isRerunning = false;
         }
     }
 

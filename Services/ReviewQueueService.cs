@@ -28,6 +28,7 @@ public sealed class ReviewQueueService(
     TagContextFactory tagContextFactory,
     ClassificationApplier applier,
     SuggestionStore suggestionStore,
+    ExtractionCacheService extractionCache,
     DocumentClassifierService classifier,
     OcrQualityChecker ocrQualityChecker,
     VisionOcrService visionOcrService,
@@ -87,6 +88,17 @@ public sealed class ReviewQueueService(
             return new ReviewApplyOutcome { Applied = false, Error = "update failed" };
 
         await suggestionStore.DeleteAsync(documentId, ct);
+
+        // Same post-filing extraction as the automatic path — accepting a review
+        // should leave the document as complete as an auto-filed one
+        try
+        {
+            await extractionCache.GetOrExtractAsync(documentId, forceRefresh: false, ct);
+        }
+        catch (Exception extractionEx)
+        {
+            logger.LogWarning(extractionEx, "Post-accept extraction failed for document {DocumentId}", documentId);
+        }
 
         return new ReviewApplyOutcome
         {
