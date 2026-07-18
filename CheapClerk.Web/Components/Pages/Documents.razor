@@ -194,6 +194,8 @@ else if (_documents is not null)
             }
             else
             {
+                // Cleared up front so a failed search can't render the stale table
+                _documents = null;
                 _matches = await PaperlessClient.SearchDocumentsAsync(
                     _searchQuery,
                     tagName: _selectedTag,
