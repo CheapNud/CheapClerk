@@ -58,7 +58,13 @@
                     <MudNavLink Href="/search" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Search">@Loc["Search"]</MudNavLink>
                     <MudNavLink Href="/tags" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Label">@Loc["Tags"]</MudNavLink>
                     <MudNavLink Href="/expiring" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Schedule">@Loc["Expiring"]</MudNavLink>
-                    <MudNavLink Href="/review" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.RateReview">@Loc["Review"]</MudNavLink>
+                    <MudNavLink Href="/review" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.RateReview">
+                @Loc["Review"]
+                @if (_reviewCount > 0)
+                {
+                    <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Filled" Class="ml-2">@_reviewCount</MudChip>
+                }
+            </MudNavLink>
                 </MudNavMenu>
                 <MudSpacer />
                 <MudText Typo="Typo.caption" Class="pa-3" Style="opacity: 0.2;">@CheapClerk.AppVersion.Display</MudText>
@@ -75,9 +81,30 @@
     [Inject] private IStringLocalizer<SharedResources> Loc { get; set; } = null!;
     [Inject] private NavigationManager Navigation { get; set; } = null!;
     [Inject] private IDialogService DialogService { get; set; } = null!;
+    [Inject] private CheapClerk.Services.ReviewQueueService ReviewQueue { get; set; } = null!;
+
+    [CascadingParameter] private Task<AuthenticationState>? AuthState { get; set; }
 
     private bool _drawerOpen = true;
     private bool _isDarkMode = true;
+    private int _reviewCount;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthState is null) return;
+        var auth = await AuthState;
+        if (auth.User.Identity?.IsAuthenticated != true) return;
+
+        try
+        {
+            // Once per circuit is enough for a hint badge; the page itself is live
+            _reviewCount = (await ReviewQueue.GetQueueAsync()).Count;
+        }
+        catch
+        {
+            // A dead Paperless must not break the layout — badge just stays hidden
+        }
+    }
 
     // The culture endpoint only accepts app-local paths, never absolute URIs
     private string CurrentPath => new Uri(Navigation.Uri).PathAndQuery;

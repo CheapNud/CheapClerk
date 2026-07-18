@@ -58,6 +58,21 @@ public sealed class ClassificationApplierTests
     }
 
     [Fact]
+    public async Task Apply_WithReplaceExistingTags_DropsTagsTheHumanRemoved()
+    {
+        var stub = new StubHttpHandler(_ => Ok("{}"));
+        var applier = BuildApplier(stub);
+        // Doc currently carries Utilities(3) plus review(2); the human submits an empty tag set
+        var doc = new PaperlessDocument { Id = 42, Title = "scan", Tags = [2, 3] };
+        var classification = new ClassificationResult { SuggestedTitle = "corrected", Tags = [], Confidence = 1.0 };
+
+        var applied = await applier.ApplyAsync(doc, classification, BuildTagContext(), replaceExistingTags: true);
+
+        Assert.NotNull(applied);
+        Assert.Contains("\"tags\":[]", stub.RequestBodies.Last()!);
+    }
+
+    [Fact]
     public async Task Apply_RecoversTagFromCrossHostRace_ByRematchingName()
     {
         // Create fails (duplicate-name 400 — another host won the race), but the

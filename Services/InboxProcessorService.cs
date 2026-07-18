@@ -143,7 +143,7 @@ public sealed class InboxProcessorService(
 
                     outcome.Confidence = classification.Confidence;
 
-                    var appliedClassification = await applier.ApplyAsync(doc, classification, tagContext, cancellationToken);
+                    var appliedClassification = await applier.ApplyAsync(doc, classification, tagContext, cancellationToken: cancellationToken);
 
                     outcome.Applied = appliedClassification is not null;
                     outcome.NewTitle = appliedClassification?.NewTitle;

@@ -1,4 +1,5 @@
 @page "/documents/{DocumentId:int}"
+@using CheapClerk.Models.Classification
 @using CheapClerk.Models.Extraction
 @using CheapClerk.Services
 @using CheapClerk.Web.Services
@@ -24,14 +25,46 @@ else
         <MudItem xs="12" md="4">
             <MudCard Elevation="0" Style="border: 1px solid rgba(255,255,255,0.06);">
                 <MudCardContent>
-                    <MudText Typo="Typo.h6" GutterBottom="true">@Loc["Metadata"]</MudText>
+                    <div class="d-flex align-center justify-space-between mb-2">
+                        <MudText Typo="Typo.h6">@Loc["Metadata"]</MudText>
+                        @if (!_isEditing)
+                        {
+                            <div>
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
+                                               OnClick="@(() => _isEditing = true)" title="@Loc["Edit"]" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
+                                               OnClick="DeleteAsync" Disabled="_isSaving" title="@Loc["Delete"]" />
+                            </div>
+                        }
+                    </div>
 
+                    @if (_isEditing)
+                    {
+                        <MudStack Spacing="3">
+                            <MudTextField T="string" @bind-Value="_editTitle" Label="@Loc["Title"]" Variant="Variant.Outlined" />
+                            <MudTextField T="string" @bind-Value="_editCorrespondent" Label="@Loc["Correspondent"]" Variant="Variant.Outlined" />
+                            <MudTextField T="string" @bind-Value="_editDocumentType" Label="@Loc["Type"]" Variant="Variant.Outlined" />
+                            <MudTextField T="string" @bind-Value="_editTagsCsv" Label="@Loc["TagsCommaSeparated"]" Variant="Variant.Outlined" />
+                            <div>
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
+                                           OnClick="SaveEditAsync" Disabled="_isSaving">@Loc["Save"]</MudButton>
+                                <MudButton Variant="Variant.Text" Size="Size.Small" Class="ml-2"
+                                           OnClick="@(() => _isEditing = false)" Disabled="_isSaving">@Loc["Cancel"]</MudButton>
+                            </div>
+                        </MudStack>
+                    }
+                    else
+                    {
                     <MudSimpleTable Dense="true" Elevation="0">
                         <tbody>
                             <tr><td><strong>@Loc["DocumentIdLabel"]</strong></td><td>@_doc!.Id</td></tr>
                             @if (_correspondentName is not null)
                             {
                                 <tr><td><strong>@Loc["Correspondent"]</strong></td><td>@_correspondentName</td></tr>
+                            }
+                            @if (_documentTypeName is not null)
+                            {
+                                <tr><td><strong>@Loc["Type"]</strong></td><td>@_documentTypeName</td></tr>
                             }
                             @if (_doc.Created.HasValue)
                             {
@@ -59,6 +92,7 @@ else
                         {
                             <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary" Class="mr-1 mb-1">@TagLabel(tagName)</MudChip>
                         }
+                    }
                     }
                 </MudCardContent>
             </MudCard>
@@ -217,12 +251,22 @@ else
     [Inject] private VisionOcrService VisionOcrService { get; set; } = null!;
     [Inject] private StructuredExtractionService ExtractionService { get; set; } = null!;
     [Inject] private ExtractionCacheService ExtractionCache { get; set; } = null!;
+    [Inject] private SuggestionStore SuggestionStore { get; set; } = null!;
+    [Inject] private ReviewQueueService ReviewQueue { get; set; } = null!;
+    [Inject] private IDialogService DialogService { get; set; } = null!;
     [Inject] private ISnackbar Snackbar { get; set; } = null!;
     [Inject] private NavigationManager Navigation { get; set; } = null!;
 
     private PaperlessDocument? _doc;
     private string? _documentContent;
     private string? _correspondentName;
+    private string? _documentTypeName;
+    private bool _isEditing;
+    private bool _isSaving;
+    private string _editTitle = string.Empty;
+    private string _editCorrespondent = string.Empty;
+    private string _editDocumentType = string.Empty;
+    private string _editTagsCsv = string.Empty;
     private List<string> _tagNames = [];
     private Dictionary<string, string> _tagLabels = new(StringComparer.OrdinalIgnoreCase);
     private bool _notFound;
@@ -236,7 +280,9 @@ else
 
     private static readonly string[] ImageExtensions = [".jpg", ".jpeg", ".png", ".webp", ".gif"];
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
     {
         _doc = await PaperlessClient.GetDocumentAsync(DocumentId);
         if (_doc is null)
@@ -249,6 +295,7 @@ else
 
         var tagLookup = await PaperlessClient.GetTagLookupAsync();
         var correspondentLookup = await PaperlessClient.GetCorrespondentLookupAsync();
+        var documentTypeLookup = await PaperlessClient.GetDocumentTypeLookupAsync();
 
         _tagNames = _doc.Tags
             .Where(tagLookup.ContainsKey)
@@ -257,6 +304,14 @@ else
 
         if (_doc.CorrespondentId.HasValue && correspondentLookup.TryGetValue(_doc.CorrespondentId.Value, out var corrName))
             _correspondentName = corrName;
+
+        if (_doc.DocumentTypeId.HasValue && documentTypeLookup.TryGetValue(_doc.DocumentTypeId.Value, out var typeName))
+            _documentTypeName = typeName;
+
+        _editTitle = _doc.Title;
+        _editCorrespondent = _correspondentName ?? string.Empty;
+        _editDocumentType = _documentTypeName ?? string.Empty;
+        _editTagsCsv = string.Join(", ", _tagNames);
 
         _tagLabels = await Taxonomy.GetDisplayMapAsync("tag", CultureInfo.CurrentUICulture.TwoLetterISOLanguageName);
 
@@ -271,6 +326,73 @@ else
         _fileUrl = _isImageFile
             ? $"/documents/{DocumentId}/file?original=true"
             : $"/documents/{DocumentId}/file";
+    }
+
+    private async Task SaveEditAsync()
+    {
+        _isSaving = true;
+        try
+        {
+            // Same human-decides-the-metadata path as the review queue: the applier
+            // resolves or creates names and preserves nothing the human removed
+            var finalDecision = new ClassificationResult
+            {
+                SuggestedTitle = _editTitle,
+                Correspondent = string.IsNullOrWhiteSpace(_editCorrespondent) ? null : _editCorrespondent,
+                DocumentType = string.IsNullOrWhiteSpace(_editDocumentType) ? null : _editDocumentType,
+                Tags = _editTagsCsv.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries).ToList(),
+                Confidence = 1.0
+            };
+
+            var outcome = await ReviewQueue.ApplyAsync(DocumentId, finalDecision);
+            if (outcome.Applied)
+            {
+                Snackbar.Add(Loc["DocumentUpdated"].Value, Severity.Success);
+                _isEditing = false;
+                await LoadAsync();
+            }
+            else
+            {
+                Snackbar.Add(Loc["FailedToApply", outcome.Error ?? string.Empty].Value, Severity.Error);
+            }
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private async Task DeleteAsync()
+    {
+        var confirmed = await DialogService.ShowMessageBoxAsync(
+            Loc["DeleteConfirmTitle"].Value,
+            Loc["DeleteConfirmText", _doc!.Title].Value,
+            yesText: Loc["Delete"].Value,
+            cancelText: Loc["Cancel"].Value);
+        if (confirmed != true)
+            return;
+
+        _isSaving = true;
+        try
+        {
+            var deleted = await PaperlessClient.DeleteDocumentAsync(DocumentId);
+            if (deleted)
+            {
+                // Clean our cache rows too, or the extraction haunts the expiring list
+                await ExtractionCache.DeleteAsync(DocumentId);
+                await SuggestionStore.DeleteAsync(DocumentId);
+                Snackbar.Add(Loc["DocumentDeleted"].Value, Severity.Success);
+                Navigation.NavigateTo("/documents");
+            }
+            else
+            {
+                Snackbar.Add(Loc["DeleteFailed"].Value, Severity.Error);
+            }
+        }
+        finally
+        {
+            _isSaving = false;
+        }
     }
 
     private async Task RunVisionOcrAsync()

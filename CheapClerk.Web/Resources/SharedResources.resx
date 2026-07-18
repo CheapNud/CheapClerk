@@ -276,4 +276,15 @@
   <data name="ReconnectPaused" xml:space="preserve"><value>The session has been paused by the server.</value></data>
   <data name="ReconnectResumeFailedTitle" xml:space="preserve"><value>Failed to resume the session.</value></data>
   <data name="ReconnectButtonResume" xml:space="preserve"><value>Resume</value></data>
+  <!-- Document detail editing -->
+  <data name="Edit" xml:space="preserve"><value>Edit</value></data>
+  <data name="Save" xml:space="preserve"><value>Save</value></data>
+  <data name="Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="Delete" xml:space="preserve"><value>Delete</value></data>
+  <data name="DeleteConfirmTitle" xml:space="preserve"><value>Delete document</value></data>
+  <data name="DeleteConfirmText" xml:space="preserve"><value>Delete '{0}' permanently? This cannot be undone.</value></data>
+  <data name="DocumentDeleted" xml:space="preserve"><value>Document deleted.</value></data>
+  <data name="DeleteFailed" xml:space="preserve"><value>Delete failed.</value></data>
+  <data name="DocumentUpdated" xml:space="preserve"><value>Document updated.</value></data>
+  <data name="TagsCommaSeparated" xml:space="preserve"><value>Tags (comma-separated)</value></data>
 </root>

@@ -81,7 +81,8 @@ public sealed class ReviewQueueService(
         if (tagContext is null)
             return new ReviewApplyOutcome { Applied = false, Error = "Paperless unreachable" };
 
-        var applied = await applier.ApplyAsync(doc, finalDecision, tagContext, ct);
+        // Human decision: the submitted tag set replaces, additions AND removals stick
+        var applied = await applier.ApplyAsync(doc, finalDecision, tagContext, replaceExistingTags: true, ct);
         if (applied is null)
             return new ReviewApplyOutcome { Applied = false, Error = "update failed" };
 

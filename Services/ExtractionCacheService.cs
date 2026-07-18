@@ -123,6 +123,13 @@ public sealed class ExtractionCacheService(
         return new RefreshSummary(processed, classified, skipped);
     }
 
+    public async Task DeleteAsync(int documentId, CancellationToken cancellationToken = default)
+    {
+        await using var db = await dbFactory.CreateDbContextAsync(cancellationToken);
+        // Without this, a deleted document's extraction haunts the expiring list
+        await db.CachedExtractions.Where(e => e.DocumentId == documentId).ExecuteDeleteAsync(cancellationToken);
+    }
+
     public async Task<int> GetCachedCountAsync(CancellationToken cancellationToken = default)
     {
         await using var db = await dbFactory.CreateDbContextAsync(cancellationToken);

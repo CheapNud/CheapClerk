@@ -24,6 +24,7 @@ public sealed class ClassificationApplier(
         PaperlessDocument doc,
         ClassificationResult classification,
         TagContext tagContext,
+        bool replaceExistingTags = false,
         CancellationToken cancellationToken = default)
     {
         var (matchedTagIds, missingTagNames) = TagResolver.Resolve(
@@ -118,9 +119,14 @@ public sealed class ClassificationApplier(
         // The processor only ever strips InboxTagId (a no-op difference for inbox
         // docs); stripping ReviewTagId too matters once review-queue docs flow
         // through this same applier.
+        // Auto-classification is additive (keeps whatever tags the doc already has);
+        // a human decision replaces — what they typed is the complete set.
+        var keptExistingTags = replaceExistingTags
+            ? []
+            : doc.Tags.Where(tagId => tagId != tagContext.InboxTagId && tagId != tagContext.ReviewTagId);
         var finalTagIds = matchedTagIds
             .Concat(createdTagIds)
-            .Concat(doc.Tags.Where(tagId => tagId != tagContext.InboxTagId && tagId != tagContext.ReviewTagId))
+            .Concat(keptExistingTags)
             .Distinct()
             .ToList();
 

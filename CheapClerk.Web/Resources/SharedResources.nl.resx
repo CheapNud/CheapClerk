@@ -227,4 +227,15 @@
   <data name="ReconnectPaused" xml:space="preserve"><value>De sessie is onderbroken door de server.</value></data>
   <data name="ReconnectResumeFailedTitle" xml:space="preserve"><value>Hervatten van de sessie mislukt.</value></data>
   <data name="ReconnectButtonResume" xml:space="preserve"><value>Hervatten</value></data>
+  <!-- Document detail editing -->
+  <data name="Edit" xml:space="preserve"><value>Bewerken</value></data>
+  <data name="Save" xml:space="preserve"><value>Opslaan</value></data>
+  <data name="Cancel" xml:space="preserve"><value>Annuleren</value></data>
+  <data name="Delete" xml:space="preserve"><value>Verwijderen</value></data>
+  <data name="DeleteConfirmTitle" xml:space="preserve"><value>Document verwijderen</value></data>
+  <data name="DeleteConfirmText" xml:space="preserve"><value>'{0}' permanent verwijderen? Dit kan niet ongedaan worden gemaakt.</value></data>
+  <data name="DocumentDeleted" xml:space="preserve"><value>Document verwijderd.</value></data>
+  <data name="DeleteFailed" xml:space="preserve"><value>Verwijderen mislukt.</value></data>
+  <data name="DocumentUpdated" xml:space="preserve"><value>Document bijgewerkt.</value></data>
+  <data name="TagsCommaSeparated" xml:space="preserve"><value>Tags (kommagescheiden)</value></data>
 </root>
