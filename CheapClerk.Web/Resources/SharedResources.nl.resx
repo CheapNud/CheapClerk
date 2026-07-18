@@ -238,4 +238,6 @@
   <data name="DeleteFailed" xml:space="preserve"><value>Verwijderen mislukt.</value></data>
   <data name="DocumentUpdated" xml:space="preserve"><value>Document bijgewerkt.</value></data>
   <data name="TagsCommaSeparated" xml:space="preserve"><value>Tags (kommagescheiden)</value></data>
+  <data name="Classification" xml:space="preserve"><value>Classificatie</value></data>
+  <data name="ClerkSuggestion" xml:space="preserve"><value>Openstaand voorstel van de klerk</value></data>
 </root>

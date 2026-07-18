@@ -1,6 +1,6 @@
 <!--
   TODO.md — CheapClerk project work tracker
-  Last updated: 2026-07-18 (search folded into documents)
+  Last updated: 2026-07-19 (suggestions on detail page)
 
   RULES FOR AI AGENTS:
   - Update the "Last updated" date above whenever you modify this file
@@ -31,6 +31,10 @@
 _Nothing blocking._
 
 ## Planned
+- [x] (2026-07-19 → 2026-07-19) Detail page: pending suggestion with accept/edit, re-run classification with OCR toggle, auto-extract after filing [user]
+  - Extraction now runs automatically after auto-file AND review accept (failure-tolerant); Extract button remains as manual refresh
+- [ ] (2026-07-19) UI pass 2: dashboard consolidation (recent docs, action counts, expiring strip) + mobile polish across remaining pages [user]
+  - On hold by user choice — revisit after real document traffic settles the priorities
 - [x] (2026-07-18 → 2026-07-18) Fold search into the Documents page, drop the separate Search page, mobile-first controls [user]
   - /search route kept as alias; query present = ranked search with excerpts, absent = filtered list; table collapses to cards below sm
 - [x] (2026-07-18 → 2026-07-18) Edit/delete documents from the detail page + review-count badge in nav [user]
