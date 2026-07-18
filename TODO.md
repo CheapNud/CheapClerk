@@ -1,6 +1,6 @@
 <!--
   TODO.md — CheapClerk project work tracker
-  Last updated: 2026-07-18 (document editing in UI)
+  Last updated: 2026-07-18 (search folded into documents)
 
   RULES FOR AI AGENTS:
   - Update the "Last updated" date above whenever you modify this file
@@ -31,6 +31,8 @@
 _Nothing blocking._
 
 ## Planned
+- [x] (2026-07-18 → 2026-07-18) Fold search into the Documents page, drop the separate Search page, mobile-first controls [user]
+  - /search route kept as alias; query present = ranked search with excerpts, absent = filtered list; table collapses to cards below sm
 - [x] (2026-07-18 → 2026-07-18) Edit/delete documents from the detail page + review-count badge in nav [user]
   - Edit reuses the review applier with replace-tags semantics (human edits stick, incl. removals); delete cleans the cache rows too
 
