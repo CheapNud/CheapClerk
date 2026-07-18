@@ -1,4 +1,5 @@
 @page "/documents"
+@page "/search"
 @using System.Globalization
 @inject IStringLocalizer<SharedResources> Loc
 @inject TaxonomyTranslationService Taxonomy
@@ -7,8 +8,16 @@
 
 <MudText Typo="Typo.h4" GutterBottom="true">@Loc["Documents"]</MudText>
 
-<MudGrid Class="mb-4">
-    <MudItem xs="12" sm="4">
+@* All controls stack full-width on phones; the grid only splits columns from sm/md up *@
+<MudGrid Class="mb-4" Spacing="2">
+    <MudItem xs="12" md="4">
+        <MudTextField T="string" @bind-Value="_searchQuery" Label="@Loc["SearchQuery"]" Variant="Variant.Outlined"
+                      Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search"
+                      OnAdornmentClick="RefreshAsync" OnKeyDown="OnSearchKeyDown"
+                      Clearable="true" OnClearButtonClick="ClearSearchAsync"
+                      Placeholder="@Loc["SearchPlaceholderExample"]" />
+    </MudItem>
+    <MudItem xs="12" sm="6" md="3">
         <MudSelect T="string" Label="@Loc["Correspondent"]" Value="_selectedCorrespondent" ValueChanged="OnCorrespondentChanged"
                    Clearable="true" Variant="Variant.Outlined" Dense="true">
             @if (_correspondents is not null)
@@ -20,7 +29,7 @@
             }
         </MudSelect>
     </MudItem>
-    <MudItem xs="12" sm="4">
+    <MudItem xs="12" sm="6" md="3">
         <MudSelect T="string" Label="@Loc["Tag"]" Value="_selectedTag" ValueChanged="OnTagChanged"
                    Clearable="true" Variant="Variant.Outlined" Dense="true">
             @if (_tags is not null)
@@ -32,10 +41,11 @@
             }
         </MudSelect>
     </MudItem>
-    <MudItem xs="12" sm="4" Class="d-flex align-end">
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="LoadDocumentsAsync"
-                   Disabled="_isLoading" StartIcon="@Icons.Material.Filled.Refresh">
-            @(_isLoading ? Loc["Loading"] : Loc["Apply"])
+    <MudItem xs="12" md="2" Class="d-flex align-center">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="RefreshAsync"
+                   Disabled="_isLoading" FullWidth="true"
+                   StartIcon="@(string.IsNullOrWhiteSpace(_searchQuery) ? Icons.Material.Filled.Refresh : Icons.Material.Filled.Search)">
+            @(_isLoading ? Loc["Loading"] : string.IsNullOrWhiteSpace(_searchQuery) ? Loc["Apply"] : Loc["Search"])
         </MudButton>
     </MudItem>
 </MudGrid>
@@ -44,9 +54,47 @@
 {
     <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
 }
+else if (_matches is not null)
+{
+    @if (_matches.Count == 0)
+    {
+        <MudAlert Severity="Severity.Info">@Loc["NoDocumentsFoundMatching", _searchQuery ?? string.Empty]</MudAlert>
+    }
+    else
+    {
+        <MudText Typo="Typo.body2" Class="mb-3" Style="opacity: 0.6;">@Loc["FoundDocumentsCount", _matches.Count]</MudText>
+
+        @foreach (var match in _matches)
+        {
+            <MudCard Elevation="0" Class="mb-3" Style="border: 1px solid rgba(255,255,255,0.06);">
+                <MudCardContent>
+                    <MudLink Href="@($"/documents/{match.DocumentId}")" Typo="Typo.h6">@match.Title</MudLink>
+                    <div class="d-flex align-center flex-wrap gap-2 mt-1 mb-2">
+                        @if (match.Correspondent is not null)
+                        {
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Tertiary">@match.Correspondent</MudChip>
+                        }
+                        @foreach (var tagName in match.Tags)
+                        {
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary">@TagLabel(tagName)</MudChip>
+                        }
+                        @if (match.Created.HasValue)
+                        {
+                            <MudText Typo="Typo.caption" Style="opacity: 0.5;">@match.Created.Value.ToString("yyyy-MM-dd")</MudText>
+                        }
+                    </div>
+                    @if (match.Excerpt is not null)
+                    {
+                        <MudText Typo="Typo.body2" Style="opacity: 0.7;">@match.Excerpt</MudText>
+                    }
+                </MudCardContent>
+            </MudCard>
+        }
+    }
+}
 else if (_documents is not null)
 {
-    <MudTable Items="_documents" Hover="true" Elevation="0" Dense="true"
+    <MudTable Items="_documents" Hover="true" Elevation="0" Dense="true" Breakpoint="Breakpoint.Sm"
               Style="border: 1px solid rgba(255,255,255,0.06);">
         <HeaderContent>
             <MudTh>@Loc["Id"]</MudTh>
@@ -56,18 +104,18 @@ else if (_documents is not null)
             <MudTh>@Loc["Added"]</MudTh>
         </HeaderContent>
         <RowTemplate>
-            <MudTd>@context.Id</MudTd>
-            <MudTd>
+            <MudTd DataLabel="@Loc["Id"]">@context.Id</MudTd>
+            <MudTd DataLabel="@Loc["Title"]">
                 <MudLink Href="@($"/documents/{context.Id}")">@context.Title</MudLink>
             </MudTd>
-            <MudTd>
+            <MudTd DataLabel="@Loc["Tags"]">
                 @foreach (var tagId in context.Tags)
                 {
                     <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary">@TagLabelById(tagId)</MudChip>
                 }
             </MudTd>
-            <MudTd>@(context.Created?.ToString("yyyy-MM-dd") ?? "—")</MudTd>
-            <MudTd>@(context.Added?.ToString("yyyy-MM-dd") ?? "—")</MudTd>
+            <MudTd DataLabel="@Loc["Created"]">@(context.Created?.ToString("yyyy-MM-dd") ?? "—")</MudTd>
+            <MudTd DataLabel="@Loc["Added"]">@(context.Added?.ToString("yyyy-MM-dd") ?? "—")</MudTd>
         </RowTemplate>
     </MudTable>
 }
@@ -76,9 +124,11 @@ else if (_documents is not null)
     [Inject] private PaperlessClient PaperlessClient { get; set; } = null!;
 
     private List<PaperlessDocument>? _documents;
+    private List<DocumentMatch>? _matches;
     private List<PaperlessTag>? _tags;
     private List<PaperlessCorrespondent>? _correspondents;
     private Dictionary<string, string> _tagLabels = new(StringComparer.OrdinalIgnoreCase);
+    private string? _searchQuery;
     private string? _selectedCorrespondent;
     private string? _selectedTag;
     private bool _isLoading;
@@ -103,25 +153,57 @@ else if (_documents is not null)
     private string TagLabelById(int tagId) =>
         _tags?.FirstOrDefault(t => t.Id == tagId) is { } matched ? TagLabel(matched.Name) : $"#{tagId}";
 
+    private async Task OnSearchKeyDown(KeyboardEventArgs keyArgs)
+    {
+        if (keyArgs.Key == "Enter")
+            await RefreshAsync();
+    }
+
+    private async Task ClearSearchAsync()
+    {
+        _searchQuery = null;
+        await RefreshAsync();
+    }
+
     private async Task OnCorrespondentChanged(string corrName)
     {
         _selectedCorrespondent = corrName;
-        await LoadDocumentsAsync();
+        await RefreshAsync();
     }
 
     private async Task OnTagChanged(string tagName)
     {
         _selectedTag = tagName;
-        await LoadDocumentsAsync();
+        await RefreshAsync();
     }
 
-    private async Task LoadDocumentsAsync()
+    // One entry point for both modes: a query searches (ranked, with excerpts),
+    // no query lists — the filters apply either way
+    private async Task RefreshAsync()
     {
         _isLoading = true;
-        _documents = await PaperlessClient.ListDocumentsAsync(
-            correspondentName: _selectedCorrespondent,
-            tagName: _selectedTag,
-            maxResults: 50);
-        _isLoading = false;
+        try
+        {
+            if (string.IsNullOrWhiteSpace(_searchQuery))
+            {
+                _matches = null;
+                _documents = await PaperlessClient.ListDocumentsAsync(
+                    correspondentName: _selectedCorrespondent,
+                    tagName: _selectedTag,
+                    maxResults: 50);
+            }
+            else
+            {
+                _matches = await PaperlessClient.SearchDocumentsAsync(
+                    _searchQuery,
+                    tagName: _selectedTag,
+                    correspondentName: _selectedCorrespondent,
+                    maxResults: 25);
+            }
+        }
+        finally
+        {
+            _isLoading = false;
+        }
     }
 }
