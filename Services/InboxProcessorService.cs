@@ -58,6 +58,7 @@ public sealed class InboxProcessorService(
             var applied = 0;
             var sentToReview = 0;
             var failed = 0;
+            var consecutiveLlmFailures = 0;
 
             foreach (var doc in inboxDocuments)
             {
@@ -84,8 +85,20 @@ public sealed class InboxProcessorService(
                         outcome.Error = "LLM unavailable";
                         failed++;
                         report.Outcomes.Add(outcome);
+
+                        // A dead provider fails every doc the same way — don't make
+                        // the rest of the batch wait out a full timeout each
+                        if (++consecutiveLlmFailures >= 3)
+                        {
+                            logger.LogWarning(
+                                "Aborting inbox run after {Failures} consecutive LLM failures; remaining documents stay in the inbox for the next run",
+                                consecutiveLlmFailures);
+                            break;
+                        }
                         continue;
                     }
+
+                    consecutiveLlmFailures = 0;
 
                     if (classification is null || classification.Confidence < _options.MinConfidence)
                     {

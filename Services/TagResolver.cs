@@ -13,7 +13,7 @@ public static class TagResolver
 
         foreach (var suggestedName in suggestedNames
                      .Where(n => !string.IsNullOrWhiteSpace(n))
-                     .Select(n => n.Trim()))
+                     .Select(EntityNameSanitizer.Clean))
         {
             if (!seenNames.Add(suggestedName)) continue;
 

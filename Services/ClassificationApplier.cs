@@ -61,8 +61,9 @@ public sealed class ClassificationApplier(
         int? correspondentId = null;
         if (!string.IsNullOrWhiteSpace(classification.Correspondent))
         {
+            var correspondentName = EntityNameSanitizer.Clean(classification.Correspondent);
             var existingCorrespondentId = tagContext.CorrespondentLookup
-                .FirstOrDefault(c => c.Value.Equals(classification.Correspondent, StringComparison.OrdinalIgnoreCase)).Key;
+                .FirstOrDefault(c => c.Value.Equals(correspondentName, StringComparison.OrdinalIgnoreCase)).Key;
             if (existingCorrespondentId > 0)
             {
                 correspondentId = existingCorrespondentId;
@@ -70,12 +71,12 @@ public sealed class ClassificationApplier(
             else
             {
                 var createdCorrespondent = await paperlessClient.CreateCorrespondentAsync(
-                    classification.Correspondent, cancellationToken);
+                    correspondentName, cancellationToken);
                 if (createdCorrespondent is null)
                 {
                     // Same cross-host race recovery as tags
                     createdCorrespondent = (await paperlessClient.GetCorrespondentsAsync(cancellationToken))
-                        .FirstOrDefault(c => c.Name.Equals(classification.Correspondent, StringComparison.OrdinalIgnoreCase));
+                        .FirstOrDefault(c => c.Name.Equals(correspondentName, StringComparison.OrdinalIgnoreCase));
                 }
                 if (createdCorrespondent is not null)
                 {
@@ -88,8 +89,9 @@ public sealed class ClassificationApplier(
         int? documentTypeId = null;
         if (!string.IsNullOrWhiteSpace(classification.DocumentType))
         {
+            var documentTypeName = EntityNameSanitizer.Clean(classification.DocumentType);
             var existingDocumentTypeId = tagContext.DocumentTypeLookup
-                .FirstOrDefault(dt => dt.Value.Equals(classification.DocumentType, StringComparison.OrdinalIgnoreCase)).Key;
+                .FirstOrDefault(dt => dt.Value.Equals(documentTypeName, StringComparison.OrdinalIgnoreCase)).Key;
             if (existingDocumentTypeId > 0)
             {
                 documentTypeId = existingDocumentTypeId;
@@ -97,12 +99,12 @@ public sealed class ClassificationApplier(
             else
             {
                 var createdDocumentType = await paperlessClient.CreateDocumentTypeAsync(
-                    classification.DocumentType, cancellationToken);
+                    documentTypeName, cancellationToken);
                 if (createdDocumentType is null)
                 {
                     // Same cross-host race recovery as tags
                     createdDocumentType = (await paperlessClient.GetDocumentTypesAsync(cancellationToken))
-                        .FirstOrDefault(dt => dt.Name.Equals(classification.DocumentType, StringComparison.OrdinalIgnoreCase));
+                        .FirstOrDefault(dt => dt.Name.Equals(documentTypeName, StringComparison.OrdinalIgnoreCase));
                 }
                 if (createdDocumentType is not null)
                 {

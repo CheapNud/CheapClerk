@@ -1,6 +1,6 @@
 <!--
   TODO.md — CheapClerk project work tracker
-  Last updated: 2026-07-17 (mirror PAT fixed)
+  Last updated: 2026-07-18 (audit backlog cleared)
 
   RULES FOR AI AGENTS:
   - Update the "Last updated" date above whenever you modify this file
@@ -50,7 +50,7 @@ _Nothing blocking._
 - [x] (2026-07-06 → 2026-07-16) Recover from cross-host entity-creation races in ClassificationApplier [audit]
   - Duplicate-name POST 400s → CreateTagAsync null → tag silently dropped from the filed doc (Applied still true)
   - On null create, force-refresh the lookup and rematch by name; same for correspondent/type
-- [ ] (2026-07-06) Review queue capped at MaxDocumentsPerRun with no "more" indicator [audit]
+- [x] (2026-07-06 → 2026-07-18) Review queue capped at MaxDocumentsPerRun with no "more" indicator [audit]
   - GetQueueAsync reuses the batch knob as a page size; >20 queued docs are invisible in UI and MCP
 - [x] (2026-07-06 → 2026-07-06) Review queue — stored suggestions, /review page (accept/edit/re-run), 3 MCP tools [user]
   - Suggestions persisted in SQLite at low-confidence time; filing shares the applier with auto-classification
@@ -62,9 +62,9 @@ _Nothing blocking._
 - [x] (2026-07-06 → 2026-07-16) Paginate tag fetch or use name__iexact lookup in EnsureWorkflowTagsAsync [audit]
   - GetTagsAsync caps at page_size=100; once the taxonomy outgrows page 1, workflow tags stop resolving and every run aborts
   - AutoCreateTags makes this a when, not an if
-- [ ] (2026-07-06) Sanitize LLM-created tag/correspondent names (length cap, strip newlines) [audit]
+- [x] (2026-07-06 → 2026-07-18) Sanitize LLM-created tag/correspondent names (length cap, strip newlines) [audit]
   - Injected names feed back into every future classification prompt via the existing-tags list
-- [ ] (2026-07-06) Short-circuit inbox run after N consecutive LLM failures [audit]
+- [x] (2026-07-06 → 2026-07-18) Short-circuit inbox run after N consecutive LLM failures [audit]
   - When the provider is down, each of up to 20 docs waits out a full HTTP timeout sequentially
 - [x] (2026-07-06 → 2026-07-06) Automatic inbox classification — LLM titles/tags/correspondents/dates new Paperless documents [user]
   - Paperless inbox tag marks incoming docs; clerk polls + dashboard button + process_inbox MCP tool

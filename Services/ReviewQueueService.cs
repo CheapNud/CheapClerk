@@ -45,8 +45,11 @@ public sealed class ReviewQueueService(
             return [];
         }
 
+        // The queue is a full listing, not a processing batch — don't reuse the
+        // per-run batch knob as a page size.
+        // ponytail: hard 100 ceiling; add paging if a household queue ever exceeds it
         var reviewDocuments = await paperlessClient.ListDocumentsByTagIdAsync(
-            tagContext.ReviewTagId, _options.MaxDocumentsPerRun, ct);
+            tagContext.ReviewTagId, 100, ct);
 
         var queue = new List<ReviewQueueEntry>();
         foreach (var doc in reviewDocuments)
