@@ -1,6 +1,6 @@
 <!--
   TODO.md — CheapClerk project work tracker
-  Last updated: 2026-07-19 (suggestions on detail page)
+  Last updated: 2026-07-23 (extraction-first pipeline)
 
   RULES FOR AI AGENTS:
   - Update the "Last updated" date above whenever you modify this file
@@ -31,6 +31,9 @@
 _Nothing blocking._
 
 ## Planned
+- [x] (2026-07-23 → 2026-07-23) Extraction-first pipeline + Vehicle category + broadened prompts [user]
+  - Extraction runs before classification and its findings feed the filing prompt (consistency); re-run uses the cached extraction
+  - Prompts widened from household-only to personal admin (vehicles, VME/syndicus, medical, employment); keuring dates hit the expiring page
 - [x] (2026-07-19 → 2026-07-19) Detail page: pending suggestion with accept/edit, re-run classification with OCR toggle, auto-extract after filing [user]
   - Extraction now runs automatically after auto-file AND review accept (failure-tolerant); Extract button remains as manual refresh
 - [ ] (2026-07-19) UI pass 2: dashboard consolidation (recent docs, action counts, expiring strip) + mobile polish across remaining pages [user]

@@ -74,11 +74,28 @@ public sealed class InboxProcessorService(
                 try
                 {
                     var text = await ResolveDocumentTextAsync(doc, cancellationToken);
+
+                    // Extraction runs FIRST so the filing decision can stay consistent
+                    // with the deep read (e.g. an insurance policy's actual policy type).
+                    // Its failure must not block classification.
+                    string? extractionContext = null;
+                    try
+                    {
+                        var extracted = await extractionCache.GetOrExtractAsync(doc.Id, forceRefresh: false, cancellationToken);
+                        if (extracted is not null)
+                            extractionContext = DocumentClassifierService.BuildExtractionContext(extracted);
+                    }
+                    catch (Exception extractionEx)
+                    {
+                        logger.LogWarning(extractionEx, "Pre-classification extraction failed for document {DocumentId}", doc.Id);
+                    }
+
                     var (classification, llmFailed) = await classifier.ClassifyAsync(
                         text ?? string.Empty,
                         tagContext.ClassifiableTagLookup.Values.ToList(),
                         tagContext.CorrespondentLookup.Values.ToList(),
                         tagContext.DocumentTypeLookup.Values.ToList(),
+                        extractionContext,
                         cancellationToken);
 
                     if (llmFailed)
@@ -158,18 +175,6 @@ public sealed class InboxProcessorService(
                         // A confidently filed document no longer needs its parked suggestion
                         await suggestionStore.DeleteAsync(doc.Id, cancellationToken);
                         applied++;
-
-                        // One document, one visit: extract structured data right after
-                        // filing so the detail page never shows an empty Extracted card.
-                        // Failure here must not fail the filing that already happened.
-                        try
-                        {
-                            await extractionCache.GetOrExtractAsync(doc.Id, forceRefresh: false, cancellationToken);
-                        }
-                        catch (Exception extractionEx)
-                        {
-                            logger.LogWarning(extractionEx, "Post-filing extraction failed for document {DocumentId}", doc.Id);
-                        }
                     }
                     else
                     {

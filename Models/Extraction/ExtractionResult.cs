@@ -19,6 +19,9 @@ public sealed class ExtractionResult
     [Description("Extracted contract fields, populated when Category is Contract.")]
     public ExtractedContract? Contract { get; set; }
 
+    [Description("Extracted vehicle fields, populated when Category is Vehicle.")]
+    public ExtractedVehicle? Vehicle { get; set; }
+
     [Description("A one-sentence summary of the document.")]
     public string? Summary { get; set; }
 }

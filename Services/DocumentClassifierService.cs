@@ -1,5 +1,7 @@
+using System.Text.Json;
 using CheapClerk.Configuration;
 using CheapClerk.Models.Classification;
+using CheapClerk.Models.Extraction;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -26,8 +28,11 @@ public sealed class DocumentClassifierService(
         };
 
         return $"""
-            You are a filing clerk for Belgian household paperwork (invoices, insurance
-            policies, contracts, tax documents, receipts, warranties, official letters).
+            You are a filing clerk for Belgian personal administration: household
+            paperwork, vehicles (registration, inspection/keuring), building
+            co-ownership (VME/syndicus), medical, employment and education documents —
+            invoices, insurance policies, contracts, tax documents, receipts,
+            warranties, official letters.
             Documents are usually Dutch, sometimes French, German or English.
 
             Given the OCR text of ONE document plus the existing organizational taxonomy,
@@ -57,17 +62,28 @@ public sealed class DocumentClassifierService(
         string documentText,
         List<string> existingTags,
         List<string> existingCorrespondents,
-        List<string> existingDocumentTypes)
+        List<string> existingDocumentTypes,
+        string? extractionContext = null)
     {
         var bounded = documentText.Length > MaxDocumentChars
             ? documentText[..MaxDocumentChars] + "\n[truncated]"
             : documentText;
 
+        var contextBlock = string.IsNullOrWhiteSpace(extractionContext)
+            ? string.Empty
+            : $"""
+
+              Structured analysis of this document already found:
+              {extractionContext}
+              Keep the filing decision CONSISTENT with these findings.
+
+              """;
+
         return $"""
             Existing tags: {(existingTags.Count > 0 ? string.Join(", ", existingTags) : "(none yet)")}
             Existing correspondents: {(existingCorrespondents.Count > 0 ? string.Join(", ", existingCorrespondents) : "(none yet)")}
             Existing document types: {(existingDocumentTypes.Count > 0 ? string.Join(", ", existingDocumentTypes) : "(none yet)")}
-
+            {contextBlock}
             Document text:
             ---
             {bounded}
@@ -75,11 +91,33 @@ public sealed class DocumentClassifierService(
             """;
     }
 
+    private static readonly JsonSerializerOptions ContextJsonSettings = new()
+    {
+        DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+    };
+
+    // Compact text block the classifier prompt can quote so filing decisions
+    // stay consistent with what the deep extraction pass already discovered
+    public static string? BuildExtractionContext(ExtractionResult extracted)
+    {
+        var detail = (object?)extracted.Invoice ?? (object?)extracted.Insurance
+            ?? (object?)extracted.Contract ?? extracted.Vehicle;
+
+        var lines = new List<string> { $"Category: {extracted.Category} ({extracted.Confidence:P0} confidence)" };
+        if (!string.IsNullOrWhiteSpace(extracted.Summary))
+            lines.Add($"Summary: {extracted.Summary}");
+        if (detail is not null)
+            lines.Add($"Fields: {JsonSerializer.Serialize(detail, detail.GetType(), ContextJsonSettings)}");
+
+        return string.Join("\n", lines);
+    }
+
     public async Task<(ClassificationResult? Classification, bool LlmFailed)> ClassifyAsync(
         string documentText,
         List<string> existingTags,
         List<string> existingCorrespondents,
         List<string> existingDocumentTypes,
+        string? extractionContext = null,
         CancellationToken cancellationToken = default)
     {
         if (!IsEnabled)
@@ -100,7 +138,7 @@ public sealed class DocumentClassifierService(
             {
                 new(ChatRole.System, BuildSystemPrompt(_classification.TaxonomyLanguage)),
                 new(ChatRole.User, BuildTaxonomyMessage(
-                    documentText, existingTags, existingCorrespondents, existingDocumentTypes))
+                    documentText, existingTags, existingCorrespondents, existingDocumentTypes, extractionContext))
             };
 
             var chatOptions = new ChatOptions

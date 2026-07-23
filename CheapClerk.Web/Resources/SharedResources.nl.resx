@@ -240,4 +240,9 @@
   <data name="TagsCommaSeparated" xml:space="preserve"><value>Tags (kommagescheiden)</value></data>
   <data name="Classification" xml:space="preserve"><value>Classificatie</value></data>
   <data name="ClerkSuggestion" xml:space="preserve"><value>Openstaand voorstel van de klerk</value></data>
+  <data name="LicensePlate" xml:space="preserve"><value>Nummerplaat</value></data>
+  <data name="VehicleMake" xml:space="preserve"><value>Merk / model</value></data>
+  <data name="ChassisNumber" xml:space="preserve"><value>Chassisnummer (VIN)</value></data>
+  <data name="FirstRegistered" xml:space="preserve"><value>Eerste inschrijving</value></data>
+  <data name="InspectionDue" xml:space="preserve"><value>Keuring vervalt</value></data>
 </root>

@@ -9,5 +9,7 @@ public enum DocumentCategory
     Receipt,
     TaxDocument,
     Warranty,
-    BankStatement
+    BankStatement,
+    // Appended last — the cache stores this enum as an integer
+    Vehicle
 }
