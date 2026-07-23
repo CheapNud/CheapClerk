@@ -289,4 +289,9 @@
   <data name="TagsCommaSeparated" xml:space="preserve"><value>Tags (comma-separated)</value></data>
   <data name="Classification" xml:space="preserve"><value>Classification</value></data>
   <data name="ClerkSuggestion" xml:space="preserve"><value>Pending clerk suggestion</value></data>
+  <data name="LicensePlate" xml:space="preserve"><value>License plate</value></data>
+  <data name="VehicleMake" xml:space="preserve"><value>Make / model</value></data>
+  <data name="ChassisNumber" xml:space="preserve"><value>Chassis (VIN)</value></data>
+  <data name="FirstRegistered" xml:space="preserve"><value>First registered</value></data>
+  <data name="InspectionDue" xml:space="preserve"><value>Inspection due</value></data>
 </root>

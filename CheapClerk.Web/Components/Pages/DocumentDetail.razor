@@ -228,6 +228,18 @@ else
                                 </tbody>
                             </MudSimpleTable>
                         }
+                        else if (_extracted.Vehicle is not null)
+                        {
+                            <MudSimpleTable Dense="true" Elevation="0">
+                                <tbody>
+                                    @if (_extracted.Vehicle.LicensePlate is not null) { <tr><td><strong>@Loc["LicensePlate"]</strong></td><td>@_extracted.Vehicle.LicensePlate</td></tr> }
+                                    @if (_extracted.Vehicle.Make is not null) { <tr><td><strong>@Loc["VehicleMake"]</strong></td><td>@_extracted.Vehicle.Make @_extracted.Vehicle.Model</td></tr> }
+                                    @if (_extracted.Vehicle.ChassisNumber is not null) { <tr><td><strong>@Loc["ChassisNumber"]</strong></td><td>@_extracted.Vehicle.ChassisNumber</td></tr> }
+                                    @if (_extracted.Vehicle.FirstRegistrationDate is not null) { <tr><td><strong>@Loc["FirstRegistered"]</strong></td><td>@_extracted.Vehicle.FirstRegistrationDate</td></tr> }
+                                    @if (_extracted.Vehicle.InspectionDueDate is not null) { <tr><td><strong>@Loc["InspectionDue"]</strong></td><td>@_extracted.Vehicle.InspectionDueDate</td></tr> }
+                                </tbody>
+                            </MudSimpleTable>
+                        }
                     }
                 </MudCardContent>
             </MudCard>

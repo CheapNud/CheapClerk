@@ -179,6 +179,8 @@ public sealed class ExtractionCacheService(
             DocumentCategory.Insurance => extracted.Insurance?.CoverageEnd,
             DocumentCategory.Contract => extracted.Contract?.EndDate,
             DocumentCategory.Invoice => extracted.Invoice?.DueDate,
+            // Keuring due dates surface on the expiring page like any other deadline
+            DocumentCategory.Vehicle => extracted.Vehicle?.InspectionDueDate,
             _ => null
         };
 

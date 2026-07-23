@@ -121,11 +121,19 @@ public sealed class ReviewQueueService(
 
         var text = await ResolveDocumentTextAsync(doc.Id, doc.Content, forceVisionOcr, ct);
 
+        // Cached extraction only — a re-run should be cheap; the Extract button
+        // refreshes the deep read when the content itself changed
+        var cachedExtraction = await extractionCache.GetCachedAsync(documentId, ct);
+        var extractionContext = cachedExtraction is null
+            ? null
+            : DocumentClassifierService.BuildExtractionContext(cachedExtraction);
+
         var (classification, llmFailed) = await classifier.ClassifyAsync(
             text ?? string.Empty,
             tagContext.ClassifiableTagLookup.Values.ToList(),
             tagContext.CorrespondentLookup.Values.ToList(),
             tagContext.DocumentTypeLookup.Values.ToList(),
+            extractionContext,
             ct);
 
         if (llmFailed)

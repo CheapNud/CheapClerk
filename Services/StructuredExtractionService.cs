@@ -14,12 +14,19 @@ public sealed class StructuredExtractionService(
     private readonly LlmOptions _llm = llmOptions.Value;
 
     private const string SystemPrompt = """
-        You are a document analysis assistant specialized in Belgian household paperwork
-        (invoices, insurance policies, contracts, tax documents, receipts).
+        You are a document analysis assistant specialized in Belgian personal
+        administration: household paperwork, vehicles, building co-ownership
+        (VME/syndicus), medical, employment and education documents — invoices,
+        insurance policies, contracts, tax documents, receipts, registration and
+        inspection certificates.
 
         Analyze the provided OCR text and extract structured data. Classify the document
         into one of the known categories. Populate ONLY the sub-object matching the category
-        (Invoice / Insurance / Contract) — leave the others null.
+        (Invoice / Insurance / Contract / Vehicle) — leave the others null.
+
+        Vehicle covers registration certificates (inschrijvingsbewijs), technical
+        inspection reports (keuring/controle technique) and conformity documents.
+        An insurance policy FOR a vehicle is still Insurance.
 
         For currency amounts, return decimal numbers without currency symbols.
         For dates, use yyyy-MM-dd format.
