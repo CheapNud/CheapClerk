@@ -21,50 +21,64 @@ else
 {
     <MudSwitch T="bool" @bind-Value="_forceVision" Label="@Loc["ForceVisionOcrOnRerun"]" Class="mb-4" />
 
-    <MudTable Items="_rows" Hover="true" Elevation="0" Dense="true"
-              Style="border: 1px solid rgba(255,255,255,0.06);">
-        <HeaderContent>
-            <MudTh>@Loc["Doc"]</MudTh>
-            <MudTh>@Loc["Title"]</MudTh>
-            <MudTh>@Loc["Correspondent"]</MudTh>
-            <MudTh>@Loc["Type"]</MudTh>
-            <MudTh>@Loc["Tags"]</MudTh>
-            <MudTh>@Loc["Date"]</MudTh>
-            <MudTh>@Loc["Actions"]</MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd>
-                <MudLink Href="@($"/documents/{context.Entry.DocumentId}")">@context.Entry.DocumentId</MudLink>
-                @if (context.Entry.Confidence is not null)
-                {
-                    <MudText Typo="Typo.caption" Style="opacity: 0.6;">@($"{context.Entry.Confidence:P0}")</MudText>
-                }
-            </MudTd>
-            <MudTd><MudTextField T="string" @bind-Value="context.Title" /></MudTd>
-            <MudTd><MudTextField T="string" @bind-Value="context.Correspondent" /></MudTd>
-            <MudTd><MudTextField T="string" @bind-Value="context.DocumentType" /></MudTd>
-            <MudTd>
-                <MudTextField T="string" @bind-Value="context.TagsCsv" />
-                @if (HasLocalizedTags(context.TagsCsv))
-                {
-                    <MudText Typo="Typo.caption" Style="opacity: 0.6;">@LocalizedTagsCsv(context.TagsCsv)</MudText>
-                }
-            </MudTd>
-            <MudTd><MudTextField T="string" @bind-Value="context.DocumentDate" /></MudTd>
-            <MudTd>
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
-                           Disabled="@(context.Busy)"
-                           OnClick="@(() => AcceptAsync(context))">
+    @foreach (var row in _rows)
+    {
+        <MudCard Elevation="0" Class="mb-4" Style="border: 1px solid rgba(255,255,255,0.06);">
+            <MudCardContent>
+                <div class="d-flex align-center flex-wrap gap-2 mb-3">
+                    <MudLink Href="@($"/documents/{row.Entry.DocumentId}")" Typo="Typo.subtitle1">
+                        #@row.Entry.DocumentId — @row.Entry.Title
+                    </MudLink>
+                    @if (row.Entry.Confidence is not null)
+                    {
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="@ConfidenceColor(row.Entry.Confidence.Value)">
+                            @($"{row.Entry.Confidence:P0}")
+                        </MudChip>
+                    }
+                    @if (row.Entry.Added.HasValue)
+                    {
+                        <MudText Typo="Typo.caption" Style="opacity: 0.5;">@row.Entry.Added.Value.ToString("yyyy-MM-dd")</MudText>
+                    }
+                </div>
+
+                @* Fields stack full-width on phones, split into columns from sm up *@
+                <MudGrid Spacing="2">
+                    <MudItem xs="12" md="6">
+                        <MudTextField T="string" @bind-Value="row.Title" Label="@Loc["Title"]" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="3">
+                        <MudTextField T="string" @bind-Value="row.Correspondent" Label="@Loc["Correspondent"]" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="3">
+                        <MudTextField T="string" @bind-Value="row.DocumentType" Label="@Loc["Type"]" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                    </MudItem>
+                    <MudItem xs="12" sm="8" md="9">
+                        <MudTextField T="string" @bind-Value="row.TagsCsv" Label="@Loc["TagsCommaSeparated"]" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                      HelperText="@(HasLocalizedTags(row.TagsCsv) ? LocalizedTagsCsv(row.TagsCsv) : null)" />
+                    </MudItem>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudTextField T="string" @bind-Value="row.DocumentDate" Label="@Loc["Date"]" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                    </MudItem>
+                </MudGrid>
+            </MudCardContent>
+            <MudCardActions Class="px-4 pb-4 pt-0 d-flex flex-wrap gap-2">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                           Disabled="@(row.Busy)"
+                           OnClick="@(() => AcceptAsync(row))">
                     @Loc["Accept"]
                 </MudButton>
-                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Small" Class="ml-2"
-                           Disabled="@(context.Busy)"
-                           OnClick="@(() => RerunAsync(context))">
+                <MudButton Variant="Variant.Outlined" Color="Color.Secondary"
+                           Disabled="@(row.Busy)"
+                           OnClick="@(() => RerunAsync(row))">
                     @Loc["Rerun"]
                 </MudButton>
-            </MudTd>
-        </RowTemplate>
-    </MudTable>
+                @if (row.Busy)
+                {
+                    <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Primary" Class="align-self-center" />
+                }
+            </MudCardActions>
+        </MudCard>
+    }
 }
 
 @code {
@@ -83,6 +97,13 @@ else
     }
 
     private string TagLabel(string canonical) => _tagLabels.TryGetValue(canonical, out var label) ? label : canonical;
+
+    private static Color ConfidenceColor(double confidence) => confidence switch
+    {
+        >= 0.7 => Color.Success,
+        >= 0.4 => Color.Warning,
+        _ => Color.Error
+    };
 
     private static List<string> SplitTagsCsv(string canonicalCsv) => canonicalCsv
         .Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)

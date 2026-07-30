@@ -1,6 +1,6 @@
 <!--
   TODO.md — CheapClerk project work tracker
-  Last updated: 2026-07-30 (near-duplicate detection)
+  Last updated: 2026-07-30 (review page cards)
 
   RULES FOR AI AGENTS:
   - Update the "Last updated" date above whenever you modify this file
@@ -31,6 +31,7 @@
 _Nothing blocking._
 
 ## Planned
+- [x] (2026-07-30 → 2026-07-30) Review page rebuilt as cards — mobile-first editing, color-coded confidence [user]
 - [x] (2026-07-29 → 2026-07-30) Near-duplicate detection via extraction cache [user]
   - Same invoice number + compatible vendor on another cached doc parks the new one for review with a Possible Duplicate tag in the suggestion; catches rescans that content hashing cannot
 - [x] (2026-07-23 → 2026-07-23) Extraction-first pipeline + Vehicle category + broadened prompts [user]
