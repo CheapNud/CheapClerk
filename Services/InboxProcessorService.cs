@@ -79,11 +79,15 @@ public sealed class InboxProcessorService(
                     // with the deep read (e.g. an insurance policy's actual policy type).
                     // Its failure must not block classification.
                     string? extractionContext = null;
+                    int? duplicateOfId = null;
                     try
                     {
                         var extracted = await extractionCache.GetOrExtractAsync(doc.Id, forceRefresh: false, cancellationToken);
                         if (extracted is not null)
+                        {
                             extractionContext = DocumentClassifierService.BuildExtractionContext(extracted);
+                            duplicateOfId = await extractionCache.FindInvoiceDuplicateAsync(doc.Id, extracted, cancellationToken);
+                        }
                     }
                     catch (Exception extractionEx)
                     {
@@ -118,9 +122,20 @@ public sealed class InboxProcessorService(
 
                     consecutiveLlmFailures = 0;
 
-                    if (classification is null || classification.Confidence < _options.MinConfidence)
+                    if (classification is null || classification.Confidence < _options.MinConfidence || duplicateOfId is not null)
                     {
                         outcome.Confidence = classification?.Confidence ?? 0;
+
+                        if (duplicateOfId is not null && classification is not null)
+                        {
+                            // A confident classification still parks: only a human can
+                            // decide whether the same invoice number means the same bill
+                            if (!classification.Tags.Any(t => t.Equals(_options.DuplicateTagName, StringComparison.OrdinalIgnoreCase)))
+                                classification.Tags.Add(_options.DuplicateTagName);
+                            logger.LogWarning(
+                                "Document {DocumentId} looks like a duplicate of {DuplicateOfId} (same invoice number); parked for review",
+                                doc.Id, duplicateOfId);
+                        }
 
                         if (classification is not null)
                         {

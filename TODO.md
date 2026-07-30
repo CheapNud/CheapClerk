@@ -1,6 +1,6 @@
 <!--
   TODO.md — CheapClerk project work tracker
-  Last updated: 2026-07-23 (extraction-first pipeline)
+  Last updated: 2026-07-30 (near-duplicate detection)
 
   RULES FOR AI AGENTS:
   - Update the "Last updated" date above whenever you modify this file
@@ -31,6 +31,8 @@
 _Nothing blocking._
 
 ## Planned
+- [x] (2026-07-29 → 2026-07-30) Near-duplicate detection via extraction cache [user]
+  - Same invoice number + compatible vendor on another cached doc parks the new one for review with a Possible Duplicate tag in the suggestion; catches rescans that content hashing cannot
 - [x] (2026-07-23 → 2026-07-23) Extraction-first pipeline + Vehicle category + broadened prompts [user]
   - Extraction runs before classification and its findings feed the filing prompt (consistency); re-run uses the cached extraction
   - Prompts widened from household-only to personal admin (vehicles, VME/syndicus, medical, employment); keuring dates hit the expiring page
@@ -88,6 +90,8 @@ _Nothing blocking._
   - cheapclerk-web on Megaton repointed via Paperless__BaseUrl + token in /opt/blazor-apps/cheapclerk/.env
 
 ## Future
+- [ ] (2026-07-30) oCIS/ownCloud scan-folder bridge — clerk polls a WebDAV folder on Sierra-Madre oCIS, uploads via UploadTracker, moves processed files [user]
+  - Very low prio by user choice: replaces a manual save-to-clerked-folder habit; WebDAV polling flakiness is the concern; rclone-to-consume-dir rejected as flaky too
 
 - [ ] (2026-07-12) Per-culture document TITLE translations [user]
   - Deliberately skipped in the v1.5.0 localization layer (YAGNI): titles are per-document data, so the map grows one row per document per culture and each new document costs an extra LLM call per culture

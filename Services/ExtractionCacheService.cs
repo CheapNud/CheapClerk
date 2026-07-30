@@ -123,6 +123,42 @@ public sealed class ExtractionCacheService(
         return new RefreshSummary(processed, classified, skipped);
     }
 
+    /// <summary>
+    /// Finds another cached invoice with the same invoice number (and a compatible
+    /// vendor) — the near-duplicate case content hashing mathematically cannot catch,
+    /// like the same bill scanned twice or photographed once and PDF'd once.
+    /// </summary>
+    public async Task<int?> FindInvoiceDuplicateAsync(
+        int documentId, ExtractionResult extracted, CancellationToken cancellationToken = default)
+    {
+        if (extracted.Category != DocumentCategory.Invoice) return null;
+        var invoiceNumber = extracted.Invoice?.InvoiceNumber?.Trim();
+        if (string.IsNullOrWhiteSpace(invoiceNumber)) return null;
+
+        await using var db = await dbFactory.CreateDbContextAsync(cancellationToken);
+        // ponytail: linear payload scan — fine at household scale, promote the invoice
+        // number to an indexed column if the archive ever makes this measurable
+        var otherInvoices = await db.CachedExtractions
+            .Where(e => e.Category == DocumentCategory.Invoice && e.DocumentId != documentId)
+            .ToListAsync(cancellationToken);
+
+        foreach (var cachedRow in otherInvoices)
+        {
+            var other = JsonSerializer.Deserialize<ExtractionResult>(cachedRow.PayloadJson, JsonSettings);
+            var otherNumber = other?.Invoice?.InvoiceNumber?.Trim();
+            if (!invoiceNumber.Equals(otherNumber, StringComparison.OrdinalIgnoreCase)) continue;
+
+            // Bare numbers like "1" collide across vendors — require the vendors to be
+            // compatible (equal, or unknown on either side)
+            var vendor = extracted.Invoice?.Vendor?.Trim();
+            var otherVendor = other?.Invoice?.Vendor?.Trim();
+            if (vendor is null || otherVendor is null || vendor.Equals(otherVendor, StringComparison.OrdinalIgnoreCase))
+                return cachedRow.DocumentId;
+        }
+
+        return null;
+    }
+
     public async Task DeleteAsync(int documentId, CancellationToken cancellationToken = default)
     {
         await using var db = await dbFactory.CreateDbContextAsync(cancellationToken);
