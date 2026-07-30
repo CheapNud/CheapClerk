@@ -85,6 +85,75 @@ public sealed class ExtractionCacheReadTests : IAsyncLifetime
         Assert.Null(await extractionCache.GetCachedAsync(999));
     }
 
+    private async Task SeedInvoiceAsync(int documentId, string? invoiceNumber, string? vendor)
+    {
+        var seeded = new ExtractionResult
+        {
+            Category = DocumentCategory.Invoice,
+            Confidence = 0.9,
+            Invoice = new ExtractedInvoice { InvoiceNumber = invoiceNumber, Vendor = vendor }
+        };
+        await using var db = await _dbFactory.CreateDbContextAsync();
+        db.CachedExtractions.Add(new CachedExtraction
+        {
+            DocumentId = documentId,
+            Category = seeded.Category,
+            Confidence = seeded.Confidence,
+            PayloadJson = JsonSerializer.Serialize(seeded),
+            ExtractedAt = DateTime.UtcNow
+        });
+        await db.SaveChangesAsync();
+    }
+
+    private static ExtractionResult BuildInvoice(string? invoiceNumber, string? vendor) => new()
+    {
+        Category = DocumentCategory.Invoice,
+        Confidence = 0.9,
+        Invoice = new ExtractedInvoice { InvoiceNumber = invoiceNumber, Vendor = vendor }
+    };
+
+    [Fact]
+    public async Task FindInvoiceDuplicate_MatchesSameNumberAndVendor_CaseInsensitive()
+    {
+        await SeedInvoiceAsync(31, "LM-2026-778899", "Luminus NV");
+        var extractionCache = BuildCache();
+
+        var duplicateOf = await extractionCache.FindInvoiceDuplicateAsync(
+            40, BuildInvoice("lm-2026-778899", "LUMINUS NV"));
+
+        Assert.Equal(31, duplicateOf);
+    }
+
+    [Fact]
+    public async Task FindInvoiceDuplicate_MatchesWhenEitherVendorUnknown()
+    {
+        await SeedInvoiceAsync(32, "F-1001", null);
+        var extractionCache = BuildCache();
+
+        Assert.Equal(32, await extractionCache.FindInvoiceDuplicateAsync(40, BuildInvoice("F-1001", "Telenet BV")));
+    }
+
+    [Fact]
+    public async Task FindInvoiceDuplicate_IgnoresSameNumberFromDifferentVendor()
+    {
+        await SeedInvoiceAsync(33, "1", "Telenet BV");
+        var extractionCache = BuildCache();
+
+        Assert.Null(await extractionCache.FindInvoiceDuplicateAsync(40, BuildInvoice("1", "Proximus NV")));
+    }
+
+    [Fact]
+    public async Task FindInvoiceDuplicate_IgnoresOwnDocument_AndBlankNumbers()
+    {
+        await SeedInvoiceAsync(34, "F-2002", "Engie");
+        var extractionCache = BuildCache();
+
+        // Same document id must never match itself
+        Assert.Null(await extractionCache.FindInvoiceDuplicateAsync(34, BuildInvoice("F-2002", "Engie")));
+        // Missing invoice number never matches anything
+        Assert.Null(await extractionCache.FindInvoiceDuplicateAsync(40, BuildInvoice(null, "Engie")));
+    }
+
     private sealed class SilentChatClient : IChatClient
     {
         public Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> messages, ChatOptions? options = null, CancellationToken cancellationToken = default)
