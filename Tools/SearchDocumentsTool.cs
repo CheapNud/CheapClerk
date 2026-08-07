@@ -1,6 +1,8 @@
 using System.ComponentModel;
 using System.Text;
+using CheapClerk.Configuration;
 using CheapClerk.Services;
+using Microsoft.Extensions.Options;
 using ModelContextProtocol.Server;
 
 namespace CheapClerk.Tools;
@@ -8,9 +10,10 @@ namespace CheapClerk.Tools;
 [McpServerToolType]
 public sealed class SearchDocumentsTool
 {
-    [McpServerTool(Name = "search_documents"), Description("Full-text search across all ingested documents in Paperless-ngx.")]
+    [McpServerTool(Name = "search_documents"), Description("Full-text search across all ingested documents in Paperless-ngx. Results include viewer/file links when the web UI URL is configured.")]
     public static async Task<string> SearchDocuments(
         PaperlessClient paperlessClient,
+        IOptions<WebOptions> webOptions,
         [Description("The search query to find documents.")] string query,
         [Description("Optional tag name to filter results.")] string? tag = null,
         [Description("Optional correspondent name to filter results.")] string? correspondent = null,
@@ -42,6 +45,9 @@ public sealed class SearchDocumentsTool
 
             if (match.Excerpt is not null)
                 sb.AppendLine($"  Excerpt: {match.Excerpt}");
+
+            if (DocumentLinkFormatter.Links(webOptions.Value.PublicBaseUrl, match.DocumentId) is { } docLinks)
+                sb.AppendLine($"  {docLinks}");
 
             sb.AppendLine();
         }

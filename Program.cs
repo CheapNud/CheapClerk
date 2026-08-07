@@ -21,6 +21,7 @@ builder.Services.Configure<VisionFallbackOptions>(visionSection);
 builder.Services.Configure<LlmOptions>(llmSection);
 builder.Services.Configure<CacheOptions>(cacheSection);
 builder.Services.Configure<ClassificationOptions>(classificationSection);
+builder.Services.Configure<WebOptions>(builder.Configuration.GetSection(WebOptions.SectionName));
 builder.Services.AddConfiguredChatClient();
 
 var cacheOptions = cacheSection.Get<CacheOptions>() ?? new CacheOptions();
