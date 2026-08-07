@@ -1,6 +1,8 @@
 using System.ComponentModel;
 using System.Text;
+using CheapClerk.Configuration;
 using CheapClerk.Services;
+using Microsoft.Extensions.Options;
 using ModelContextProtocol.Server;
 
 namespace CheapClerk.Tools;
@@ -8,9 +10,10 @@ namespace CheapClerk.Tools;
 [McpServerToolType]
 public sealed class ListDocumentsTool
 {
-    [McpServerTool(Name = "list_documents"), Description("Browse documents with optional filters by correspondent, tag, or date range.")]
+    [McpServerTool(Name = "list_documents"), Description("Browse documents with optional filters by correspondent, tag, or date range. Results include viewer/file links when the web UI URL is configured.")]
     public static async Task<string> ListDocuments(
         PaperlessClient paperlessClient,
+        IOptions<WebOptions> webOptions,
         [Description("Filter by correspondent name.")] string? correspondent = null,
         [Description("Filter by tag name.")] string? tag = null,
         [Description("Only show documents added after this date (yyyy-MM-dd).")] DateTime? addedAfter = null,
@@ -52,6 +55,9 @@ public sealed class ListDocumentsTool
 
             if (doc.Added.HasValue)
                 sb.AppendLine($"  Added: {doc.Added.Value:yyyy-MM-dd}");
+
+            if (DocumentLinkFormatter.Links(webOptions.Value.PublicBaseUrl, doc.Id) is { } docLinks)
+                sb.AppendLine($"  {docLinks}");
 
             sb.AppendLine();
         }

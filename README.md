@@ -85,17 +85,17 @@ async Task<string> SearchDocuments(
 Returns: document ID, title, matched excerpt, tags, date, correspondent.
 
 ### `get_document_content`
-Retrieve the full OCR text of a specific document. Triggers vision fallback if OCR quality is poor.
+Retrieve the full OCR text of one or more documents. Triggers vision fallback if OCR quality is poor.
 
 ```csharp
 [Tool("get_document_content")]
 async Task<string> GetDocumentContent(
-    int documentId,
+    int[] documentIds,
     bool forceVisionOcr = false
 )
 ```
 
-Returns: full text content. If `forceVisionOcr` is true or Tesseract output is below confidence threshold, fetches original scan and runs Claude Vision.
+Returns: full text content, with a per-document header (and links) when multiple IDs are passed — bulk-first so an assistant reads N documents in one round trip. If `forceVisionOcr` is true or Tesseract output is below confidence threshold, fetches original scan and runs Claude Vision.
 
 ### `list_documents`
 Browse documents with filters. Useful for "show me all documents from KBC" or "what did I scan last month."
@@ -114,14 +114,16 @@ async Task<string> ListDocuments(
 Returns: summary list with ID, title, correspondent, tags, dates.
 
 ### `get_document_metadata`
-Retrieve metadata without the full text — faster for bulk operations.
+Retrieve metadata for one or more documents without the full text — faster for bulk operations.
 
 ```csharp
 [Tool("get_document_metadata")]
-async Task<string> GetDocumentMetadata(int documentId)
+async Task<string> GetDocumentMetadata(int[] documentIds)
 ```
 
 Returns: title, correspondent, tags, dates (created, added, modified), archive serial number, original filename.
+
+**Document links:** when `Web:PublicBaseUrl` is configured (e.g. `Web__PublicBaseUrl=https://clerk.example.com` in the MCP server's environment), `search_documents`, `list_documents`, `get_document_metadata` and bulk `get_document_content` append two links per document — the viewer page and the raw file — so the assistant can hand you the document, not just describe it.
 
 ### `list_tags`
 List all available tags in Paperless. Helps Claude Code understand the taxonomy.

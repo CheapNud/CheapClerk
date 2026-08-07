@@ -1,6 +1,6 @@
 <!--
   TODO.md — CheapClerk project work tracker
-  Last updated: 2026-07-30 (review page cards)
+  Last updated: 2026-08-07 (answer-experience MCP upgrade)
 
   RULES FOR AI AGENTS:
   - Update the "Last updated" date above whenever you modify this file
@@ -31,6 +31,7 @@
 _Nothing blocking._
 
 ## Planned
+- [x] (2026-08-07 → 2026-08-07) Answer-experience MCP upgrade (from Kreuzakt research): viewer+file links on doc-returning tools, bulk ids on content/metadata [user]
 - [x] (2026-07-30 → 2026-07-30) Review page rebuilt as cards — mobile-first editing, color-coded confidence [user]
 - [x] (2026-07-29 → 2026-07-30) Near-duplicate detection via extraction cache [user]
   - Same invoice number + compatible vendor on another cached doc parks the new one for review with a Possible Duplicate tag in the suggestion; catches rescans that content hashing cannot
@@ -91,6 +92,8 @@ _Nothing blocking._
   - cheapclerk-web on Megaton repointed via Paperless__BaseUrl + token in /opt/blazor-apps/cheapclerk/.env
 
 ## Future
+- [ ] (2026-08-07) LLM query expansion on search (cross-language NL/FR/EN synonyms, cached) — Kreuzakt pattern, revisit after living with links/bulk [user]
+- [ ] (2026-08-07) Kreuzberg/Xberg REST sidecar for table extraction + email/spreadsheet ingestion — only if those formats become real; rebrand churn says wait [user]
 - [ ] (2026-07-30) oCIS/ownCloud scan-folder bridge — clerk polls a WebDAV folder on Sierra-Madre oCIS, uploads via UploadTracker, moves processed files [user]
   - Very low prio by user choice: replaces a manual save-to-clerked-folder habit; WebDAV polling flakiness is the concern; rclone-to-consume-dir rejected as flaky too
 
