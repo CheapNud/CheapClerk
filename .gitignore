@@ -431,3 +431,6 @@ CLAUDE.md
 
 # Windows reserved filename artifacts
 /nul
+
+# Host-side deployment secrets (git replica on Megaton)
+.env

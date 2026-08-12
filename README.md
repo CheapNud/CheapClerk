@@ -436,6 +436,8 @@ OCR languages: Dutch (primary), English, French, German — covers Belgian house
 
 The `cheapclerk-web` container runs separately on Megaton (`/opt/blazor-apps/cheapclerk`) and points at Paperless via `Paperless__BaseUrl` + an API token generated with `manage.py drf_create_token`.
 
+**Releases are tag-driven**: pushing a `v*.*.*` tag to the forge runs `.forgejo/workflows/deploy.yml` — build + test, push the image to the forge container registry, then SSH to the app host, reset its git replica to the tag and `docker compose up`. The root `docker-compose.yml` is the deployment file (memory caps committed, secrets in the host-side untracked `.env`); `docker/docker-compose.yml` remains the Paperless reference stack.
+
 ---
 
 ## Automatic Classification

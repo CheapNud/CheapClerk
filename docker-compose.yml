@@ -1,0 +1,36 @@
+# Deployment compose for the Megaton app host. The host directory is a git
+# replica — every deploy resets it to the release tag, so THIS file is what
+# runs. Memory caps live here rather than only on the host: a host-side edit
+# is silently reverted on the next release. Secrets stay in the host-side
+# .env next to this file (untracked).
+services:
+  cheapclerk-web:
+    image: ${REGISTRY_HOST:?REGISTRY_HOST is required}/cheapnud/cheapclerk-web:${CHEAPCLERK_TAG:-latest}
+    container_name: cheapclerk-web
+    restart: unless-stopped
+    mem_limit: 512m
+    environment:
+      - ASPNETCORE_URLS=http://+:5000
+      - ASPNETCORE_ENVIRONMENT=Production
+      # Plex SSO — server-members-only gate in front of the whole app
+      - Plex__AdminToken=${PLEX_ADMIN_TOKEN}
+      - Plex__CallbackBaseUrl=${CHEAPCLERK_PUBLIC_URL}
+      # Only forwarded headers from this proxy (NPM on Hidden-Valley) are trusted
+      - Proxy__KnownProxies__0=${TRUSTED_PROXY_IP}
+      - Paperless__BaseUrl=http://192.168.1.15:8010
+      - Paperless__ApiToken=${PAPERLESS_API_TOKEN}
+      # Cache lives in PostgreSQL on Vault-Tec like every other app; SQLite is dev/test only
+      - Cache__Provider=Postgres
+      - Cache__ConnectionString=Host=192.168.1.14;Port=5432;Database=cheapclerk;Username=cheapclerk;Password=${CHEAPCLERK_DB_PASSWORD}
+      - Llm__Anthropic__ApiKey=${ANTHROPIC_API_KEY}
+      - Llm__Anthropic__Model=claude-haiku-4-5-20251001
+      - Classification__WebhookToken=${CHEAPCLERK_WEBHOOK_TOKEN}
+      - Classification__PollIntervalMinutes=60
+      - Serilog__WriteTo__0__Name=Seq
+      - Serilog__WriteTo__0__Args__serverUrl=http://192.168.1.15:5341
+    volumes:
+      - dataprotection-keys:/root/.aspnet/DataProtection-Keys
+    ports:
+      - "5030:5000"
+volumes:
+  dataprotection-keys:

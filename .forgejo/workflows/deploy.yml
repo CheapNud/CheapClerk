@@ -1,0 +1,144 @@
+name: Build, Push & Deploy
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+env:
+  DOTNET_VERSION: '11.0.x'
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 11
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+          dotnet-quality: 'preview'
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: nuget-
+
+      - name: Restore
+        run: dotnet restore CheapClerk.slnx
+
+      - name: Build
+        run: dotnet build CheapClerk.slnx --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test CheapClerk.slnx --no-build --configuration Release --verbosity normal
+
+  push-image:
+    name: Build & Push Docker Image
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to the container registry
+        run: echo "${{ secrets.REGISTRY_TOKEN }}" | docker login "${{ secrets.REGISTRY_HOST }}" -u cheapnud --password-stdin
+
+      - name: Build and push image
+        shell: bash
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -e
+          image="${{ secrets.REGISTRY_HOST }}/cheapnud/cheapclerk-web:${TAG}"
+          image_latest="${{ secrets.REGISTRY_HOST }}/cheapnud/cheapclerk-web:latest"
+
+          echo "Building ${image}..."
+          docker build -t "${image}" -t "${image_latest}" -f CheapClerk.Web/Dockerfile .
+
+          echo "Pushing ${image}..."
+          docker push "${image}"
+          docker push "${image_latest}"
+
+  deploy:
+    name: Deploy to the app host
+    needs: push-image
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Deploy via SSH
+        shell: bash
+        env:
+          DEPLOY_KEY: ${{ secrets.MEGATON_SSH_KEY }}
+          DEPLOY_HOST: ${{ secrets.MEGATON_HOST }}
+          DEPLOY_USER: ${{ secrets.MEGATON_USER }}
+          DEPLOY_HOST_KEY: ${{ secrets.MEGATON_HOST_KEY }}
+          DEPLOY_TAG: ${{ github.ref_name }}
+          REGISTRY_HOST: ${{ secrets.REGISTRY_HOST }}
+          REGISTRY_TOKEN: ${{ secrets.REGISTRY_TOKEN }}
+        run: |
+          set -e
+
+          # Reject anything that isn't strict semver — DEPLOY_TAG is interpolated into
+          # the remote ssh command below, so it's a trust boundary.
+          if [[ ! "$DEPLOY_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Refusing to deploy: tag '$DEPLOY_TAG' does not match ^v[0-9]+\.[0-9]+\.[0-9]+$"
+            exit 1
+          fi
+
+          mkdir -p ~/.ssh
+          echo "$DEPLOY_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          # Covers the token file too: if scp fails, `set -e` exits before any cleanup line runs.
+          trap 'rm -f ~/.ssh/deploy_key /tmp/.registry_token' EXIT
+          echo "$DEPLOY_HOST_KEY" >> ~/.ssh/known_hosts
+
+          echo "Deploying $DEPLOY_TAG to $DEPLOY_HOST..."
+
+          # Send the registry token as a temp file so it never appears in a process listing.
+          # 0600 before copying, and scp -p preserves the mode, so the remote copy is never
+          # world-readable — it is deleted by the remote trap below.
+          install -m 600 /dev/null /tmp/.registry_token
+          echo "${REGISTRY_TOKEN}" > /tmp/.registry_token
+          scp -p -i ~/.ssh/deploy_key /tmp/.registry_token "${DEPLOY_USER}@${DEPLOY_HOST}:/tmp/.registry_token"
+          rm -f /tmp/.registry_token
+
+          ssh -i ~/.ssh/deploy_key "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "export DEPLOY_TAG='${DEPLOY_TAG}' REGISTRY_HOST='${REGISTRY_HOST}'; /bin/bash -s" << 'DEPLOY'
+            set -e
+            # Trap rather than a trailing rm: on a docker login failure `set -e` exits before any
+            # cleanup line, leaving the registry token sitting on the host.
+            trap 'rm -f /tmp/.registry_token' EXIT
+
+            cat /tmp/.registry_token | docker login "${REGISTRY_HOST}" -u cheapnud --password-stdin
+
+            # The host holds a git replica, not a workspace: reset discards any drift so the
+            # committed compose (including its mem_limit value) is always what runs.
+            cd /opt/blazor-apps/cheapclerk
+            git fetch origin --tags --force
+            git reset --hard "${DEPLOY_TAG}"
+
+            echo "Pulling image for ${DEPLOY_TAG}..."
+            CHEAPCLERK_TAG="${DEPLOY_TAG}" REGISTRY_HOST="${REGISTRY_HOST}" docker compose pull
+
+            echo "Restarting services..."
+            CHEAPCLERK_TAG="${DEPLOY_TAG}" REGISTRY_HOST="${REGISTRY_HOST}" docker compose up -d --force-recreate
+
+            docker image prune -f
+
+            echo "Verifying..."
+            sleep 10
+            docker compose ps
+          DEPLOY
+
+          echo "Deployment of $DEPLOY_TAG successful"
