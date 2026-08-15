@@ -21,6 +21,43 @@ public sealed class PaperlessClientUploadTests
         new(HttpStatusCode.OK) { Content = new StringContent(json, Encoding.UTF8, "application/json") };
 
     [Fact]
+    public async Task GetTaskStatus_PaginatedShape_Paperless3_ReturnsStatus()
+    {
+        // Paperless 3.x wraps /api/tasks/ in {count, next, previous, results}
+        var stub = new StubHttpHandler(_ => Ok(
+            "{\"count\":1,\"next\":null,\"previous\":null,\"results\":[{\"task_id\":\"uuid-9\",\"status\":\"SUCCESS\",\"result\":\"ok\",\"related_document\":\"7\"}]}"));
+        var paperless = BuildClient(stub);
+
+        var taskStatus = await paperless.GetTaskStatusAsync("uuid-9");
+
+        Assert.NotNull(taskStatus);
+        Assert.Equal("SUCCESS", taskStatus!.Status);
+        Assert.Equal("7", taskStatus.RelatedDocument);
+    }
+
+    [Fact]
+    public async Task GetTaskStatus_BareArrayShape_LegacyPaperless_ReturnsStatus()
+    {
+        var stub = new StubHttpHandler(_ => Ok(
+            "[{\"task_id\":\"uuid-9\",\"status\":\"PENDING\",\"result\":null,\"related_document\":null}]"));
+        var paperless = BuildClient(stub);
+
+        var taskStatus = await paperless.GetTaskStatusAsync("uuid-9");
+
+        Assert.NotNull(taskStatus);
+        Assert.Equal("PENDING", taskStatus!.Status);
+    }
+
+    [Fact]
+    public async Task GetTaskStatus_UnrecognizedShape_ReturnsNullInsteadOfThrowing()
+    {
+        var stub = new StubHttpHandler(_ => Ok("{\"unexpected\":true}"));
+        var paperless = BuildClient(stub);
+
+        Assert.Null(await paperless.GetTaskStatusAsync("uuid-9"));
+    }
+
+    [Fact]
     public async Task UploadDocumentAsync_SuccessfulUpload_ReturnsUnquotedUuid()
     {
         var stub = new StubHttpHandler(_ => Ok("\"abc-123\""));

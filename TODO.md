@@ -1,6 +1,6 @@
 <!--
   TODO.md — CheapClerk project work tracker
-  Last updated: 2026-08-12 (Forgejo-primary pipeline)
+  Last updated: 2026-08-15 (Paperless 3.x tasks shape)
 
   RULES FOR AI AGENTS:
   - Update the "Last updated" date above whenever you modify this file
@@ -31,6 +31,7 @@
 _Nothing blocking._
 
 ## Planned
+- [x] (2026-08-15 → 2026-08-15) Upload tracking broke on Paperless 3.x — /api/tasks/ became paginated; parse both shapes, never throw raw JSON errors into the dialog [bug]
 - [x] (2026-08-12 → 2026-08-12) Forgejo-primary migration: forge origin + GitHub backup mirror, .forgejo workflows (build/pr-review/tag-driven deploy), committed deployment compose with mem caps, host git replica [user]
   - Closes the "CheapClerk has no deploy path" gap: WUD is gone, releases now deploy themselves on v*.*.* tags
 - [x] (2026-08-07 → 2026-08-07) Answer-experience MCP upgrade (from Kreuzakt research): viewer+file links on doc-returning tools, bulk ids on content/metadata [user]

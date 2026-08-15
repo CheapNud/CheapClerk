@@ -380,8 +380,35 @@ public sealed class PaperlessClient(
 
     public async Task<PaperlessTaskStatus?> GetTaskStatusAsync(string taskUuid, CancellationToken cancellationToken = default)
     {
-        var statuses = await GetAsync<List<PaperlessTaskStatus>>(
-            $"api/tasks/?task_id={Uri.EscapeDataString(taskUuid)}", cancellationToken);
-        return statuses?.FirstOrDefault();
+        try
+        {
+            var statusReply = await httpClient.GetAsync(
+                $"api/tasks/?task_id={Uri.EscapeDataString(taskUuid)}", cancellationToken);
+            statusReply.EnsureSuccessStatusCode();
+            var json = await statusReply.Content.ReadAsStringAsync(cancellationToken);
+
+            // Paperless 3.x paginates /api/tasks/ ({count, results: [...]}); older
+            // versions returned a bare array. Accept both so a server upgrade can't
+            // break upload tracking again.
+            using var parsed = JsonDocument.Parse(json);
+            var statusArray = parsed.RootElement.ValueKind == JsonValueKind.Array
+                ? parsed.RootElement
+                : parsed.RootElement.TryGetProperty("results", out var resultsElement)
+                    ? resultsElement
+                    : default;
+            if (statusArray.ValueKind != JsonValueKind.Array)
+            {
+                logger.LogWarning("Unrecognized /api/tasks/ response shape for task {TaskUuid}", taskUuid);
+                return null;
+            }
+
+            var statuses = JsonSerializer.Deserialize<List<PaperlessTaskStatus>>(statusArray.GetRawText(), JsonSettings);
+            return statuses?.FirstOrDefault();
+        }
+        catch (Exception ex) when (ex is HttpRequestException or JsonException)
+        {
+            logger.LogError(ex, "Failed to fetch task status for {TaskUuid}", taskUuid);
+            return null;
+        }
     }
 }
