@@ -1,6 +1,6 @@
 <!--
   TODO.md — CheapClerk project work tracker
-  Last updated: 2026-08-15 (share links)
+  Last updated: 2026-08-15 (share interstitial)
 
   RULES FOR AI AGENTS:
   - Update the "Last updated" date above whenever you modify this file
@@ -31,6 +31,7 @@
 _Nothing blocking._
 
 ## Planned
+- [x] (2026-08-15 → 2026-08-15) Share-link interstitial — file one click deeper so chat link-preview crawlers get an HTML stub, never the document [user]
 - [x] (2026-08-15 → 2026-08-15) Time-limited public share links (SAS-style) with per-document revocation [user]
   - HMAC tokens (1h/24h/7d) minted by web UI or share_document MCP tool; /share/* anonymous, all failures 404
   - Revocation via share-generation column in the cache DB — bump kills every outstanding link for that doc
@@ -98,6 +99,7 @@ _Nothing blocking._
   - cheapclerk-web on Megaton repointed via Paperless__BaseUrl + token in /opt/blazor-apps/cheapclerk/.env
 
 ## Future
+- [ ] (2026-08-15) Anubis PoW bot-shield in front of /share/* (or homelab-wide) via NPM — see tranquility TODO for the shared pattern [user]
 - [ ] (2026-08-15) Doccle intake — REJECTED for now after research [user]
   - No official consumer API exists (sender-side only; ToS says back up manually); community path is the reverse-engineered secure.doccle.be/doccle-euui/rest/v2 with plain Basic Auth (zdaar/doccle-paperless, 2024)
   - Rejected because TOTP/itsme have since become too dominant on the account for password-only automation to be viable

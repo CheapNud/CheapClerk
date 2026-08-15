@@ -202,30 +202,80 @@ app.MapGet("/documents/{documentId:int}/file", async (
 });
 
 // Time-limited public share links (SAS-style). Every failure mode is a plain
-// 404 so the endpoint gives no oracle: bad signature, expired, revoked
+// 404 so the endpoints give no oracle: bad signature, expired, revoked
 // generation and missing document all look identical from outside.
+// The token URL serves a minimal interstitial page with the file one click
+// deeper — chat apps' link-preview crawlers fetch pasted URLs immediately, and
+// this way they get a harmless HTML stub instead of the document itself.
+static async Task<(int DocumentId, DateTimeOffset ExpiresUtc)?> ValidateShareAsync(
+    string shareToken,
+    CheapClerk.Configuration.ShareOptions shareConfig,
+    ShareGenerationStore shareGenerations,
+    CancellationToken cancellationToken)
+{
+    if (string.IsNullOrWhiteSpace(shareConfig.SigningKey)) return null;
+    var validated = ShareLinkBuilder.TryValidate(shareConfig.SigningKey, shareToken, DateTimeOffset.UtcNow);
+    if (validated is null) return null;
+    if (await shareGenerations.GetAsync(validated.Value.DocumentId, cancellationToken) != validated.Value.Generation)
+        return null;
+    return (validated.Value.DocumentId, validated.Value.ExpiresUtc);
+}
+
 app.MapGet("/share/{shareToken}", async (
     string shareToken,
+    HttpContext http,
     Microsoft.Extensions.Options.IOptions<CheapClerk.Configuration.ShareOptions> shareConfig,
     ShareGenerationStore shareGenerations,
     PaperlessClient paperless,
     CancellationToken cancellationToken) =>
 {
-    var signingKey = shareConfig.Value.SigningKey;
-    if (string.IsNullOrWhiteSpace(signingKey))
+    var share = await ValidateShareAsync(shareToken, shareConfig.Value, shareGenerations, cancellationToken);
+    if (share is null)
         return Results.NotFound();
 
-    var validated = ShareLinkBuilder.TryValidate(signingKey, shareToken, DateTimeOffset.UtcNow);
-    if (validated is null)
+    var doc = await paperless.GetDocumentAsync(share.Value.DocumentId, cancellationToken);
+    if (doc is null)
         return Results.NotFound();
 
-    if (await shareGenerations.GetAsync(validated.Value.DocumentId, cancellationToken) != validated.Value.Generation)
+    http.Response.Headers["X-Robots-Tag"] = "noindex, nofollow";
+    http.Response.Headers["Referrer-Policy"] = "no-referrer";
+
+    // "Open document" reads naturally in both Dutch and English — no locale
+    // machinery for a page whose recipient could be anyone
+    var safeTitle = System.Net.WebUtility.HtmlEncode(doc.Title);
+    var html = $$"""
+        <!doctype html>
+        <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noindex, nofollow"><title>{{safeTitle}}</title>
+        <style>body{background:#0a0a0a;color:rgba(255,255,255,.9);font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}
+        .card{background:#141414;border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:2.5rem;max-width:26rem;text-align:center}
+        h1{font-size:1.1rem;font-weight:600;margin:0 0 1.5rem}
+        a{display:inline-block;background:#42A5F5;color:#0a0a0a;font-weight:600;padding:.7rem 2rem;border-radius:6px;text-decoration:none}
+        p{opacity:.5;font-size:.8rem;margin-top:1.5rem}</style></head>
+        <body><div class="card"><h1>{{safeTitle}}</h1>
+        <a href="/share/{{shareToken}}/file" rel="nofollow">Open document</a>
+        <p>Valid until {{share.Value.ExpiresUtc:yyyy-MM-dd HH:mm}} UTC</p></div></body></html>
+        """;
+    return Results.Content(html, "text/html");
+}).AllowAnonymous();
+
+app.MapGet("/share/{shareToken}/file", async (
+    string shareToken,
+    HttpContext http,
+    Microsoft.Extensions.Options.IOptions<CheapClerk.Configuration.ShareOptions> shareConfig,
+    ShareGenerationStore shareGenerations,
+    PaperlessClient paperless,
+    CancellationToken cancellationToken) =>
+{
+    var share = await ValidateShareAsync(shareToken, shareConfig.Value, shareGenerations, cancellationToken);
+    if (share is null)
         return Results.NotFound();
 
-    var sharedFile = await paperless.GetFileAsync(validated.Value.DocumentId, original: false, cancellationToken);
+    var sharedFile = await paperless.GetFileAsync(share.Value.DocumentId, original: false, cancellationToken);
     if (sharedFile is null)
         return Results.NotFound();
 
+    http.Response.Headers["X-Robots-Tag"] = "noindex, nofollow";
     string[] shareSafeTypes = ["application/pdf", "image/jpeg", "image/png", "image/webp", "image/gif"];
     var sharedContentType = shareSafeTypes.Contains(sharedFile.Value.ContentType, StringComparer.OrdinalIgnoreCase)
         ? sharedFile.Value.ContentType
