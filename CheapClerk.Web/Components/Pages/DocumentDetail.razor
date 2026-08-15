@@ -30,6 +30,13 @@ else
                         @if (!_isEditing)
                         {
                             <div>
+                                <MudMenu Icon="@Icons.Material.Filled.Share" Size="Size.Small" Dense="true" title="@Loc["Share"]">
+                                    <MudMenuItem OnClick="@(() => CreateShareAsync(1))">@Loc["ShareFor1Hour"]</MudMenuItem>
+                                    <MudMenuItem OnClick="@(() => CreateShareAsync(24))">@Loc["ShareFor24Hours"]</MudMenuItem>
+                                    <MudMenuItem OnClick="@(() => CreateShareAsync(168))">@Loc["ShareFor7Days"]</MudMenuItem>
+                                    <MudDivider />
+                                    <MudMenuItem OnClick="RevokeSharesAsync">@Loc["RevokeShares"]</MudMenuItem>
+                                </MudMenu>
                                 <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
                                                OnClick="@(() => _isEditing = true)" title="@Loc["Edit"]" />
                                 <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
@@ -37,6 +44,14 @@ else
                             </div>
                         }
                     </div>
+
+                    @if (_shareUrl is not null)
+                    {
+                        <MudTextField T="string" Value="@_shareUrl" ReadOnly="true" Variant="Variant.Outlined"
+                                      Label="@Loc["ShareLink"]" Class="mb-3" HelperText="@_shareExpiryNote"
+                                      Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.ContentCopy"
+                                      OnAdornmentClick="CopyShareLinkAsync" />
+                    }
 
                     @if (_isEditing)
                     {
@@ -299,6 +314,9 @@ else
     [Inject] private StructuredExtractionService ExtractionService { get; set; } = null!;
     [Inject] private ExtractionCacheService ExtractionCache { get; set; } = null!;
     [Inject] private SuggestionStore SuggestionStore { get; set; } = null!;
+    [Inject] private ShareGenerationStore ShareGenerations { get; set; } = null!;
+    [Inject] private Microsoft.Extensions.Options.IOptions<CheapClerk.Configuration.ShareOptions> ShareConfig { get; set; } = null!;
+    [Inject] private IJSRuntime JS { get; set; } = null!;
     [Inject] private ReviewQueueService ReviewQueue { get; set; } = null!;
     [Inject] private IDialogService DialogService { get; set; } = null!;
     [Inject] private ISnackbar Snackbar { get; set; } = null!;
@@ -412,6 +430,50 @@ else
         {
             _isSaving = false;
         }
+    }
+
+    private string? _shareUrl;
+    private string? _shareExpiryNote;
+
+    private async Task CreateShareAsync(int hours)
+    {
+        var signingKey = ShareConfig.Value.SigningKey;
+        if (string.IsNullOrWhiteSpace(signingKey))
+        {
+            Snackbar.Add(Loc["ShareDisabled"].Value, Severity.Warning);
+            return;
+        }
+
+        var expiresUtc = DateTimeOffset.UtcNow.AddHours(hours);
+        var generation = await ShareGenerations.GetAsync(DocumentId);
+        var shareToken = ShareLinkBuilder.CreateToken(signingKey, DocumentId, generation, expiresUtc);
+        _shareUrl = $"{Navigation.BaseUri}share/{shareToken}";
+        _shareExpiryNote = Loc["ShareValidUntil", expiresUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm")].Value;
+        await CopyShareLinkAsync();
+    }
+
+    private async Task CopyShareLinkAsync()
+    {
+        if (_shareUrl is null) return;
+        try
+        {
+            // Clipboard API needs a secure context; on plain-http LAN access the
+            // visible read-only field is the fallback
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", _shareUrl);
+            Snackbar.Add(Loc["ShareLinkCopied"].Value, Severity.Success);
+        }
+        catch (JSException)
+        {
+            Snackbar.Add(Loc["ShareCopyManually"].Value, Severity.Info);
+        }
+    }
+
+    private async Task RevokeSharesAsync()
+    {
+        await ShareGenerations.BumpAsync(DocumentId);
+        _shareUrl = null;
+        _shareExpiryNote = null;
+        Snackbar.Add(Loc["SharesRevoked"].Value, Severity.Success);
     }
 
     private async Task ApplySuggestionAsync()

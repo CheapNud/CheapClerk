@@ -17,6 +17,18 @@ public static class ClerkDbInitializer
     {
         await db.Database.EnsureCreatedAsync();
 
+        // Provider-neutral additive DDL: this table postdates the production
+        // Postgres database, so EnsureCreated no-ops there and both providers
+        // need the CREATE TABLE IF NOT EXISTS (the dialect below is valid in
+        // SQLite and Postgres alike).
+        await db.Database.ExecuteSqlRawAsync(
+            """
+            CREATE TABLE IF NOT EXISTS "ShareGenerations" (
+                "DocumentId" INTEGER NOT NULL CONSTRAINT "PK_ShareGenerations" PRIMARY KEY,
+                "Generation" INTEGER NOT NULL
+            );
+            """);
+
         if (db.Database.IsSqlite())
         {
             await db.Database.ExecuteSqlRawAsync(

@@ -92,6 +92,9 @@ builder.Services.AddSingleton<DocumentClassifierService>();
 builder.Services.AddSingleton<TagContextFactory>();
 builder.Services.AddSingleton<ClassificationApplier>();
 builder.Services.AddSingleton<SuggestionStore>();
+builder.Services.AddSingleton<ShareGenerationStore>();
+builder.Services.Configure<CheapClerk.Configuration.ShareOptions>(
+    builder.Configuration.GetSection(CheapClerk.Configuration.ShareOptions.SectionName));
 builder.Services.AddSingleton<InboxProcessorService>();
 builder.Services.AddSingleton<ReviewQueueService>();
 builder.Services.AddSingleton<TranslationStore>();
@@ -197,6 +200,38 @@ app.MapGet("/documents/{documentId:int}/file", async (
         : "application/octet-stream";
     return Results.File(storedFile.Value.Payload, safeContentType);
 });
+
+// Time-limited public share links (SAS-style). Every failure mode is a plain
+// 404 so the endpoint gives no oracle: bad signature, expired, revoked
+// generation and missing document all look identical from outside.
+app.MapGet("/share/{shareToken}", async (
+    string shareToken,
+    Microsoft.Extensions.Options.IOptions<CheapClerk.Configuration.ShareOptions> shareConfig,
+    ShareGenerationStore shareGenerations,
+    PaperlessClient paperless,
+    CancellationToken cancellationToken) =>
+{
+    var signingKey = shareConfig.Value.SigningKey;
+    if (string.IsNullOrWhiteSpace(signingKey))
+        return Results.NotFound();
+
+    var validated = ShareLinkBuilder.TryValidate(signingKey, shareToken, DateTimeOffset.UtcNow);
+    if (validated is null)
+        return Results.NotFound();
+
+    if (await shareGenerations.GetAsync(validated.Value.DocumentId, cancellationToken) != validated.Value.Generation)
+        return Results.NotFound();
+
+    var sharedFile = await paperless.GetFileAsync(validated.Value.DocumentId, original: false, cancellationToken);
+    if (sharedFile is null)
+        return Results.NotFound();
+
+    string[] shareSafeTypes = ["application/pdf", "image/jpeg", "image/png", "image/webp", "image/gif"];
+    var sharedContentType = shareSafeTypes.Contains(sharedFile.Value.ContentType, StringComparer.OrdinalIgnoreCase)
+        ? sharedFile.Value.ContentType
+        : "application/octet-stream";
+    return Results.File(sharedFile.Value.Payload, sharedContentType);
+}).AllowAnonymous();
 
 app.MapStaticAssets().AllowAnonymous();
 app.MapRazorComponents<App>()

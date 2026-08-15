@@ -294,4 +294,16 @@
   <data name="ChassisNumber" xml:space="preserve"><value>Chassis (VIN)</value></data>
   <data name="FirstRegistered" xml:space="preserve"><value>First registered</value></data>
   <data name="InspectionDue" xml:space="preserve"><value>Inspection due</value></data>
+  <!-- Share links -->
+  <data name="Share" xml:space="preserve"><value>Share</value></data>
+  <data name="ShareFor1Hour" xml:space="preserve"><value>Share for 1 hour</value></data>
+  <data name="ShareFor24Hours" xml:space="preserve"><value>Share for 24 hours</value></data>
+  <data name="ShareFor7Days" xml:space="preserve"><value>Share for 7 days</value></data>
+  <data name="RevokeShares" xml:space="preserve"><value>Revoke all share links</value></data>
+  <data name="ShareLink" xml:space="preserve"><value>Share link</value></data>
+  <data name="ShareLinkCopied" xml:space="preserve"><value>Share link copied to clipboard.</value></data>
+  <data name="ShareCopyManually" xml:space="preserve"><value>Copy the link from the field below.</value></data>
+  <data name="SharesRevoked" xml:space="preserve"><value>All share links for this document are now invalid.</value></data>
+  <data name="ShareDisabled" xml:space="preserve"><value>Sharing is not configured on this server.</value></data>
+  <data name="ShareValidUntil" xml:space="preserve"><value>Valid until {0}</value></data>
 </root>

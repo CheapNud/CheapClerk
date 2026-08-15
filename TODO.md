@@ -1,6 +1,6 @@
 <!--
   TODO.md — CheapClerk project work tracker
-  Last updated: 2026-08-15 (Doccle research closed)
+  Last updated: 2026-08-15 (share links)
 
   RULES FOR AI AGENTS:
   - Update the "Last updated" date above whenever you modify this file
@@ -31,6 +31,9 @@
 _Nothing blocking._
 
 ## Planned
+- [x] (2026-08-15 → 2026-08-15) Time-limited public share links (SAS-style) with per-document revocation [user]
+  - HMAC tokens (1h/24h/7d) minted by web UI or share_document MCP tool; /share/* anonymous, all failures 404
+  - Revocation via share-generation column in the cache DB — bump kills every outstanding link for that doc
 - [x] (2026-08-15 → 2026-08-15) Upload tracking broke on Paperless 3.x — /api/tasks/ became paginated; parse both shapes, never throw raw JSON errors into the dialog [bug]
 - [x] (2026-08-12 → 2026-08-12) Forgejo-primary migration: forge origin + GitHub backup mirror, .forgejo workflows (build/pr-review/tag-driven deploy), committed deployment compose with mem caps, host git replica [user]
   - Closes the "CheapClerk has no deploy path" gap: WUD is gone, releases now deploy themselves on v*.*.* tags

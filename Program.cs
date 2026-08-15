@@ -22,6 +22,7 @@ builder.Services.Configure<LlmOptions>(llmSection);
 builder.Services.Configure<CacheOptions>(cacheSection);
 builder.Services.Configure<ClassificationOptions>(classificationSection);
 builder.Services.Configure<WebOptions>(builder.Configuration.GetSection(WebOptions.SectionName));
+builder.Services.Configure<ShareOptions>(builder.Configuration.GetSection(ShareOptions.SectionName));
 builder.Services.AddConfiguredChatClient();
 
 var cacheOptions = cacheSection.Get<CacheOptions>() ?? new CacheOptions();
@@ -42,6 +43,7 @@ builder.Services.AddSingleton<DocumentClassifierService>();
 builder.Services.AddSingleton<TagContextFactory>();
 builder.Services.AddSingleton<ClassificationApplier>();
 builder.Services.AddSingleton<SuggestionStore>();
+builder.Services.AddSingleton<ShareGenerationStore>();
 builder.Services.AddSingleton<InboxProcessorService>();
 builder.Services.AddSingleton<ReviewQueueService>();
 builder.Services.AddSingleton<TranslationStore>();

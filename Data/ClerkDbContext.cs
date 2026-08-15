@@ -7,6 +7,7 @@ public sealed class ClerkDbContext(DbContextOptions<ClerkDbContext> options) : D
     public DbSet<CachedExtraction> CachedExtractions => Set<CachedExtraction>();
     public DbSet<CachedSuggestion> CachedSuggestions => Set<CachedSuggestion>();
     public DbSet<NameTranslation> NameTranslations => Set<NameTranslation>();
+    public DbSet<ShareGeneration> ShareGenerations => Set<ShareGeneration>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -20,5 +21,12 @@ public sealed class ClerkDbContext(DbContextOptions<ClerkDbContext> options) : D
         });
 
         modelBuilder.Entity<NameTranslation>().HasKey(t => new { t.Kind, t.CanonicalName, t.Culture });
+
+        modelBuilder.Entity<ShareGeneration>(entity =>
+        {
+            entity.HasKey(s => s.DocumentId);
+            // Paperless assigns document ids — never let the provider generate them
+            entity.Property(s => s.DocumentId).ValueGeneratedNever();
+        });
     }
 }
