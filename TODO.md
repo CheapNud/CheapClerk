@@ -1,6 +1,6 @@
 <!--
   TODO.md — CheapClerk project work tracker
-  Last updated: 2026-08-15 (Paperless 3.x tasks shape)
+  Last updated: 2026-08-15 (Doccle research closed)
 
   RULES FOR AI AGENTS:
   - Update the "Last updated" date above whenever you modify this file
@@ -95,6 +95,10 @@ _Nothing blocking._
   - cheapclerk-web on Megaton repointed via Paperless__BaseUrl + token in /opt/blazor-apps/cheapclerk/.env
 
 ## Future
+- [ ] (2026-08-15) Doccle intake — REJECTED for now after research [user]
+  - No official consumer API exists (sender-side only; ToS says back up manually); community path is the reverse-engineered secure.doccle.be/doccle-euui/rest/v2 with plain Basic Auth (zdaar/doccle-paperless, 2024)
+  - Rejected because TOTP/itsme have since become too dominant on the account for password-only automation to be viable
+  - Reopen only if Doccle ships a consumer API or an official export/forward feature
 - [ ] (2026-08-07) LLM query expansion on search (cross-language NL/FR/EN synonyms, cached) — Kreuzakt pattern, revisit after living with links/bulk [user]
 - [ ] (2026-08-07) Kreuzberg/Xberg REST sidecar for table extraction + email/spreadsheet ingestion — only if those formats become real; rebrand churn says wait [user]
 - [ ] (2026-07-30) oCIS/ownCloud scan-folder bridge — clerk polls a WebDAV folder on Sierra-Madre oCIS, uploads via UploadTracker, moves processed files [user]
