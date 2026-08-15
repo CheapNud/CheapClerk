@@ -134,7 +134,9 @@ jobs:
             echo "Restarting services..."
             CHEAPCLERK_TAG="${DEPLOY_TAG}" REGISTRY_HOST="${REGISTRY_HOST}" docker compose up -d --force-recreate
 
-            docker image prune -f
+            # -a, not bare -f: version-tagged old images are never dangling, so they
+            # accumulate ~650MB per release until the disk fills (bit us 2026-08-15)
+            docker image prune -a -f
 
             echo "Verifying..."
             sleep 10
