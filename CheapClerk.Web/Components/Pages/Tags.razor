@@ -18,7 +18,7 @@ else if (_tags.Count == 0)
 else
 {
     <MudTable Items="@_tags.OrderByDescending(t => t.DocumentCount)" Hover="true" Elevation="0" Dense="true"
-              Style="border: 1px solid rgba(255,255,255,0.06);">
+              Style="border: 1px solid var(--mud-palette-lines-default);">
         <HeaderContent>
             <MudTh>@Loc["Tag"]</MudTh>
             <MudTh>@Loc["Documents"]</MudTh>

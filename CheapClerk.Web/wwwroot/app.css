@@ -1,0 +1,11 @@
+/* Base stylesheet: font faces only — component styling stays in MudBlazor. */
+
+/* DIN-alike display fallback for platforms without Bahnschrift (phones).
+   Windows renders native Bahnschrift and never downloads this. */
+@font-face {
+    font-family: 'Barlow';
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url('fonts/barlow-600.woff2') format('woff2');
+}

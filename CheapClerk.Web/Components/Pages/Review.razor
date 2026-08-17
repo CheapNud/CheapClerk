@@ -23,7 +23,7 @@ else
 
     @foreach (var row in _rows)
     {
-        <MudCard Elevation="0" Class="mb-4" Style="border: 1px solid rgba(255,255,255,0.06);">
+        <MudCard Elevation="0" Class="mb-4" Style="border: 1px solid var(--mud-palette-lines-default);">
             <MudCardContent>
                 <div class="d-flex align-center flex-wrap gap-2 mb-3">
                     <MudLink Href="@($"/documents/{row.Entry.DocumentId}")" Typo="Typo.subtitle1">

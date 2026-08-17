@@ -30,7 +30,7 @@
             <MudStack Class="mt-4" Spacing="2">
                 @foreach (var row in _rows)
                 {
-                    <MudPaper Class="pa-2 d-flex align-center" Elevation="0" Style="border: 1px solid rgba(255,255,255,0.08);">
+                    <MudPaper Class="pa-2 d-flex align-center" Elevation="0" Style="border: 1px solid var(--mud-palette-lines-default);">
                         @if (row.Status == UploadRowStatus.Uploading)
                         {
                             <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Primary" Class="mr-3" />

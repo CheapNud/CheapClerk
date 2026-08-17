@@ -66,7 +66,7 @@ else if (_matches is not null)
 
         @foreach (var match in _matches)
         {
-            <MudCard Elevation="0" Class="mb-3" Style="border: 1px solid rgba(255,255,255,0.06);">
+            <MudCard Elevation="0" Class="mb-3" Style="border: 1px solid var(--mud-palette-lines-default);">
                 <MudCardContent>
                     <MudLink Href="@($"/documents/{match.DocumentId}")" Typo="Typo.h6">@match.Title</MudLink>
                     <div class="d-flex align-center flex-wrap gap-2 mt-1 mb-2">
@@ -95,7 +95,7 @@ else if (_matches is not null)
 else if (_documents is not null)
 {
     <MudTable Items="_documents" Hover="true" Elevation="0" Dense="true" Breakpoint="Breakpoint.Sm"
-              Style="border: 1px solid rgba(255,255,255,0.06);">
+              Style="border: 1px solid var(--mud-palette-lines-default);">
         <HeaderContent>
             <MudTh>@Loc["Id"]</MudTh>
             <MudTh>@Loc["Title"]</MudTh>

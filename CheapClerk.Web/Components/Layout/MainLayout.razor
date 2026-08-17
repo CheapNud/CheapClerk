@@ -7,7 +7,7 @@
 <MudSnackbarProvider />
 
 <MudLayout>
-    <MudAppBar Elevation="0" Dense="true" Style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+    <MudAppBar Elevation="0" Dense="true" Style="border-bottom: 1px solid var(--mud-palette-lines-default);">
         <AuthorizeView>
             <Authorized>
                 <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@(() => _drawerOpen = !_drawerOpen)" />
@@ -47,7 +47,7 @@
     <AuthorizeView>
         <Authorized>
             <MudDrawer @bind-Open="_drawerOpen" Elevation="0" Variant="DrawerVariant.Mini" OpenMiniOnHover="true"
-                       Style="border-right: 1px solid rgba(255,255,255,0.05);">
+                       Style="border-right: 1px solid var(--mud-palette-lines-default);">
                 <MudDrawerHeader Dense="true" Class="d-flex align-center">
                     <MudIcon Icon="@Icons.Material.Filled.Description" Color="Color.Primary" />
                     <MudText Typo="Typo.body1" Class="ml-2" Style="font-weight: 600; letter-spacing: 1px;">CHEAPCLERK</MudText>
@@ -71,7 +71,7 @@
         </Authorized>
     </AuthorizeView>
 
-    <MudMainContent Class="pt-14 px-4 pb-4" Style="min-height: 100vh;">
+    <MudMainContent Class="pt-16 px-6 pb-6" Style="min-height: 100vh;">
         @Body
     </MudMainContent>
 </MudLayout>
