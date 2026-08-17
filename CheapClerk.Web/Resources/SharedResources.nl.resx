@@ -264,4 +264,7 @@
   <data name="KickerDocument" xml:space="preserve"><value>Document</value></data>
   <data name="KickerTaxonomy" xml:space="preserve"><value>Taxonomie</value></data>
   <data name="NoRecords" xml:space="preserve"><value>Nog niets hier.</value></data>
+  <data name="UploadQueued" xml:space="preserve"><value>In wachtrij — de klerk archiveert het automatisch</value></data>
+  <data name="UploadQueuedSummary" xml:space="preserve"><value>{0} bestand(en) in de wachtrij — de klerk archiveert ze automatisch.</value></data>
+  <data name="UploadFailedSummary" xml:space="preserve"><value>{0} bestand(en) mislukt — zie de lijst voor redenen.</value></data>
 </root>

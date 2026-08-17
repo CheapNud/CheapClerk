@@ -313,4 +313,7 @@
   <data name="KickerDocument" xml:space="preserve"><value>Document</value></data>
   <data name="KickerTaxonomy" xml:space="preserve"><value>Taxonomy</value></data>
   <data name="NoRecords" xml:space="preserve"><value>Nothing here yet.</value></data>
+  <data name="UploadQueued" xml:space="preserve"><value>Queued — the clerk files it automatically</value></data>
+  <data name="UploadQueuedSummary" xml:space="preserve"><value>{0} file(s) queued — the clerk will file them automatically.</value></data>
+  <data name="UploadFailedSummary" xml:space="preserve"><value>{0} file(s) failed — see the list for reasons.</value></data>
 </root>

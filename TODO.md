@@ -1,6 +1,6 @@
 <!--
   TODO.md — CheapClerk project work tracker
-  Last updated: 2026-08-17 (Paperless 3 status casing)
+  Last updated: 2026-08-17 (fire-and-forget uploads)
 
   RULES FOR AI AGENTS:
   - Update the "Last updated" date above whenever you modify this file
@@ -31,6 +31,7 @@
 _Nothing blocking._
 
 ## Planned
+- [x] (2026-08-17 → 2026-08-17) Upload dialog rebuilt fire-and-forget — POST only, snackbar summary, auto-close; no consumption babysitting; circuit-safe catch-all [user]
 - [x] (2026-08-17 → 2026-08-17) Upload tracking stalled on Paperless 3 lowercase task statuses; upload errors now distinguish unreachable from rejected [bug]
   - Root cause of the batch failure was Paperless OOM-killing under its 512m cap on Sierra-Madre — raise pending
 - [x] (2026-08-17 → 2026-08-17) UI/UX house-rules migration (global style rules) — theme/chrome, PageHeader anatomy, ProgressButton+tables [user]

@@ -1,4 +1,5 @@
-@inject UploadTracker Tracker
+@inject PaperlessClient Paperless
+@inject ISnackbar Snackbar
 @inject IStringLocalizer<SharedResources> Loc
 
 <MudDialog>
@@ -79,16 +80,42 @@
             _rows.Add(new UploadRow(file));
     }
 
+    // Fire-and-forget by design: the dialog only performs the POSTs (the browser
+    // has to be present for those), then gets out of the way. Consumption and
+    // classification are background work owned by the webhook pipeline — nobody
+    // should have to babysit a modal for them.
     private async Task UploadPendingAsync()
     {
         _busy = true;
         try
         {
-            foreach (var row in _rows.Where(row => row.Status == UploadRowStatus.Pending).ToList())
+            var pendingRows = _rows.Where(row => row.Status == UploadRowStatus.Pending).ToList();
+            foreach (var row in pendingRows)
             {
                 await UploadRowAsync(row);
                 StateHasChanged();
             }
+
+            var queued = pendingRows.Count(row => row.Status == UploadRowStatus.Queued);
+            var failed = pendingRows.Count - queued;
+
+            if (queued > 0)
+                Snackbar.Add(Loc["UploadQueuedSummary", queued].Value, Severity.Success);
+
+            if (failed == 0)
+            {
+                MudDialog.Close();
+            }
+            else
+            {
+                // Failures keep the dialog open so their per-file reasons stay readable
+                Snackbar.Add(Loc["UploadFailedSummary", failed].Value, Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            // A dialog mishap must never take the circuit down with it
+            Snackbar.Add(ex.Message, Severity.Error);
         }
         finally
         {
@@ -115,11 +142,16 @@
             await using var readStream = row.File.OpenReadStream(UploadRules.MaxUploadBytes);
             await readStream.CopyToAsync(memoryStream);
 
-            // Short budget: duplicates fail within a poll or two (checksum check runs
-            // early in consume); real OCR takes longer than anyone should stare at a
-            // dialog, so it degrades to StillProcessing and the webhook files it
-            var outcome = await Tracker.UploadAndTrackAsync(memoryStream.ToArray(), row.FileName, TimeSpan.FromSeconds(5));
-            ApplyOutcome(row, outcome);
+            var attempt = await Paperless.UploadDocumentAsync(memoryStream.ToArray(), row.FileName);
+            if (attempt.TaskUuid is not null)
+            {
+                row.Status = UploadRowStatus.Queued;
+            }
+            else
+            {
+                row.Status = UploadRowStatus.Rejected;
+                row.Detail = attempt.FailureDetail;
+            }
         }
         catch (IOException ex)
         {
@@ -133,35 +165,19 @@
         }
     }
 
-    private static void ApplyOutcome(UploadRow row, UploadOutcome outcome)
-    {
-        row.DocumentId = outcome.DocumentId;
-        row.Detail = outcome.Detail;
-        row.Status = outcome.Kind switch
-        {
-            UploadOutcomeKind.Consumed => UploadRowStatus.Consumed,
-            UploadOutcomeKind.Failed => UploadRowStatus.Failed,
-            UploadOutcomeKind.StillProcessing => UploadRowStatus.StillProcessing,
-            UploadOutcomeKind.UploadRejected => UploadRowStatus.Rejected,
-            _ => UploadRowStatus.Failed
-        };
-    }
-
     private static string RowIcon(UploadRow row) => row.Status switch
     {
-        UploadRowStatus.Consumed => Icons.Material.Filled.CheckCircle,
+        UploadRowStatus.Queued => Icons.Material.Filled.CheckCircle,
         UploadRowStatus.Failed => Icons.Material.Filled.Error,
-        UploadRowStatus.StillProcessing => Icons.Material.Filled.Schedule,
         UploadRowStatus.Rejected => Icons.Material.Filled.Block,
         _ => Icons.Material.Filled.HourglassEmpty
     };
 
     private static Color RowColor(UploadRow row) => row.Status switch
     {
-        UploadRowStatus.Consumed => Color.Success,
+        UploadRowStatus.Queued => Color.Success,
         UploadRowStatus.Failed => Color.Error,
         UploadRowStatus.Rejected => Color.Error,
-        UploadRowStatus.StillProcessing => Color.Warning,
         _ => Color.Default
     };
 
@@ -169,14 +185,13 @@
     {
         UploadRowStatus.Pending => Loc["UploadPending"].Value,
         UploadRowStatus.Uploading => Loc["UploadUploading"].Value,
-        UploadRowStatus.Consumed => Loc["UploadConsumed", row.DocumentId?.ToString() ?? "—"].Value,
+        UploadRowStatus.Queued => Loc["UploadQueued"].Value,
         UploadRowStatus.Failed => Loc["UploadFailedAs", row.Detail ?? string.Empty].Value,
-        UploadRowStatus.StillProcessing => Loc["UploadStillProcessing"].Value,
         UploadRowStatus.Rejected => Loc["UploadRejectedReason", row.Detail ?? string.Empty].Value,
         _ => string.Empty
     };
 
-    private enum UploadRowStatus { Pending, Uploading, Consumed, Failed, StillProcessing, Rejected }
+    private enum UploadRowStatus { Pending, Uploading, Queued, Failed, Rejected }
 
     private sealed class UploadRow(IBrowserFile file)
     {
@@ -184,6 +199,5 @@
         public string FileName => File.Name;
         public UploadRowStatus Status { get; set; } = UploadRowStatus.Pending;
         public string? Detail { get; set; }
-        public int? DocumentId { get; set; }
     }
 }
