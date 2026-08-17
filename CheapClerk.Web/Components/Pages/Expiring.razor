@@ -6,10 +6,10 @@
 
 <PageHeader Kicker="@Loc["KickerDeadlines"]" Title="@Loc["ExpiringDocuments"]">
     <Actions>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="RefreshCacheAsync"
-                   Disabled="_isRefreshing" StartIcon="@Icons.Material.Filled.Autorenew">
+        <ProgressButton Variant="Variant.Filled" Color="Color.Primary" OnClick="RefreshCacheAsync"
+                        StartIcon="@Icons.Material.Filled.Autorenew">
             @(_isRefreshing ? Loc["Analyzing"] : Loc["AnalyzeAll"])
-        </MudButton>
+        </ProgressButton>
     </Actions>
 </PageHeader>
 
@@ -46,7 +46,7 @@ else if (_expiring.Count == 0)
 }
 else
 {
-    <MudTable Items="_expiring" Hover="true" Elevation="0" Dense="true"
+    <MudTable Items="_expiring" Hover="true" Elevation="0" Dense="true" Breakpoint="Breakpoint.Sm"
               Style="border: 1px solid var(--mud-palette-lines-default);">
         <HeaderContent>
             <MudTh>@Loc["Id"]</MudTh>
@@ -56,25 +56,25 @@ else
             <MudTh>@Loc["Summary"]</MudTh>
         </HeaderContent>
         <RowTemplate>
-            <MudTd>
+            <MudTd DataLabel="@Loc["Id"]">
                 <MudButton Href="@($"/documents/{context.DocumentId}")" Variant="Variant.Outlined"
                            Size="Size.Small" Color="Color.Primary"
                            StartIcon="@Icons.Material.Filled.OpenInNew">
                     #@context.DocumentId
                 </MudButton>
             </MudTd>
-            <MudTd>
+            <MudTd DataLabel="@Loc["Category"]">
                 <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="@CategoryColor(context.Category)">
                     @context.Category
                 </MudChip>
             </MudTd>
-            <MudTd>@context.ExpiryDate.ToString("yyyy-MM-dd")</MudTd>
-            <MudTd>
-                <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="@DaysLeftColor(context.DaysRemaining)">
+            <MudTd DataLabel="@Loc["Expires"]">@context.ExpiryDate.ToString("yyyy-MM-dd")</MudTd>
+            <MudTd DataLabel="@Loc["DaysLeft"]">
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Color="@DaysLeftColor(context.DaysRemaining)">
                     @context.DaysRemaining
                 </MudChip>
             </MudTd>
-            <MudTd>@(context.Summary ?? "—")</MudTd>
+            <MudTd DataLabel="@Loc["Summary"]">@(context.Summary ?? "—")</MudTd>
         </RowTemplate>
     </MudTable>
 }

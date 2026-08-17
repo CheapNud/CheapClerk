@@ -8,7 +8,8 @@
                        MaximumFileCount="100"
                        Disabled="_busy">
             <CustomContent>
-                <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                @* Outlined, not filled — the dialog's single primary CTA is Upload *@
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary"
                            StartIcon="@Icons.Material.Filled.AttachFile"
                            OnClick="@context.OpenFilePickerAsync"
                            Disabled="_busy">
@@ -50,11 +51,11 @@
     </DialogContent>
     <DialogActions>
         <MudButton Disabled="_busy" OnClick="@(() => MudDialog.Close())">@Loc["Close"]</MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary"
-                   Disabled="@(_busy || !_rows.Any(row => row.Status == UploadRowStatus.Pending))"
-                   OnClick="UploadPendingAsync">
+        <ProgressButton Variant="Variant.Filled" Color="Color.Primary"
+                        Disabled="@(!_rows.Any(row => row.Status == UploadRowStatus.Pending))"
+                        OnClick="UploadPendingAsync">
             @Loc["UploadSelected", _rows.Count(row => row.Status == UploadRowStatus.Pending)]
-        </MudButton>
+        </ProgressButton>
     </DialogActions>
 </MudDialog>
 

@@ -263,4 +263,5 @@
   <data name="KickerDeadlines" xml:space="preserve"><value>Vervaldagen</value></data>
   <data name="KickerDocument" xml:space="preserve"><value>Document</value></data>
   <data name="KickerTaxonomy" xml:space="preserve"><value>Taxonomie</value></data>
+  <data name="NoRecords" xml:space="preserve"><value>Nog niets hier.</value></data>
 </root>

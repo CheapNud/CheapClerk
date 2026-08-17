@@ -30,7 +30,7 @@ else
                     </MudLink>
                     @if (row.Entry.Confidence is not null)
                     {
-                        <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="@ConfidenceColor(row.Entry.Confidence.Value)">
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Color="@ConfidenceColor(row.Entry.Confidence.Value)">
                             @($"{row.Entry.Confidence:P0}")
                         </MudChip>
                     }
@@ -61,20 +61,16 @@ else
                 </MudGrid>
             </MudCardContent>
             <MudCardActions Class="px-4 pb-4 pt-0 d-flex flex-wrap gap-2">
-                <MudButton Variant="Variant.Filled" Color="Color.Primary"
-                           Disabled="@(row.Busy)"
-                           OnClick="@(() => AcceptAsync(row))">
+                <ProgressButton Variant="Variant.Filled" Color="Color.Primary"
+                                Disabled="@(row.Busy)"
+                                OnClick="@(() => AcceptAsync(row))">
                     @Loc["Accept"]
-                </MudButton>
-                <MudButton Variant="Variant.Outlined" Color="Color.Secondary"
-                           Disabled="@(row.Busy)"
-                           OnClick="@(() => RerunAsync(row))">
+                </ProgressButton>
+                <ProgressButton Variant="Variant.Outlined" Color="Color.Secondary"
+                                Disabled="@(row.Busy)"
+                                OnClick="@(() => RerunAsync(row))">
                     @Loc["Rerun"]
-                </MudButton>
-                @if (row.Busy)
-                {
-                    <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Primary" Class="align-self-center" />
-                }
+                </ProgressButton>
             </MudCardActions>
         </MudCard>
     }
