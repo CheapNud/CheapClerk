@@ -359,7 +359,7 @@ public sealed class PaperlessClient(
         }
     }
 
-    public async Task<string?> UploadDocumentAsync(byte[] fileBytes, string fileName, CancellationToken cancellationToken = default)
+    public async Task<UploadAttempt> UploadDocumentAsync(byte[] fileBytes, string fileName, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -369,12 +369,18 @@ public sealed class PaperlessClient(
             var uploadReply = await httpClient.PostAsync("api/documents/post_document/", multipart, cancellationToken);
             uploadReply.EnsureSuccessStatusCode();
             var rawReply = await uploadReply.Content.ReadAsStringAsync(cancellationToken);
-            return rawReply.Trim().Trim('"');
+            return new UploadAttempt(rawReply.Trim().Trim('"'), null);
         }
         catch (HttpRequestException ex)
         {
             logger.LogError(ex, "Failed to upload document {FileName}", fileName);
-            return null;
+            // An unreachable server is not a rejection — say which one it was
+            var failureDetail = ex.InnerException is System.Net.Sockets.SocketException
+                ? "Paperless was unreachable — try again in a moment"
+                : ex.StatusCode is { } httpStatus
+                    ? $"upload was rejected by Paperless (HTTP {(int)httpStatus})"
+                    : "upload was rejected by Paperless — check the logs";
+            return new UploadAttempt(null, failureDetail);
         }
     }
 
@@ -412,3 +418,6 @@ public sealed class PaperlessClient(
         }
     }
 }
+
+/// <summary>Result of a Paperless upload POST: a consume-task uuid, or a human-readable failure.</summary>
+public sealed record UploadAttempt(string? TaskUuid, string? FailureDetail);

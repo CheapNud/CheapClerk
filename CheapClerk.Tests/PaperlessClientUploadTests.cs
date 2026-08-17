@@ -64,9 +64,10 @@ public sealed class PaperlessClientUploadTests
         var paperless = BuildClient(stub);
         var fileBytes = "PDF content"u8.ToArray();
 
-        var taskId = await paperless.UploadDocumentAsync(fileBytes, "factuur.pdf");
+        var attempt = await paperless.UploadDocumentAsync(fileBytes, "factuur.pdf");
 
-        Assert.Equal("abc-123", taskId);
+        Assert.Equal("abc-123", attempt.TaskUuid);
+        Assert.Null(attempt.FailureDetail);
         var sent = Assert.Single(stub.Requests);
         Assert.Equal(HttpMethod.Post, sent.Method);
         Assert.Equal("http://paperless.test/api/documents/post_document/", sent.RequestUri!.ToString());
@@ -76,15 +77,29 @@ public sealed class PaperlessClientUploadTests
     }
 
     [Fact]
-    public async Task UploadDocumentAsync_HttpError_ReturnsNull()
+    public async Task UploadDocumentAsync_HttpError_ReportsRejectionWithStatusCode()
     {
         var stub = new StubHttpHandler(_ => new HttpResponseMessage(HttpStatusCode.InternalServerError));
         var paperless = BuildClient(stub);
         var fileBytes = "PDF content"u8.ToArray();
 
-        var taskId = await paperless.UploadDocumentAsync(fileBytes, "factuur.pdf");
+        var attempt = await paperless.UploadDocumentAsync(fileBytes, "factuur.pdf");
 
-        Assert.Null(taskId);
+        Assert.Null(attempt.TaskUuid);
+        Assert.Contains("500", attempt.FailureDetail);
+    }
+
+    [Fact]
+    public async Task UploadDocumentAsync_ConnectionRefused_ReportsUnreachableNotRejected()
+    {
+        var stub = new StubHttpHandler(_ => throw new HttpRequestException(
+            "Connection refused", new System.Net.Sockets.SocketException(111)));
+        var paperless = BuildClient(stub);
+
+        var attempt = await paperless.UploadDocumentAsync("PDF"u8.ToArray(), "factuur.pdf");
+
+        Assert.Null(attempt.TaskUuid);
+        Assert.Contains("unreachable", attempt.FailureDetail);
     }
 
     [Fact]

@@ -24,16 +24,17 @@ public sealed class UploadTracker(
     public async Task<UploadOutcome> UploadAndTrackAsync(
         byte[] fileBytes, string fileName, TimeSpan pollBudget, CancellationToken cancellationToken = default)
     {
-        var taskUuid = await paperlessClient.UploadDocumentAsync(fileBytes, fileName, cancellationToken);
-        if (taskUuid is null)
+        var attempt = await paperlessClient.UploadDocumentAsync(fileBytes, fileName, cancellationToken);
+        if (attempt.TaskUuid is null)
         {
-            logger.LogWarning("Upload rejected by Paperless for {FileName}", fileName);
+            logger.LogWarning("Upload failed for {FileName}: {Detail}", fileName, attempt.FailureDetail);
             return new UploadOutcome
             {
                 Kind = UploadOutcomeKind.UploadRejected,
-                Detail = "upload was rejected by Paperless — check the logs"
+                Detail = attempt.FailureDetail ?? "upload failed — check the logs"
             };
         }
+        var taskUuid = attempt.TaskUuid;
 
         var maxPolls = Math.Max(1, (int)(pollBudget.TotalSeconds / 2));
 
@@ -45,7 +46,9 @@ public sealed class UploadTracker(
             if (taskStatus is null)
                 continue;
 
-            switch (taskStatus.Status)
+            // Paperless 3.x lowercased task statuses ("success"); older versions
+            // shout them ("SUCCESS") — match case-insensitively forever
+            switch (taskStatus.Status?.ToUpperInvariant())
             {
                 case "SUCCESS":
                     return new UploadOutcome

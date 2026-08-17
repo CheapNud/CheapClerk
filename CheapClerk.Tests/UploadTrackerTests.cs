@@ -42,8 +42,9 @@ public sealed class UploadTrackerTests
 
             pollCount++;
             return pollCount == 1
-                ? Ok("[{\"task_id\":\"task-uuid-1\",\"status\":\"PENDING\",\"result\":null,\"related_document\":null}]")
-                : Ok("[{\"task_id\":\"task-uuid-1\",\"status\":\"SUCCESS\",\"result\":\"ok\",\"related_document\":\"5\"}]");
+                // Paperless 3.x lowercases statuses — the tracker must not care
+                ? Ok("[{\"task_id\":\"task-uuid-1\",\"status\":\"pending\",\"result\":null,\"related_document\":null}]")
+                : Ok("[{\"task_id\":\"task-uuid-1\",\"status\":\"success\",\"result\":\"ok\",\"related_document\":\"5\"}]");
         });
         var counter = new DelayCallCounter();
         var tracker = new UploadTracker(BuildPaperlessClient(stub), NullLogger<UploadTracker>.Instance, counter.Delay);
@@ -114,7 +115,7 @@ public sealed class UploadTrackerTests
             "PDF content"u8.ToArray(), "broken.pdf", TimeSpan.FromSeconds(30));
 
         Assert.Equal(UploadOutcomeKind.UploadRejected, outcome.Kind);
-        Assert.Equal("upload was rejected by Paperless — check the logs", outcome.Detail);
+        Assert.Equal("upload was rejected by Paperless (HTTP 500)", outcome.Detail);
         Assert.Equal(0, counter.Calls);
     }
 }
