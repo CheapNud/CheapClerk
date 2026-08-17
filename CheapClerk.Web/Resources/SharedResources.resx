@@ -337,4 +337,5 @@
   <data name="HealthBusy" xml:space="preserve"><value>Busy</value></data>
   <data name="HealthUnreachable" xml:space="preserve"><value>Unreachable</value></data>
   <data name="ViewQueue" xml:space="preserve"><value>Queue</value></data>
+  <data name="QueueProcessingHint" xml:space="preserve"><value>{0} document(s) processing</value></data>
 </root>

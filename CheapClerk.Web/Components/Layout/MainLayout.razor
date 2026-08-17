@@ -19,10 +19,9 @@
             <Authorized>
                 @if (_activeTaskCount > 0)
                 {
-                    <MudTooltip Text="@Loc["QueueTitle"]">
-                        <MudBadge Content="_activeTaskCount" Color="Color.Info" Overlap="true">
-                            <MudIconButton Icon="@Icons.Material.Filled.Timelapse" Color="Color.Inherit" Href="/queue" />
-                        </MudBadge>
+                    @* Indication only — the count lives on the drawer's Queue chip *@
+                    <MudTooltip Text="@Loc["QueueProcessingHint", _activeTaskCount]">
+                        <MudIconButton Icon="@Icons.Material.Filled.Autorenew" Color="Color.Warning" Href="/queue" />
                     </MudTooltip>
                 }
                 <MudTooltip Text="@Loc["Upload"]">
@@ -66,7 +65,13 @@
                     <MudNavLink Href="/documents" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.FolderOpen">@Loc["Documents"]</MudNavLink>
                     <MudNavLink Href="/tags" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Label">@Loc["Tags"]</MudNavLink>
                     <MudNavLink Href="/expiring" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Schedule">@Loc["Expiring"]</MudNavLink>
-            <MudNavLink Href="/queue" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Timelapse">@Loc["Queue"]</MudNavLink>
+            <MudNavLink Href="/queue" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Timelapse">
+                @Loc["Queue"]
+                @if (_activeTaskCount > 0)
+                {
+                    <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Filled" Class="ml-2">@_activeTaskCount</MudChip>
+                }
+            </MudNavLink>
                     <MudNavLink Href="/review" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.RateReview">
                 @Loc["Review"]
                 @if (_reviewCount > 0)
