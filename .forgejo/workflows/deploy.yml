@@ -63,7 +63,7 @@ jobs:
           image_latest="${{ secrets.REGISTRY_HOST }}/cheapnud/cheapclerk-web:latest"
 
           echo "Building ${image}..."
-          docker build -t "${image}" -t "${image_latest}" -f CheapClerk.Web/Dockerfile .
+          docker build --build-arg APP_VERSION="${TAG#v}" -t "${image}" -t "${image_latest}" -f CheapClerk.Web/Dockerfile .
 
           echo "Pushing ${image}..."
           docker push "${image}"
