@@ -21,6 +21,9 @@ public sealed class PaperlessTaskStatus
     [JsonPropertyName("status_display")]
     public string? StatusDisplay { get; set; }            // Paperless 3.x pre-humanized label
 
+    [JsonPropertyName("task_type")]
+    public string? TaskType { get; set; }                 // consume_file | scheduled housekeeping types
+
     [JsonPropertyName("task_file_name")]
     public string? TaskFileName { get; set; }             // pre-3.x filename location
 

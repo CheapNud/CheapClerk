@@ -75,6 +75,21 @@ public sealed class PaperlessClientUploadTests
     }
 
     [Fact]
+    public async Task ListRecentTasks_FiltersOutPaperlessHousekeepingTasks()
+    {
+        var stub = new StubHttpHandler(_ => Ok(
+            "{\"count\":3,\"results\":[" +
+            "{\"task_id\":\"a\",\"status\":\"success\",\"task_type\":\"check_mail\"}," +
+            "{\"task_id\":\"b\",\"status\":\"success\",\"task_type\":\"consume_file\",\"input_data\":{\"filename\":\"bill.pdf\"}}," +
+            "{\"task_id\":\"c\",\"status\":\"success\",\"task_type\":\"train_classifier\"}]}"));
+        var paperless = BuildClient(stub);
+
+        var recentTasks = await paperless.ListRecentTasksAsync();
+
+        Assert.Equal("bill.pdf", Assert.Single(recentTasks!).Filename);
+    }
+
+    [Fact]
     public async Task ListRecentTasks_LegacyArrayShape_ResolvesTopLevelFilename()
     {
         var stub = new StubHttpHandler(_ => Ok(

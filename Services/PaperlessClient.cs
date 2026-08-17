@@ -394,7 +394,15 @@ public sealed class PaperlessClient(
     public async Task<List<PaperlessTaskStatus>?> ListRecentTasksAsync(int limit = 30, CancellationToken cancellationToken = default)
     {
         // Null means "could not ask", distinct from an empty queue
-        return await FetchTasksAsync($"api/tasks/?limit={limit}", cancellationToken);
+        var recentTasks = await FetchTasksAsync($"api/tasks/?limit={limit}", cancellationToken);
+
+        // Paperless 3.x reports EVERY task type here — its own scheduled
+        // housekeeping (mail checks, classifier training) included. The queue is
+        // about documents; keep consume tasks plus legacy rows that predate the
+        // task_type field.
+        return recentTasks?
+            .Where(t => t.TaskType is null || t.TaskType.Equals("consume_file", StringComparison.OrdinalIgnoreCase))
+            .ToList();
     }
 
     private async Task<List<PaperlessTaskStatus>?> FetchTasksAsync(string relativeUrl, CancellationToken cancellationToken)

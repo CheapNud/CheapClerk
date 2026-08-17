@@ -1,6 +1,6 @@
 <!--
   TODO.md — CheapClerk project work tracker
-  Last updated: 2026-08-17 (processing queue page)
+  Last updated: 2026-08-18 (queue consume-only filter)
 
   RULES FOR AI AGENTS:
   - Update the "Last updated" date above whenever you modify this file
@@ -31,6 +31,7 @@
 _Nothing blocking._
 
 ## Planned
+- [x] (2026-08-18 → 2026-08-18) Queue page leaked Paperless housekeeping tasks (10-min mail checks etc.) — filtered to consume_file [bug]
 - [x] (2026-08-17 → 2026-08-17) /queue page (live Paperless task list + functional health strip), app-bar active badge, upload toast link [user]
   - RAM/CPU deliberately left to Grafana on Sierra-Madre — the clerk shows functional health only
 - [x] (2026-08-17 → 2026-08-17) Upload dialog rebuilt fire-and-forget — POST only, snackbar summary, auto-close; no consumption babysitting; circuit-safe catch-all [user]
