@@ -257,4 +257,10 @@
   <data name="SharesRevoked" xml:space="preserve"><value>Alle deellinks voor dit document zijn nu ongeldig.</value></data>
   <data name="ShareDisabled" xml:space="preserve"><value>Delen is niet geconfigureerd op deze server.</value></data>
   <data name="ShareValidUntil" xml:space="preserve"><value>Geldig tot {0}</value></data>
+  <!-- Page kickers -->
+  <data name="KickerArchive" xml:space="preserve"><value>Archief</value></data>
+  <data name="KickerClassification" xml:space="preserve"><value>Classificatie</value></data>
+  <data name="KickerDeadlines" xml:space="preserve"><value>Vervaldagen</value></data>
+  <data name="KickerDocument" xml:space="preserve"><value>Document</value></data>
+  <data name="KickerTaxonomy" xml:space="preserve"><value>Taxonomie</value></data>
 </root>

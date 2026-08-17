@@ -306,4 +306,10 @@
   <data name="SharesRevoked" xml:space="preserve"><value>All share links for this document are now invalid.</value></data>
   <data name="ShareDisabled" xml:space="preserve"><value>Sharing is not configured on this server.</value></data>
   <data name="ShareValidUntil" xml:space="preserve"><value>Valid until {0}</value></data>
+  <!-- Page kickers -->
+  <data name="KickerArchive" xml:space="preserve"><value>Archive</value></data>
+  <data name="KickerClassification" xml:space="preserve"><value>Classification</value></data>
+  <data name="KickerDeadlines" xml:space="preserve"><value>Deadlines</value></data>
+  <data name="KickerDocument" xml:space="preserve"><value>Document</value></data>
+  <data name="KickerTaxonomy" xml:space="preserve"><value>Taxonomy</value></data>
 </root>

@@ -19,31 +19,29 @@ else if (_notFound)
 }
 else
 {
-    <MudText Typo="Typo.h4" GutterBottom="true">@_doc!.Title</MudText>
+    <PageHeader Kicker="@Loc["KickerDocument"]" Title="@_doc!.Title" Subtitle="@_correspondentName">
+        <Actions>
+            <div class="d-flex align-center gap-1">
+                <MudMenu Icon="@Icons.Material.Filled.Share" Dense="true" title="@Loc["Share"]">
+                    <MudMenuItem OnClick="@(() => CreateShareAsync(1))">@Loc["ShareFor1Hour"]</MudMenuItem>
+                    <MudMenuItem OnClick="@(() => CreateShareAsync(24))">@Loc["ShareFor24Hours"]</MudMenuItem>
+                    <MudMenuItem OnClick="@(() => CreateShareAsync(168))">@Loc["ShareFor7Days"]</MudMenuItem>
+                    <MudDivider />
+                    <MudMenuItem OnClick="RevokeSharesAsync">@Loc["RevokeShares"]</MudMenuItem>
+                </MudMenu>
+                <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                               OnClick="@(() => _isEditing = true)" Disabled="_isEditing" title="@Loc["Edit"]" />
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error"
+                               OnClick="DeleteAsync" Disabled="_isSaving" title="@Loc["Delete"]" />
+            </div>
+        </Actions>
+    </PageHeader>
 
     <MudGrid>
         <MudItem xs="12" md="4">
             <MudCard Elevation="0" Style="border: 1px solid var(--mud-palette-lines-default);">
                 <MudCardContent>
-                    <div class="d-flex align-center justify-space-between mb-2">
-                        <MudText Typo="Typo.h6">@Loc["Metadata"]</MudText>
-                        @if (!_isEditing)
-                        {
-                            <div>
-                                <MudMenu Icon="@Icons.Material.Filled.Share" Size="Size.Small" Dense="true" title="@Loc["Share"]">
-                                    <MudMenuItem OnClick="@(() => CreateShareAsync(1))">@Loc["ShareFor1Hour"]</MudMenuItem>
-                                    <MudMenuItem OnClick="@(() => CreateShareAsync(24))">@Loc["ShareFor24Hours"]</MudMenuItem>
-                                    <MudMenuItem OnClick="@(() => CreateShareAsync(168))">@Loc["ShareFor7Days"]</MudMenuItem>
-                                    <MudDivider />
-                                    <MudMenuItem OnClick="RevokeSharesAsync">@Loc["RevokeShares"]</MudMenuItem>
-                                </MudMenu>
-                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
-                                               OnClick="@(() => _isEditing = true)" title="@Loc["Edit"]" />
-                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
-                                               OnClick="DeleteAsync" Disabled="_isSaving" title="@Loc["Delete"]" />
-                            </div>
-                        }
-                    </div>
+                    <MudText Typo="Typo.h6" Class="mb-2">@Loc["Metadata"]</MudText>
 
                     @if (_shareUrl is not null)
                     {

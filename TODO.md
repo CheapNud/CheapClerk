@@ -1,6 +1,6 @@
 <!--
   TODO.md — CheapClerk project work tracker
-  Last updated: 2026-08-17 (style migration PR1)
+  Last updated: 2026-08-17 (style migration PR2)
 
   RULES FOR AI AGENTS:
   - Update the "Last updated" date above whenever you modify this file
@@ -31,7 +31,7 @@
 _Nothing blocking._
 
 ## Planned
-- [ ] (2026-08-17) UI/UX house-rules migration (global style rules) — PR1 theme/chrome DONE, PR2 PageHeader anatomy, PR3 ProgressButton+tables [user]
+- [ ] (2026-08-17) UI/UX house-rules migration (global style rules) — PR1 theme/chrome DONE, PR2 anatomy DONE, PR3 ProgressButton+tables [user]
   - Plan in the project specs dir; fonts: Bahnschrift native + self-hosted Barlow fallback, body Segoe/Roboto; light mode #F5F5F7 field
 - [x] (2026-08-15 → 2026-08-15) Share-link interstitial — file one click deeper so chat link-preview crawlers get an HTML stub, never the document [user]
 - [x] (2026-08-15 → 2026-08-15) Time-limited public share links (SAS-style) with per-document revocation [user]

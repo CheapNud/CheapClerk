@@ -4,13 +4,14 @@
 
 <PageTitle>@Loc["AppExpiringTitle"]</PageTitle>
 
-<div class="d-flex align-center justify-space-between mb-4">
-    <MudText Typo="Typo.h4">@Loc["ExpiringDocuments"]</MudText>
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="RefreshCacheAsync"
-               Disabled="_isRefreshing" StartIcon="@Icons.Material.Filled.Autorenew">
-        @(_isRefreshing ? Loc["Analyzing"] : Loc["AnalyzeAll"])
-    </MudButton>
-</div>
+<PageHeader Kicker="@Loc["KickerDeadlines"]" Title="@Loc["ExpiringDocuments"]">
+    <Actions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="RefreshCacheAsync"
+                   Disabled="_isRefreshing" StartIcon="@Icons.Material.Filled.Autorenew">
+            @(_isRefreshing ? Loc["Analyzing"] : Loc["AnalyzeAll"])
+        </MudButton>
+    </Actions>
+</PageHeader>
 
 <MudGrid Class="mb-4">
     <MudItem xs="12" sm="4">

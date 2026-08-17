@@ -1,0 +1,26 @@
+@* House page anatomy: kicker names the section, title names the action,
+   actions right-aligned with the primary CTA last. *@
+<div class="d-flex flex-wrap align-center justify-space-between gap-4 mb-6">
+    <div>
+        @if (!string.IsNullOrWhiteSpace(Kicker))
+        {
+            <MudText Typo="Typo.overline" Color="Color.Secondary">@Kicker</MudText>
+        }
+        <MudText Typo="Typo.h4">@Title</MudText>
+        @if (!string.IsNullOrWhiteSpace(Subtitle))
+        {
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">@Subtitle</MudText>
+        }
+    </div>
+    @if (Actions is not null)
+    {
+        <div class="d-flex align-center gap-2">@Actions</div>
+    }
+</div>
+
+@code {
+    [Parameter] public string? Kicker { get; set; }
+    [Parameter, EditorRequired] public string Title { get; set; } = string.Empty;
+    [Parameter] public string? Subtitle { get; set; }
+    [Parameter] public RenderFragment? Actions { get; set; }
+}
