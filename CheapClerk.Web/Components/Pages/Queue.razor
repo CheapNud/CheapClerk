@@ -1,0 +1,169 @@
+@page "/queue"
+@implements IDisposable
+@inject IStringLocalizer<SharedResources> Loc
+
+<PageTitle>@Loc["AppQueueTitle"]</PageTitle>
+
+<PageHeader Kicker="@Loc["KickerProcessing"]" Title="@Loc["QueueTitle"]" Subtitle="@Loc["QueueSubtitle"]">
+    <Actions>
+        <ProgressButton Variant="Variant.Filled" Color="Color.Primary" OnClick="LoadAsync"
+                        StartIcon="@Icons.Material.Filled.Refresh">
+            @Loc["Refresh"]
+        </ProgressButton>
+    </Actions>
+</PageHeader>
+
+@* Functional health strip: derived from data the page already fetches — the
+   clerk owns "is it working"; Grafana owns RAM/CPU. *@
+<MudPaper Class="pa-4 mb-6 d-flex align-center flex-wrap gap-2" Elevation="0"
+          Style="border: 1px solid var(--mud-palette-lines-default);">
+    <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Color="@HealthColor" Icon="@HealthIcon">
+        @HealthLabel
+    </MudChip>
+    @if (_tasks is not null)
+    {
+        <MudText Typo="Typo.body2" Class="mud-text-secondary">
+            @Loc["QueueCounts", ActiveCount, _tasks.Count(t => IsFailure(t))]
+        </MudText>
+        @if (LastCompleted is { } lastDone)
+        {
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">· @Loc["QueueLastCompleted", lastDone.ToLocalTime().ToString("HH:mm:ss")]</MudText>
+        }
+        <MudText Typo="Typo.caption" Class="mud-text-secondary">· @Loc["QueueLatency", _lastFetchMs]</MudText>
+    }
+</MudPaper>
+
+@if (_tasks is null && !_unreachable)
+{
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+}
+else if (_unreachable)
+{
+    <MudAlert Severity="Severity.Error">@Loc["QueueUnreachable"]</MudAlert>
+}
+else
+{
+    <MudTable Items="_tasks" Hover="true" Elevation="0" Dense="true" Breakpoint="Breakpoint.Sm"
+              Style="border: 1px solid var(--mud-palette-lines-default);">
+        <HeaderContent>
+            <MudTh>@Loc["Filename"]</MudTh>
+            <MudTh>@Loc["StatusLabel"]</MudTh>
+            <MudTh>@Loc["Completed"]</MudTh>
+            <MudTh>@Loc["Detail"]</MudTh>
+            <MudTh />
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="@Loc["Filename"]">@(context.Filename ?? context.TaskId[..8])</MudTd>
+            <MudTd DataLabel="@Loc["StatusLabel"]">
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Color="@StatusColor(context)">
+                    @(context.StatusDisplay ?? Humanize(context.Status))
+                </MudChip>
+            </MudTd>
+            <MudTd DataLabel="@Loc["Completed"]">@(context.DateDone?.ToLocalTime().ToString("MM-dd HH:mm:ss") ?? "—")</MudTd>
+            <MudTd DataLabel="@Loc["Detail"]">
+                @if (IsFailure(context) && context.Result is not null)
+                {
+                    <MudText Typo="Typo.caption" Color="Color.Error">@Truncate(context.Result, 120)</MudText>
+                }
+                else
+                {
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">—</MudText>
+                }
+            </MudTd>
+            <MudTd Class="d-flex justify-end">
+                @if (IsSuccess(context) && int.TryParse(context.RelatedDocument, out var docId))
+                {
+                    <MudIconButton Icon="@Icons.Material.Filled.OpenInNew" Size="Size.Small"
+                                   Href="@($"/documents/{docId}")" title="@Loc["Open"]" />
+                }
+            </MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText Class="mud-text-secondary">@Loc["QueueEmpty"]</MudText>
+        </NoRecordsContent>
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
+    </MudTable>
+}
+
+@code {
+    [Inject] private PaperlessClient PaperlessClient { get; set; } = null!;
+
+    private List<PaperlessTaskStatus>? _tasks;
+    private bool _unreachable;
+    private long _lastFetchMs;
+    private readonly CancellationTokenSource _pollStopper = new();
+
+    private int ActiveCount => _tasks?.Count(t => IsActive(t)) ?? 0;
+    private DateTimeOffset? LastCompleted => _tasks?.Where(t => t.DateDone is not null).Max(t => t.DateDone);
+
+    private static bool IsActive(PaperlessTaskStatus t) =>
+        t.Status.Equals("PENDING", StringComparison.OrdinalIgnoreCase) || t.Status.Equals("STARTED", StringComparison.OrdinalIgnoreCase);
+    private static bool IsSuccess(PaperlessTaskStatus t) => t.Status.Equals("SUCCESS", StringComparison.OrdinalIgnoreCase);
+    private static bool IsFailure(PaperlessTaskStatus t) => t.Status.Equals("FAILURE", StringComparison.OrdinalIgnoreCase);
+
+    private Color HealthColor => _unreachable ? Color.Error : ActiveCount > 0 || _lastFetchMs > 3000 ? Color.Warning : Color.Success;
+    private string HealthIcon => _unreachable ? Icons.Material.Filled.CloudOff : ActiveCount > 0 ? Icons.Material.Filled.Autorenew : Icons.Material.Filled.CheckCircle;
+    private string HealthLabel => _unreachable ? Loc["HealthUnreachable"] : ActiveCount > 0 || _lastFetchMs > 3000 ? Loc["HealthBusy"] : Loc["HealthWorking"];
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+        _ = PollLoopAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        var fetched = await PaperlessClient.ListRecentTasksAsync(30);
+        _lastFetchMs = stopwatch.ElapsedMilliseconds;
+        _unreachable = fetched is null;
+        if (fetched is not null)
+        {
+            // Running work first, then the rest newest-first
+            _tasks = fetched
+                .OrderByDescending(IsActive)
+                .ThenByDescending(t => t.DateCreated ?? DateTimeOffset.MinValue)
+                .ToList();
+        }
+    }
+
+    // Adaptive refresh: quick while work is running, lazy when idle
+    private async Task PollLoopAsync()
+    {
+        try
+        {
+            while (!_pollStopper.IsCancellationRequested)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(ActiveCount > 0 ? 4 : 15), _pollStopper.Token);
+                await LoadAsync();
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // page closed — normal
+        }
+    }
+
+    private static string Humanize(string rawStatus) =>
+        rawStatus.Length == 0 ? rawStatus : char.ToUpperInvariant(rawStatus[0]) + rawStatus[1..].ToLowerInvariant();
+
+    private static string Truncate(string text, int max) => text.Length <= max ? text : text[..max] + "…";
+
+    private static Color StatusColor(PaperlessTaskStatus t) => t.Status.ToUpperInvariant() switch
+    {
+        "SUCCESS" => Color.Success,
+        "FAILURE" => Color.Error,
+        "STARTED" => Color.Primary,     // actively in progress
+        "PENDING" => Color.Secondary,   // at rest, waiting
+        _ => Color.Default
+    };
+
+    public void Dispose()
+    {
+        _pollStopper.Cancel();
+        _pollStopper.Dispose();
+    }
+}

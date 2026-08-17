@@ -58,6 +58,47 @@ public sealed class PaperlessClientUploadTests
     }
 
     [Fact]
+    public async Task ListRecentTasks_PaginatedShape_ResolvesNestedFilename()
+    {
+        var stub = new StubHttpHandler(_ => Ok(
+            "{\"count\":2,\"results\":[" +
+            "{\"task_id\":\"a\",\"status\":\"started\",\"input_data\":{\"filename\":\"bill.pdf\"},\"date_created\":\"2026-08-17T10:00:00Z\"}," +
+            "{\"task_id\":\"b\",\"status\":\"success\",\"input_data\":{\"filename\":\"scan.jpg\"},\"related_document\":\"7\"}]}"));
+        var paperless = BuildClient(stub);
+
+        var recentTasks = await paperless.ListRecentTasksAsync();
+
+        Assert.NotNull(recentTasks);
+        Assert.Equal(2, recentTasks!.Count);
+        Assert.Equal("bill.pdf", recentTasks[0].Filename);
+        Assert.Equal("started", recentTasks[0].Status);
+    }
+
+    [Fact]
+    public async Task ListRecentTasks_LegacyArrayShape_ResolvesTopLevelFilename()
+    {
+        var stub = new StubHttpHandler(_ => Ok(
+            "[{\"task_id\":\"a\",\"status\":\"SUCCESS\",\"task_file_name\":\"old.pdf\",\"related_document\":\"3\"}]"));
+        var paperless = BuildClient(stub);
+
+        var recentTasks = await paperless.ListRecentTasksAsync();
+
+        Assert.NotNull(recentTasks);
+        Assert.Equal("old.pdf", Assert.Single(recentTasks!).Filename);
+    }
+
+    [Fact]
+    public async Task ListRecentTasks_ServerDown_ReturnsNullNotEmpty()
+    {
+        var stub = new StubHttpHandler(_ => throw new HttpRequestException(
+            "Connection refused", new System.Net.Sockets.SocketException(111)));
+        var paperless = BuildClient(stub);
+
+        // Null must stay distinguishable from an empty queue
+        Assert.Null(await paperless.ListRecentTasksAsync());
+    }
+
+    [Fact]
     public async Task UploadDocumentAsync_SuccessfulUpload_ReturnsUnquotedUuid()
     {
         var stub = new StubHttpHandler(_ => Ok("\"abc-123\""));

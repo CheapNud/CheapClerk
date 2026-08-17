@@ -17,6 +17,31 @@ public sealed class PaperlessTaskStatus
     [JsonPropertyName("related_document")]
     [JsonConverter(typeof(LenientStringConverter))]
     public string? RelatedDocument { get; set; }          // version-variant type; parse leniently
+
+    [JsonPropertyName("status_display")]
+    public string? StatusDisplay { get; set; }            // Paperless 3.x pre-humanized label
+
+    [JsonPropertyName("task_file_name")]
+    public string? TaskFileName { get; set; }             // pre-3.x filename location
+
+    [JsonPropertyName("input_data")]
+    public TaskInputData? InputData { get; set; }         // 3.x filename location
+
+    [JsonPropertyName("date_created")]
+    public DateTimeOffset? DateCreated { get; set; }
+
+    [JsonPropertyName("date_done")]
+    public DateTimeOffset? DateDone { get; set; }
+
+    /// <summary>Filename across Paperless versions (3.x nests it, older tops it).</summary>
+    [JsonIgnore]
+    public string? Filename => InputData?.Filename ?? TaskFileName;
+}
+
+public sealed class TaskInputData
+{
+    [JsonPropertyName("filename")]
+    public string? Filename { get; set; }
 }
 
 internal sealed class LenientStringConverter : JsonConverter<string?>

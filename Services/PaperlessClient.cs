@@ -386,10 +386,22 @@ public sealed class PaperlessClient(
 
     public async Task<PaperlessTaskStatus?> GetTaskStatusAsync(string taskUuid, CancellationToken cancellationToken = default)
     {
+        var statuses = await FetchTasksAsync($"api/tasks/?task_id={Uri.EscapeDataString(taskUuid)}", cancellationToken);
+        return statuses?.FirstOrDefault();
+    }
+
+    /// <summary>Most recent consume tasks, newest first — the processing queue view.</summary>
+    public async Task<List<PaperlessTaskStatus>?> ListRecentTasksAsync(int limit = 30, CancellationToken cancellationToken = default)
+    {
+        // Null means "could not ask", distinct from an empty queue
+        return await FetchTasksAsync($"api/tasks/?limit={limit}", cancellationToken);
+    }
+
+    private async Task<List<PaperlessTaskStatus>?> FetchTasksAsync(string relativeUrl, CancellationToken cancellationToken)
+    {
         try
         {
-            var statusReply = await httpClient.GetAsync(
-                $"api/tasks/?task_id={Uri.EscapeDataString(taskUuid)}", cancellationToken);
+            var statusReply = await httpClient.GetAsync(relativeUrl, cancellationToken);
             statusReply.EnsureSuccessStatusCode();
             var json = await statusReply.Content.ReadAsStringAsync(cancellationToken);
 
@@ -404,16 +416,15 @@ public sealed class PaperlessClient(
                     : default;
             if (statusArray.ValueKind != JsonValueKind.Array)
             {
-                logger.LogWarning("Unrecognized /api/tasks/ response shape for task {TaskUuid}", taskUuid);
+                logger.LogWarning("Unrecognized /api/tasks/ response shape for {Url}", relativeUrl);
                 return null;
             }
 
-            var statuses = JsonSerializer.Deserialize<List<PaperlessTaskStatus>>(statusArray.GetRawText(), JsonSettings);
-            return statuses?.FirstOrDefault();
+            return JsonSerializer.Deserialize<List<PaperlessTaskStatus>>(statusArray.GetRawText(), JsonSettings);
         }
         catch (Exception ex) when (ex is HttpRequestException or JsonException)
         {
-            logger.LogError(ex, "Failed to fetch task status for {TaskUuid}", taskUuid);
+            logger.LogError(ex, "Failed to fetch tasks from {Url}", relativeUrl);
             return null;
         }
     }

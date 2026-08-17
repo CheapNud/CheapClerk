@@ -316,4 +316,25 @@
   <data name="UploadQueued" xml:space="preserve"><value>Queued — the clerk files it automatically</value></data>
   <data name="UploadQueuedSummary" xml:space="preserve"><value>{0} file(s) queued — the clerk will file them automatically.</value></data>
   <data name="UploadFailedSummary" xml:space="preserve"><value>{0} file(s) failed — see the list for reasons.</value></data>
+  <!-- Processing queue -->
+  <data name="Queue" xml:space="preserve"><value>Queue</value></data>
+  <data name="AppQueueTitle" xml:space="preserve"><value>CheapClerk — Queue</value></data>
+  <data name="KickerProcessing" xml:space="preserve"><value>Processing</value></data>
+  <data name="QueueTitle" xml:space="preserve"><value>Processing queue</value></data>
+  <data name="QueueSubtitle" xml:space="preserve"><value>What Paperless is consuming right now, and how the last runs went</value></data>
+  <data name="Refresh" xml:space="preserve"><value>Refresh</value></data>
+  <data name="Filename" xml:space="preserve"><value>File</value></data>
+  <data name="StatusLabel" xml:space="preserve"><value>Status</value></data>
+  <data name="Completed" xml:space="preserve"><value>Completed</value></data>
+  <data name="Detail" xml:space="preserve"><value>Detail</value></data>
+  <data name="Open" xml:space="preserve"><value>Open</value></data>
+  <data name="QueueCounts" xml:space="preserve"><value>{0} active · {1} failed recently</value></data>
+  <data name="QueueLastCompleted" xml:space="preserve"><value>last completed {0}</value></data>
+  <data name="QueueLatency" xml:space="preserve"><value>API {0} ms</value></data>
+  <data name="QueueUnreachable" xml:space="preserve"><value>Paperless is not answering — the queue cannot be shown.</value></data>
+  <data name="QueueEmpty" xml:space="preserve"><value>No processing tasks yet.</value></data>
+  <data name="HealthWorking" xml:space="preserve"><value>Working</value></data>
+  <data name="HealthBusy" xml:space="preserve"><value>Busy</value></data>
+  <data name="HealthUnreachable" xml:space="preserve"><value>Unreachable</value></data>
+  <data name="ViewQueue" xml:space="preserve"><value>Queue</value></data>
 </root>

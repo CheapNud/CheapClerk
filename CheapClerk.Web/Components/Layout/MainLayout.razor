@@ -1,4 +1,5 @@
 @inherits LayoutComponentBase
+@implements IDisposable
 @using CheapClerk.Web.Theme
 
 <MudThemeProvider Theme="ClerkTheme.Instance" IsDarkMode="_isDarkMode" />
@@ -16,6 +17,14 @@
         <MudSpacer />
         <AuthorizeView>
             <Authorized>
+                @if (_activeTaskCount > 0)
+                {
+                    <MudTooltip Text="@Loc["QueueTitle"]">
+                        <MudBadge Content="_activeTaskCount" Color="Color.Info" Overlap="true">
+                            <MudIconButton Icon="@Icons.Material.Filled.Timelapse" Color="Color.Inherit" Href="/queue" />
+                        </MudBadge>
+                    </MudTooltip>
+                }
                 <MudTooltip Text="@Loc["Upload"]">
                     <MudIconButton Icon="@Icons.Material.Filled.UploadFile" Color="Color.Inherit" OnClick="OpenUploadDialogAsync" />
                 </MudTooltip>
@@ -57,6 +66,7 @@
                     <MudNavLink Href="/documents" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.FolderOpen">@Loc["Documents"]</MudNavLink>
                     <MudNavLink Href="/tags" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Label">@Loc["Tags"]</MudNavLink>
                     <MudNavLink Href="/expiring" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Schedule">@Loc["Expiring"]</MudNavLink>
+            <MudNavLink Href="/queue" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Timelapse">@Loc["Queue"]</MudNavLink>
                     <MudNavLink Href="/review" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.RateReview">
                 @Loc["Review"]
                 @if (_reviewCount > 0)
@@ -81,12 +91,15 @@
     [Inject] private NavigationManager Navigation { get; set; } = null!;
     [Inject] private IDialogService DialogService { get; set; } = null!;
     [Inject] private CheapClerk.Services.ReviewQueueService ReviewQueue { get; set; } = null!;
+    [Inject] private CheapClerk.Services.PaperlessClient PaperlessClient { get; set; } = null!;
 
     [CascadingParameter] private Task<AuthenticationState>? AuthState { get; set; }
 
     private bool _drawerOpen = true;
     private bool _isDarkMode = true;
     private int _reviewCount;
+    private int _activeTaskCount;
+    private readonly CancellationTokenSource _pollStopper = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -103,6 +116,47 @@
         {
             // A dead Paperless must not break the layout — badge just stays hidden
         }
+
+        _ = PollActiveTasksAsync();
+    }
+
+    // Quiet 15s heartbeat that lights the app-bar badge while Paperless is
+    // chewing on uploads; any failure just leaves the badge dark
+    private async Task PollActiveTasksAsync()
+    {
+        try
+        {
+            while (!_pollStopper.IsCancellationRequested)
+            {
+                try
+                {
+                    var recentTasks = await PaperlessClient.ListRecentTasksAsync(30, _pollStopper.Token);
+                    var newCount = recentTasks?.Count(t =>
+                        t.Status.Equals("PENDING", StringComparison.OrdinalIgnoreCase)
+                        || t.Status.Equals("STARTED", StringComparison.OrdinalIgnoreCase)) ?? 0;
+                    if (newCount != _activeTaskCount)
+                    {
+                        _activeTaskCount = newCount;
+                        await InvokeAsync(StateHasChanged);
+                    }
+                }
+                catch (Exception) when (!_pollStopper.IsCancellationRequested)
+                {
+                    // transient — badge stays as-is until the next beat
+                }
+                await Task.Delay(TimeSpan.FromSeconds(15), _pollStopper.Token);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // circuit closing — normal
+        }
+    }
+
+    public void Dispose()
+    {
+        _pollStopper.Cancel();
+        _pollStopper.Dispose();
     }
 
     // The culture endpoint only accepts app-local paths, never absolute URIs

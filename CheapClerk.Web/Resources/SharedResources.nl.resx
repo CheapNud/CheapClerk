@@ -267,4 +267,25 @@
   <data name="UploadQueued" xml:space="preserve"><value>In wachtrij — de klerk archiveert het automatisch</value></data>
   <data name="UploadQueuedSummary" xml:space="preserve"><value>{0} bestand(en) in de wachtrij — de klerk archiveert ze automatisch.</value></data>
   <data name="UploadFailedSummary" xml:space="preserve"><value>{0} bestand(en) mislukt — zie de lijst voor redenen.</value></data>
+  <!-- Processing queue -->
+  <data name="Queue" xml:space="preserve"><value>Wachtrij</value></data>
+  <data name="AppQueueTitle" xml:space="preserve"><value>CheapClerk — Wachtrij</value></data>
+  <data name="KickerProcessing" xml:space="preserve"><value>Verwerking</value></data>
+  <data name="QueueTitle" xml:space="preserve"><value>Verwerkingswachtrij</value></data>
+  <data name="QueueSubtitle" xml:space="preserve"><value>Wat Paperless nu verwerkt, en hoe de laatste runs verliepen</value></data>
+  <data name="Refresh" xml:space="preserve"><value>Vernieuwen</value></data>
+  <data name="Filename" xml:space="preserve"><value>Bestand</value></data>
+  <data name="StatusLabel" xml:space="preserve"><value>Status</value></data>
+  <data name="Completed" xml:space="preserve"><value>Voltooid</value></data>
+  <data name="Detail" xml:space="preserve"><value>Detail</value></data>
+  <data name="Open" xml:space="preserve"><value>Openen</value></data>
+  <data name="QueueCounts" xml:space="preserve"><value>{0} actief · {1} recent mislukt</value></data>
+  <data name="QueueLastCompleted" xml:space="preserve"><value>laatst voltooid {0}</value></data>
+  <data name="QueueLatency" xml:space="preserve"><value>API {0} ms</value></data>
+  <data name="QueueUnreachable" xml:space="preserve"><value>Paperless antwoordt niet — de wachtrij kan niet getoond worden.</value></data>
+  <data name="QueueEmpty" xml:space="preserve"><value>Nog geen verwerkingstaken.</value></data>
+  <data name="HealthWorking" xml:space="preserve"><value>Actief</value></data>
+  <data name="HealthBusy" xml:space="preserve"><value>Bezig</value></data>
+  <data name="HealthUnreachable" xml:space="preserve"><value>Onbereikbaar</value></data>
+  <data name="ViewQueue" xml:space="preserve"><value>Wachtrij</value></data>
 </root>

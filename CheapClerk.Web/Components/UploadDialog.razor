@@ -1,5 +1,6 @@
 @inject PaperlessClient Paperless
 @inject ISnackbar Snackbar
+@inject NavigationManager Navigation
 @inject IStringLocalizer<SharedResources> Loc
 
 <MudDialog>
@@ -100,7 +101,17 @@
             var failed = pendingRows.Count - queued;
 
             if (queued > 0)
-                Snackbar.Add(Loc["UploadQueuedSummary", queued].Value, Severity.Success);
+            {
+                Snackbar.Add(Loc["UploadQueuedSummary", queued].Value, Severity.Success, snackbarConfig =>
+                {
+                    snackbarConfig.Action = Loc["ViewQueue"].Value;
+                    snackbarConfig.OnClick = _ =>
+                    {
+                        Navigation.NavigateTo("/queue");
+                        return Task.CompletedTask;
+                    };
+                });
+            }
 
             if (failed == 0)
             {
