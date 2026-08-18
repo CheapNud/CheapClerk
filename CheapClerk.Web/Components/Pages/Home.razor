@@ -90,6 +90,24 @@
     </MudItem>
 </MudGrid>
 
+@if (_statistics is not null)
+{
+    @* Basic archive metrics — file mix, OCR volume, taxonomy size *@
+    <MudPaper Class="pa-4 mt-6 d-flex align-center flex-wrap gap-2" Elevation="0"
+              Style="border: 1px solid var(--mud-palette-lines-default);">
+        @foreach (var fileType in _statistics.FileTypeCounts)
+        {
+            <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Color="Color.Primary">
+                @fileType.Count × @FileTypeLabel(fileType.MimeType)
+            </MudChip>
+        }
+        <MudText Typo="Typo.body2" Class="mud-text-secondary">
+            · @Loc["MetricsCharacters", (_statistics.CharacterCount / 1000.0).ToString("0.#")]
+            · @Loc["MetricsTypes", _statistics.DocumentTypeCount]
+        </MudText>
+    </MudPaper>
+}
+
 <MudText Typo="Typo.h5" Class="mt-8 mb-4">@Loc["RecentlyAdded"]</MudText>
 
 @if (_recentDocuments is null)
@@ -128,6 +146,7 @@ else
     [Inject] private NavigationManager Navigation { get; set; } = null!;
 
     private List<PaperlessDocument>? _recentDocuments;
+    private PaperlessStatistics? _statistics;
     private int _documentCount;
     private int _tagCount;
     private int _correspondentCount;
@@ -138,25 +157,36 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        var statisticsTask = PaperlessClient.GetStatisticsAsync();
         var docsTask = PaperlessClient.ListDocumentsAsync(maxResults: 10);
-        var tagsTask = PaperlessClient.GetTagsAsync();
-        var corrsTask = PaperlessClient.GetCorrespondentsAsync();
         var expiringTask = ExtractionCache.FindExpiringAsync(30);
 
-        await Task.WhenAll(docsTask, tagsTask, corrsTask, expiringTask);
+        await Task.WhenAll(statisticsTask, docsTask, expiringTask);
 
         _recentDocuments = await docsTask;
-        var tags = await tagsTask;
-        var correspondents = await corrsTask;
+        _statistics = await statisticsTask;
         var expiring = await expiringTask;
 
-        _documentCount = _recentDocuments.Count;
-        _tagCount = tags.Count;
-        _correspondentCount = correspondents.Count;
+        // Archive-wide totals from the statistics endpoint — the recent-docs list
+        // is paginated and must never masquerade as a total
+        _documentCount = _statistics?.DocumentsTotal ?? _recentDocuments.Count;
+        _tagCount = _statistics?.TagCount ?? 0;
+        _correspondentCount = _statistics?.CorrespondentCount ?? 0;
         _expiringCount = expiring.Count;
 
         await LoadWorkflowCountsAsync();
     }
+
+    private static string FileTypeLabel(string mimeType) => mimeType switch
+    {
+        "application/pdf" => "PDF",
+        "image/jpeg" => "JPG",
+        "image/png" => "PNG",
+        "image/webp" => "WEBP",
+        "image/gif" => "GIF",
+        "image/tiff" => "TIFF",
+        _ => mimeType.Contains('/') ? mimeType[(mimeType.IndexOf('/') + 1)..].ToUpperInvariant() : mimeType
+    };
 
     private async Task ProcessInboxAsync()
     {

@@ -1,6 +1,6 @@
 <!--
   TODO.md — CheapClerk project work tracker
-  Last updated: 2026-08-18 (queue consume-only filter)
+  Last updated: 2026-08-18 (true dashboard counts + metrics)
 
   RULES FOR AI AGENTS:
   - Update the "Last updated" date above whenever you modify this file
@@ -31,6 +31,7 @@
 _Nothing blocking._
 
 ## Planned
+- [x] (2026-08-18 → 2026-08-18) Dashboard counts were the paginated page size, not archive totals — now from /api/statistics/, plus a basic metrics strip (file mix, OCR volume, type count) [bug]
 - [x] (2026-08-18 → 2026-08-18) Queue page leaked Paperless housekeeping tasks (10-min mail checks etc.) — filtered to consume_file [bug]
 - [x] (2026-08-17 → 2026-08-17) /queue page (live Paperless task list + functional health strip), app-bar active badge, upload toast link [user]
   - RAM/CPU deliberately left to Grafana on Sierra-Madre — the clerk shows functional health only
@@ -107,6 +108,8 @@ _Nothing blocking._
   - cheapclerk-web on Megaton repointed via Paperless__BaseUrl + token in /opt/blazor-apps/cheapclerk/.env
 
 ## Future
+- [ ] (2026-08-18) Remote MCP endpoint: Streamable HTTP /mcp inside cheapclerk-web (Kreuzakt pattern, C# MCP SDK supports it), token-guarded at clerk.cheapludes.be/mcp — lets any agent connect with URL+token, no local .NET, shared cache by construction [user]
+  - Deferred: local stdio via .NET SDK is fine for now
 - [ ] (2026-08-15) Anubis PoW bot-shield in front of /share/* (or homelab-wide) via NPM — see tranquility TODO for the shared pattern [user]
 - [ ] (2026-08-15) Doccle intake — REJECTED for now after research [user]
   - No official consumer API exists (sender-side only; ToS says back up manually); community path is the reverse-engineered secure.doccle.be/doccle-euui/rest/v2 with plain Basic Auth (zdaar/doccle-paperless, 2024)

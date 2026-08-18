@@ -338,4 +338,6 @@
   <data name="HealthUnreachable" xml:space="preserve"><value>Unreachable</value></data>
   <data name="ViewQueue" xml:space="preserve"><value>Queue</value></data>
   <data name="QueueProcessingHint" xml:space="preserve"><value>{0} document(s) processing</value></data>
+  <data name="MetricsCharacters" xml:space="preserve"><value>{0}k characters OCR'd</value></data>
+  <data name="MetricsTypes" xml:space="preserve"><value>{0} document types</value></data>
 </root>

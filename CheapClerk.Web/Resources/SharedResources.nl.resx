@@ -289,4 +289,6 @@
   <data name="HealthUnreachable" xml:space="preserve"><value>Onbereikbaar</value></data>
   <data name="ViewQueue" xml:space="preserve"><value>Wachtrij</value></data>
   <data name="QueueProcessingHint" xml:space="preserve"><value>{0} document(en) in verwerking</value></data>
+  <data name="MetricsCharacters" xml:space="preserve"><value>{0}k tekens OCR'd</value></data>
+  <data name="MetricsTypes" xml:space="preserve"><value>{0} documenttypes</value></data>
 </root>

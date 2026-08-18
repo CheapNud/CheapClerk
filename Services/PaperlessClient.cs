@@ -90,6 +90,12 @@ public sealed class PaperlessClient(
         return await GetAsync<PaperlessDocument>($"api/documents/{documentId}/", cancellationToken);
     }
 
+    /// <summary>Archive-wide totals — the honest source for dashboard counts.</summary>
+    public async Task<PaperlessStatistics?> GetStatisticsAsync(CancellationToken cancellationToken = default)
+    {
+        return await GetAsync<PaperlessStatistics>("api/statistics/", cancellationToken);
+    }
+
     public async Task<string?> GetDocumentContentAsync(int documentId, CancellationToken cancellationToken = default)
     {
         var doc = await GetDocumentAsync(documentId, cancellationToken);
