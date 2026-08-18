@@ -45,8 +45,11 @@ public sealed class DocumentClassifierService(
             Rules:
             - NEVER refuse or return an empty suggestion because a document seems out
               of place. Every document gets a truthful title and 1-3 topical tags.
-            - STRONGLY prefer existing tags/correspondents/document types. Only invent a
-              new one when nothing existing fits. Reuse exact existing spelling.
+            - Prefer existing tags/correspondents/document types when they genuinely
+              fit — reuse exact existing spelling. But a wrong-but-existing label is
+              WORSE than a new accurate one: when nothing fits, coin a new short,
+              reusable {languageName} name (a document type like 'Handleiding', a tag
+              like {tagExample}) instead of forcing the nearest mismatch.
             - When no existing tag fits, create ONE short, reusable {languageName} tag (like {tagExample})
               rather than leaving the document untagged.
             - The correspondent is who SENT the document, not the recipient; leave it
