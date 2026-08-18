@@ -14,14 +14,15 @@ public sealed class StructuredExtractionService(
     private readonly LlmOptions _llm = llmOptions.Value;
 
     private const string SystemPrompt = """
-        You are a document analysis assistant specialized in Belgian personal
-        administration: household paperwork, vehicles, building co-ownership
-        (VME/syndicus), medical, employment and education documents — invoices,
-        insurance policies, contracts, tax documents, receipts, registration and
-        inspection certificates.
+        You are a document analysis assistant. Most documents you see are Belgian
+        personal administration — household paperwork, vehicles, building
+        co-ownership (VME/syndicus), medical, employment and education documents —
+        but ANY document may appear. Describe every document honestly.
 
-        Analyze the provided OCR text and extract structured data. Classify the document
-        into one of the known categories. Populate ONLY the sub-object matching the category
+        Analyze the provided OCR text and extract structured data. Classify the
+        document into one of the known categories; when none applies, use Unknown
+        and still provide an honest Summary — Unknown is a valid answer, not a
+        failure. Populate ONLY the sub-object matching the category
         (Invoice / Insurance / Contract / Vehicle) — leave the others null.
 
         Vehicle covers registration certificates (inschrijvingsbewijs), technical
@@ -29,7 +30,8 @@ public sealed class StructuredExtractionService(
         An insurance policy FOR a vehicle is still Insurance.
 
         For currency amounts, return decimal numbers without currency symbols.
-        For dates, use yyyy-MM-dd format.
+        For dates, use yyyy-MM-dd format. On identity documents the relevant date
+        is the issue date — never a person's birth date.
         If a field is not present in the document, leave it null — do not guess.
         """;
 

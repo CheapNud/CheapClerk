@@ -1,6 +1,6 @@
 <!--
   TODO.md — CheapClerk project work tracker
-  Last updated: 2026-08-18 (true dashboard counts + metrics)
+  Last updated: 2026-08-18 (honest classification)
 
   RULES FOR AI AGENTS:
   - Update the "Last updated" date above whenever you modify this file
@@ -31,6 +31,8 @@
 _Nothing blocking._
 
 ## Planned
+- [x] (2026-08-18 → 2026-08-18) Honest classification: domain became a prior instead of a filter — never refuse, confidence = filing certainty, identity docs use issue date [user]
+  - Root cause of empty 0% suggestions on out-of-domain docs (game manuals, certificates); ingestion describes, retrieval filters
 - [x] (2026-08-18 → 2026-08-18) Dashboard counts were the paginated page size, not archive totals — now from /api/statistics/, plus a basic metrics strip (file mix, OCR volume, type count) [bug]
 - [x] (2026-08-18 → 2026-08-18) Queue page leaked Paperless housekeeping tasks (10-min mail checks etc.) — filtered to consume_file [bug]
 - [x] (2026-08-17 → 2026-08-17) /queue page (live Paperless task list + functional health strip), app-bar active badge, upload toast link [user]
