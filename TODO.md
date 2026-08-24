@@ -1,6 +1,6 @@
 <!--
   TODO.md — CheapClerk project work tracker
-  Last updated: 2026-08-18 (label coinage)
+  Last updated: 2026-08-24 (X-13 topology move)
 
   RULES FOR AI AGENTS:
   - Update the "Last updated" date above whenever you modify this file
@@ -31,6 +31,7 @@
 _Nothing blocking._
 
 ## Planned
+- [x] (2026-08-24 → 2026-08-24) X-13 topology move: forge .40, db .45, app host .50 — compose/workflow/secrets/replica/webhook repointed [user]
 - [x] (2026-08-18 → 2026-08-18) Allow coining new document types/labels when nothing fits — wrong-but-existing is worse than new-but-accurate [user]
 - [x] (2026-08-18 → 2026-08-18) Honest classification: domain became a prior instead of a filter — never refuse, confidence = filing certainty, identity docs use issue date [user]
   - Root cause of empty 0% suggestions on out-of-domain docs (game manuals, certificates); ingestion describes, retrieval filters

@@ -19,9 +19,9 @@ services:
       - Proxy__KnownProxies__0=${TRUSTED_PROXY_IP}
       - Paperless__BaseUrl=http://192.168.1.15:8010
       - Paperless__ApiToken=${PAPERLESS_API_TOKEN}
-      # Cache lives in PostgreSQL on Vault-Tec like every other app; SQLite is dev/test only
+      # Cache lives in PostgreSQL on the X-13 db host; SQLite is dev/test only
       - Cache__Provider=Postgres
-      - Cache__ConnectionString=Host=192.168.1.14;Port=5432;Database=cheapclerk;Username=cheapclerk;Password=${CHEAPCLERK_DB_PASSWORD}
+      - Cache__ConnectionString=Host=192.168.1.45;Port=5432;Database=cheapclerk;Username=cheapclerk;Password=${CHEAPCLERK_DB_PASSWORD}
       - Llm__Anthropic__ApiKey=${ANTHROPIC_API_KEY}
       - Llm__Anthropic__Model=claude-haiku-4-5-20251001
       - Classification__WebhookToken=${CHEAPCLERK_WEBHOOK_TOKEN}
