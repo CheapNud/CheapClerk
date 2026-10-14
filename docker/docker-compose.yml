@@ -1,6 +1,6 @@
 # Reference for the live deployment — services run on TWO hosts:
 #   paperless + paperless-broker  → Sierra-Madre, /opt/paperless
-#   cheapclerk-web                → Megaton, /opt/blazor-apps/cheapclerk
+#   cheapclerk-web                → Megaton (VM on X-13, 192.168.1.50), /opt/blazor-apps/cheapclerk
 # Secrets live in a .env next to each compose file, never in this repo.
 
 services:
@@ -43,7 +43,8 @@ services:
       PAPERLESS_TASK_WORKERS: 2
       PAPERLESS_CONSUMER_RECURSIVE: "true"
 
-  # Runs on Megaton, not alongside paperless — kept here as reference only
+  # Runs on Megaton (X-13), not alongside paperless — kept here as reference only.
+  # The deployed definition is the root docker-compose.yml; this copy may lag.
   cheapclerk-web:
     image: ghcr.io/cheapnud/cheapclerk-web:latest
     container_name: cheapclerk-web
@@ -60,9 +61,9 @@ services:
       - Proxy__KnownProxies__0=${TRUSTED_PROXY_IP}
       - Paperless__BaseUrl=http://192.168.1.15:8010
       - Paperless__ApiToken=${PAPERLESS_API_TOKEN}
-      # Cache lives in PostgreSQL on Vault-Tec like every other app; SQLite is dev/test only
+      # Cache lives in PostgreSQL on the X-13 db host; SQLite is dev/test only
       - Cache__Provider=Postgres
-      - Cache__ConnectionString=Host=192.168.1.14;Port=5432;Database=cheapclerk;Username=cheapclerk;Password=${CHEAPCLERK_DB_PASSWORD}
+      - Cache__ConnectionString=Host=192.168.1.45;Port=5432;Database=cheapclerk;Username=cheapclerk;Password=${CHEAPCLERK_DB_PASSWORD}
       # Auto-classification needs an LLM; set the key in .env or disable
       - Llm__Anthropic__ApiKey=${ANTHROPIC_API_KEY}
       # - Classification__Enabled=false

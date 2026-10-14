@@ -418,7 +418,7 @@ Add to `~/.claude.json` (global) or `.claude/settings.json` (project):
 }
 ```
 
-Production runs `Provider: Postgres` against the shared PostgreSQL instance (see the compose file) — SQLite is only for local dev and tests. The schema is created automatically on first start; no migrations to run.
+Production runs `Provider: Postgres` against the shared PostgreSQL instance on the X-13 database host, 192.168.1.45 (see the compose file) — SQLite is only for local dev and tests. The schema is created automatically on first start; no migrations to run.
 
 ---
 
@@ -434,7 +434,7 @@ Deployed on Sierra-Madre at `/opt/paperless` (see `docker/docker-compose.yml` fo
 
 OCR languages: Dutch (primary), English, French, German — covers Belgian household documents.
 
-The `cheapclerk-web` container runs separately on Megaton (`/opt/blazor-apps/cheapclerk`) and points at Paperless via `Paperless__BaseUrl` + an API token generated with `manage.py drf_create_token`.
+The `cheapclerk-web` container runs separately on Megaton, a VM on X-13 at 192.168.1.50 (`/opt/blazor-apps/cheapclerk`) and points at Paperless via `Paperless__BaseUrl` + an API token generated with `manage.py drf_create_token`.
 
 **Releases are tag-driven**: pushing a `v*.*.*` tag to the forge runs `.forgejo/workflows/deploy.yml` — build + test, push the image to the forge container registry, then SSH to the app host, reset its git replica to the tag and `docker compose up`. The root `docker-compose.yml` is the deployment file (memory caps committed, secrets in the host-side untracked `.env`); `docker/docker-compose.yml` remains the Paperless reference stack.
 
